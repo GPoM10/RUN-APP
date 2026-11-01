@@ -545,7 +545,7 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
     </div>
   </section>
 
-  <footer>Versión 335 PWA (1 nov, catálogo en Referencia). Deriva de la actividad = FC 2ª mitad ÷ 1ª mitad − 1, por tiempo, desde el punto de estabilización (referencia &lt; 5 %). FC limpia: un segundo que se aparta más de 2 % de los 5 s anteriores y de los 5 s posteriores se reemplaza por el promedio de esos 10 s. Normalización por temperatura: FC normalizada = FC − k × (temperatura del reloj − temperatura de referencia); la eficiencia normalizada usa esa FC. La deriva y el TRIMP no se normalizan. TRIMP de Banister segundo a segundo. Pa:HR (desacople aeróbico) = (EF 1ª mitad − EF 2ª mitad) ÷ EF 1ª mitad, con EF = velocidad ÷ FC, mismas mitades que la deriva. Fuerza pico por paso (× peso corporal) = π/2 × (tiempo de vuelo ÷ tiempo de contacto + 1), con tiempo de vuelo = 60 ÷ cadencia − contacto (modelo de muelle, Morin 2005); carga mecánica = pasos × fuerza pico promedio, en miles. Son estimaciones propias para seguir tu tendencia, no medidas de laboratorio. Los datos se guardan en tu espacio privado de la nube del artefacto (solo vos los ves) y se ven igual en la compu y en el celular; el botón Respaldo descarga una copia.</footer>
+  <footer>Versión 336 PWA (1 nov, ajuste por clima y orden). Deriva de la actividad = FC 2ª mitad ÷ 1ª mitad − 1, por tiempo, desde el punto de estabilización (referencia &lt; 5 %). FC limpia: un segundo que se aparta más de 2 % de los 5 s anteriores y de los 5 s posteriores se reemplaza por el promedio de esos 10 s. Normalización por temperatura: FC normalizada = FC − k × (temperatura del reloj − temperatura de referencia); la eficiencia normalizada usa esa FC. La deriva y el TRIMP no se normalizan. TRIMP de Banister segundo a segundo. Pa:HR (desacople aeróbico) = (EF 1ª mitad − EF 2ª mitad) ÷ EF 1ª mitad, con EF = velocidad ÷ FC, mismas mitades que la deriva. Fuerza pico por paso (× peso corporal) = π/2 × (tiempo de vuelo ÷ tiempo de contacto + 1), con tiempo de vuelo = 60 ÷ cadencia − contacto (modelo de muelle, Morin 2005); carga mecánica = pasos × fuerza pico promedio, en miles. Son estimaciones propias para seguir tu tendencia, no medidas de laboratorio. Los datos se guardan en tu espacio privado de la nube del artefacto (solo vos los ves) y se ven igual en la compu y en el celular; el botón Respaldo descarga una copia.</footer>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
@@ -3688,7 +3688,7 @@ function xqScan(){document.querySelectorAll('.mdesc, header > p, footer').forEac
   b.addEventListener('click',e=>{e.stopPropagation(); e.preventDefault(); xqOpen(el,b)}); el._xqb=b; xqPlace(el,b)})}
 {let pend=false; new MutationObserver(()=>{if(pend) return; pend=true; requestAnimationFrame(()=>{pend=false; foldPanels(); xqScan()})}).observe(document.body,{childList:true,subtree:true}); foldPanels(); xqScan()}
 /* ---------- Referencia: evolución sin el ruido del clima (rodaje sintético a un WBGT común) ---------- */
-const REFK='comparador.ref', REF0={tipo:'ER',code:'',w0:'',w1:'',p0:'',p1:'',d0:'',d1:'',wr:'',f0:'',f1:'',m:'hr',v:'clima',all:false,sel:[]};
+const REFK='comparador.ref', REF0={tipo:'ER',code:'',adj:false,w0:'',w1:'',p0:'',p1:'',d0:'',d1:'',wr:'',f0:'',f1:'',m:'hr',v:'clima',all:false,sel:[]};
 let ref=(()=>{try{return {...REF0,...JSON.parse(LS.getItem(REFK)||'{}')}}catch(e){return {...REF0}}})(), refChart=null;
 const saveRef=()=>{try{LS.setItem(REFK,JSON.stringify(ref))}catch(e){}};
 const RMET={hr:{n:'FC promedio estable',u:'ppm',d:1,k:'hr'},hre:{n:'FC al final de la serie',u:'ppm',d:1,k:'hre'},der:{n:'Deriva',u:'pp',d:2,k:'der'},pahr:{n:'Pa:HR',u:'pp',d:2,k:'pahr'}};
@@ -3807,7 +3807,7 @@ function renderRef(){const B=document.getElementById('refBox'); if(!B) return; c
   h+=seriesHtml(C);
   // corrección de rodajes elegidos
   h+=`<h2 style="margin-top:18px;font-size:18px">Rodajes elegidos corregidos al clima de referencia</h2>`;
-  if(!selR.length) h+=`<div class="mdesc" data-keep>Marcá hasta 3 rodajes en la tabla de abajo para verlos «como si se hubieran corrido» con el clima de referencia.</div>`;
+  if(!selR.length) h+=`<div class="mdesc" data-keep>Marcá hasta 4 rodajes en la tabla de abajo para verlos «como si se hubieran corrido» con el clima de referencia.</div>`;
   else h+=`<div class="tablewrap"><table><thead><tr><th>Rodaje</th><th>WBGT</th><th>Ritmo</th><th>Duración</th><th>${R.n} real</th><th>Ajuste por clima</th><th>${R.n} a ${nf(C.Wr,1)} °C</th><th style="text-align:left">Avisos</th></tr></thead><tbody>${selR.map((r,i)=>{const c=refCorr(r,m,C);
     return `<tr><td style="color:${color(i)};font-weight:600">${dt(r.a)}</td><td class="num">${nf(r.W,1)} °C</td><td class="num">${fmtP(r.P)}</td><td class="num">${nf(r.D,0)} min</td><td class="num">${c?nf(c.v,R.d):'—'}</td><td class="num">${c&&c.adj!=null?`${c.adj-c.v>=0?'+':'−'}${nf(Math.abs(c.adj-c.v),R.d)} ± ${nf(c.half,R.d)}`:'—'}</td><td class="num"><b>${c&&c.adj!=null?nf(c.adj,R.d):'—'}</b></td><td style="text-align:left;white-space:normal;color:var(--muted)">${c?c.warn.map(esc).join('; '):''}</td></tr>`}).join('')}</tbody></table></div>`;
   if(selR.length>=2&&selR.every(r=>refCorr(r,m,C)&&refCorr(r,m,C).adj!=null)){const a0=refCorr(selR[0],m,C), a1=refCorr(selR[selR.length-1],m,C), dv=a1.adj-a0.adj, e=Math.sqrt(a0.half**2+a1.half**2);
@@ -3815,11 +3815,30 @@ function renderRef(){const B=document.getElementById('refBox'); if(!B) return; c
   // tabla de rodajes
   const list=ref.all?C.rows:C.S, nSel=ref.sel.length;
   h+=`<h2 style="margin-top:18px;font-size:18px">Rodajes ${ref.all?`de tipo ${tl()}`:'del filtro'} (${list.length})</h2><div class="opts" style="margin-top:0"><label><input type="checkbox" id="rfAll"${ref.all?' checked':''}> ver todos los ${tl()}, no solo los del filtro</label></div>
-  <div class="tablewrap"><table><thead><tr><th></th><th>Fecha</th><th>WBGT</th><th>Ritmo</th><th>Duración</th><th>${R.n}</th><th>Corregido</th><th>En el filtro</th><th style="text-align:left">Marca</th></tr></thead><tbody>${list.slice().reverse().map(r=>{const inS=C.S.includes(r), v=r[X.key], fl=F.flagged.has(r.id), on=ref.sel.includes(r.id), dis=!on&&nSel>=3;
-    const cv=v!=null&&F.ok&&r.W>=F.wMin&&r.W<=F.wMax&&C.Wr>=F.wMin&&C.Wr<=F.wMax?X.adj(r):null;
-    return `<tr${fl?' style="color:var(--muted)"':''}><td><input type="checkbox" class="rfSel" data-id="${esc(r.id)}"${on?' checked':''}${dis?' disabled':''} aria-label="Elegir ${dt(r.a)}"></td><td>${dt(r.a)}</td><td class="num">${nf(r.W,1)}</td><td class="num">${fmtP(r.P)}</td><td class="num">${nf(r.D,0)} min</td><td class="num">${fm1(v)}</td><td class="num">${cv==null?'—':nf(cv,R.d)}</td><td class="num">${inS?'✓':'·'}</td><td style="text-align:left">${fl?'<span class="w">atípico</span>':''}</td></tr>`}).join('')}</tbody></table></div>
-  <div class="mdesc" data-keep>«Corregido» lleva cada rodaje al WBGT, ritmo y duración de referencia con la regresión. Atípico = más de 3 desviaciones robustas (MAD) del ajuste: se marca y no entra en el ajuste ni en las estadísticas de esa métrica, pero no se borra. La pendiente de calor es en sí una medida de tu tolerancia al calor: si baja con los meses, te adaptás.</div>`;
-  B.innerHTML=h; wireRef(B); drawRef(C,m)}
+  <div class="opts"><label><input type="checkbox" id="rfAdj"${ref.adj?' checked':''}> <b>Ajustar por clima</b> y ordenar por eficiencia (menos ${m==='hr'||m==='hre'?'FC':R.n} = mejor)</label></div>
+  ${ref.adj&&!F.ok?`<div class="notice" style="margin:6px 0">Sin pendiente de calor confiable (${esc(F.why)}): se ordena por el valor oficial, sin corregir.</div>`:''}
+  <div class="tablewrap"><table><thead><tr>${ref.adj?'<th>#</th>':''}<th></th><th>Fecha</th><th>WBGT</th><th>Ritmo</th><th>Duración</th><th>${R.n} oficial</th>${ref.adj?`<th>A ${nf(C.Wr,1)} °C</th>`:''}<th>En el filtro</th><th style="text-align:left">Marca</th></tr></thead><tbody>${(()=>{
+    const cvOf=r=>{const v=r[X.key]; return v!=null&&F.ok&&r.W>=F.wMin&&r.W<=F.wMax&&C.Wr>=F.wMin&&C.Wr<=F.wMax?X.adj(r):null};
+    let L=list.slice().reverse();
+    if(ref.adj){const key=r=>F.flagged.has(r.id)?Infinity:(F.ok&&cvOf(r)!=null?cvOf(r):(F.ok?Infinity:(r[X.key]==null?Infinity:r[X.key]))); L=L.map(r=>({r,k:key(r)})).sort((p,q)=>p.k-q.k).map(z=>z.r)}
+    let rk=0;
+    return L.map(r=>{const inS=C.S.includes(r), v=r[X.key], fl=F.flagged.has(r.id), on=ref.sel.includes(r.id), dis=!on&&nSel>=4, cv=cvOf(r), ranked=ref.adj&&!fl&&(F.ok?cv!=null:v!=null);
+    if(ranked) rk++;
+    return `<tr${fl?' style="color:var(--muted)"':''}>${ref.adj?`<td class="num"><b>${ranked?rk:'—'}</b></td>`:''}<td><input type="checkbox" class="rfSel" data-id="${esc(r.id)}"${on?' checked':''}${dis?' disabled':''} aria-label="Elegir ${dt(r.a)}"></td><td>${dt(r.a)}</td><td class="num">${nf(r.W,1)} °C</td><td class="num">${fmtP(r.P)}</td><td class="num">${nf(r.D,0)} min</td><td class="num">${fm1(v)}</td>${ref.adj?`<td class="num"><b>${cv==null?'—':nf(cv,R.d)}</b></td>`:''}<td class="num">${inS?'✓':'·'}</td><td style="text-align:left">${fl?'<span class="w">atípico</span>':''}</td></tr>`}).join('')})()}</tbody></table></div>
+  <div class="mdesc" data-keep>«A X °C» lleva cada rodaje al WBGT, ritmo y duración de referencia con la regresión. Atípico = más de 3 desviaciones robustas (MAD) del ajuste: se marca y no entra en el ajuste ni en las estadísticas de esa métrica, pero no se borra. La pendiente de calor es en sí una medida de tu tolerancia al calor: si baja con los meses, te adaptás.</div>`;
+  if(selR.length) h+=`<h2 style="margin-top:18px;font-size:18px">Curvas de los elegidos (${selR.length} de 4)</h2><div class="chartbox" style="height:340px"><canvas id="refChart2" aria-label="Curvas de FC de los rodajes elegidos"></canvas></div><div class="mdesc" data-keep>FC de cada rodaje elegido, superpuestos${ref.tipo==='Q'?'; el minuto 0 es el inicio del trabajo (sin calentamiento)':''}.${ref.adj?' Línea punteada: la misma curva llevada al WBGT de referencia con tu pendiente de calor de la FC (si es confiable).':' Con «Ajustar por clima» se agregan las curvas corregidas.'}</div>`;
+  B.innerHTML=h; wireRef(B); drawRef(C,m); drawRefCurves(C)}
+let refChart2=null;
+function drawRefCurves(C){const cv=document.getElementById('refChart2'); if(refChart2){refChart2.destroy();refChart2=null} if(!cv||typeof Chart==='undefined') return;
+  const selR=ref.sel.map(id=>C.rows.find(r=>r.id===id)).filter(Boolean), FH=C.M.hr.F, tick=css('--muted'), grid=css('--line'), ds=[];
+  selR.forEach((r,i)=>{const a=r.a, b=binsR(a), off=ref.tipo==='Q'?(((a.q.laps||[]).find(l=>l.t==='w')||{a:0}).a/60):0;
+    const d=(b?b.map(g=>({x:g.x,y:g.hr})):segTimes(a).map(g=>({x:g.tm,y:g.hr}))).filter(p=>p.y!=null&&isFinite(p.y)).map(p=>({x:p.x-off,y:p.y,r}));
+    ds.push({label:`${dt(a)} · WBGT ${nf(r.W,1)} °C`,data:d,borderColor:color(i),backgroundColor:color(i),borderWidth:2,pointRadius:0,tension:0,showLine:true});
+    if(ref.adj&&FH.ok&&C.Wr!=null&&r.W>=FH.wMin&&r.W<=FH.wMax&&C.Wr>=FH.wMin&&C.Wr<=FH.wMax){const sh=FH.bW*(C.Wr-r.W);
+      ds.push({label:`${dt(a)} a ${nf(C.Wr,1)} °C (${sh>=0?'+':'−'}${nf(Math.abs(sh),1)} ppm)`,data:d.map(p=>({x:p.x,y:p.y+sh,r})),borderColor:color(i),backgroundColor:color(i),borderDash:[6,4],borderWidth:2,pointRadius:0,tension:0,showLine:true})}});
+  refChart2=new Chart(cv,{type:'scatter',data:{datasets:ds},options:{responsive:true,maintainAspectRatio:false,animation:false,
+    scales:{x:{type:'linear',title:{display:true,text:'minutos',color:tick},grid:{color:grid},ticks:{color:tick,font:{family:css('--mono')}}},y:{title:{display:true,text:'FC (ppm)',color:tick},grid:{color:grid},ticks:{color:tick,font:{family:css('--mono')}}}},
+    plugins:{legend:{position:'top',align:'start',labels:{color:css('--ink'),boxWidth:12,boxHeight:6,font:{family:css('--body')}}},tooltip:{callbacks:{label:it=>`${it.dataset.label}: ${nf(it.parsed.y,0)} ppm`}}}}})}
 function drawRef(C,m){const cv=document.getElementById('refChart'); if(refChart){refChart.destroy();refChart=null} if(!cv||typeof Chart==='undefined'||(ref.v!=='curvas'&&!C.S.length)) {const d=document.getElementById('refDesc'); if(d) d.textContent=C.S.length?'':'Sin rodajes en el filtro para graficar.'; return}
   const x=C.M[m], R=RMET[m], F=x.F, key=x.key, tick=css('--muted'), grid=css('--line'), acc=css('--accent'), selR=ref.sel.map(id=>C.rows.find(r=>r.id===id)).filter(Boolean);
   let ds, scales, desc;
@@ -3842,7 +3861,7 @@ function drawRef(C,m){const cv=document.getElementById('refChart'); if(refChart)
       if(FH.ok&&r.W>=FH.wMin&&r.W<=FH.wMax&&C.Wr>=FH.wMin&&C.Wr<=FH.wMax){const sh=FH.bW*(C.Wr-r.W); nc++;
         ds.push({label:`${dt(a)} corregido a ${nf(C.Wr,1)} °C (${sh>=0?'+':'−'}${nf(Math.abs(sh),1)} ppm)`,data:d.map(p=>({x:p.x,y:p.y+sh,r})),borderColor:color(i),backgroundColor:color(i),borderDash:[6,4],borderWidth:2,pointRadius:0,tension:0,showLine:true})}});
     scales={x:{type:'linear',min:0,title:{display:true,text:'minutos',color:tick},grid:{color:grid},ticks:{color:tick,font:{family:css('--mono')}}},y:{title:{display:true,text:'FC (ppm)',color:tick},grid:{color:grid},ticks:{color:tick,font:{family:css('--mono')}}}};
-    desc=selR.length?`Curvas de FC de los rodajes elegidos (tabla de abajo). Línea llena: lo real; punteada: la misma curva llevada al WBGT de referencia (${nf(C.Wr,1)} °C) con tu pendiente de calor de la FC (${FH.ok?nf(FH.bW,2)+' ppm/°C':'no estimable'}), un desplazamiento parejo sin tocar la forma de la curva.${nc<selR.length?' Sin corrección en los que quedan fuera del WBGT observado o sin pendiente confiable.':''}`:'Marcá hasta 3 rodajes en la tabla de abajo para superponer sus curvas.'}
+    desc=selR.length?`Curvas de FC de los rodajes elegidos (tabla de abajo). Línea llena: lo real; punteada: la misma curva llevada al WBGT de referencia (${nf(C.Wr,1)} °C) con tu pendiente de calor de la FC (${FH.ok?nf(FH.bW,2)+' ppm/°C':'no estimable'}), un desplazamiento parejo sin tocar la forma de la curva.${nc<selR.length?' Sin corrección en los que quedan fuera del WBGT observado o sin pendiente confiable.':''}`:'Marcá hasta 4 rodajes en la tabla de abajo para superponer sus curvas.'}
   else{const pts=C.S.filter(r=>r[key]!=null&&!F.flagged.has(r.id)).map(r=>({x:r.t*1000,y:F.ok?x.adj(r):r[key],raw:r[key],r}));
     ds=[{label:F.ok?'Corregido al clima, ritmo y duración de referencia':'Sin corregir',data:pts,backgroundColor:acc,borderColor:acc,pointRadius:5,showLine:false},
       {label:'Real',data:pts.map(p=>({x:p.x,y:p.raw,r:p.r})),backgroundColor:'transparent',borderColor:css('--muted'),pointRadius:4,pointBorderWidth:1.5,showLine:false}];
@@ -3868,8 +3887,9 @@ function wireRef(B){
   B.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{ref.m=b.dataset.rm; saveRef(); renderRef()});
   B.querySelectorAll('[data-rv]').forEach(b=>b.onclick=()=>{ref.v=b.dataset.rv; saveRef(); renderRef()});
   const rs=B.querySelector('#rfReset'); if(rs) rs.onclick=()=>{ref={...ref,w0:'',w1:'',p0:'',p1:'',d0:'',d1:'',wr:'',f0:'',f1:''}; saveRef(); renderRef()};
+  const ad=B.querySelector('#rfAdj'); if(ad) ad.onchange=()=>{ref.adj=ad.checked; saveRef(); renderRef()};
   const al=B.querySelector('#rfAll'); if(al) al.onchange=()=>{ref.all=al.checked; saveRef(); renderRef()};
-  B.querySelectorAll('input.rfSel').forEach(i=>i.onchange=()=>{const id=i.dataset.id, k=ref.sel.map(String).indexOf(id); if(i.checked){if(k<0&&ref.sel.length<3){const r=refRows(ref.tipo).find(z=>String(z.id)===id); if(r) ref.sel.push(r.id)}} else if(k>=0) ref.sel.splice(k,1); saveRef(); renderRef()});
+  B.querySelectorAll('input.rfSel').forEach(i=>i.onchange=()=>{const id=i.dataset.id, k=ref.sel.map(String).indexOf(id); if(i.checked){if(k<0&&ref.sel.length<4){const r=refRows(ref.tipo).find(z=>String(z.id)===id); if(r) ref.sel.push(r.id)}} else if(k>=0) ref.sel.splice(k,1); saveRef(); renderRef()});
 }
 
 window.cloudSt=function(){};
