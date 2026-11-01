@@ -545,7 +545,7 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
     </div>
   </section>
 
-  <footer>Versión 338 PWA (1 nov, Referencia más simple). Deriva de la actividad = FC 2ª mitad ÷ 1ª mitad − 1, por tiempo, desde el punto de estabilización (referencia &lt; 5 %). FC limpia: un segundo que se aparta más de 2 % de los 5 s anteriores y de los 5 s posteriores se reemplaza por el promedio de esos 10 s. Normalización por temperatura: FC normalizada = FC − k × (temperatura del reloj − temperatura de referencia); la eficiencia normalizada usa esa FC. La deriva y el TRIMP no se normalizan. TRIMP de Banister segundo a segundo. Pa:HR (desacople aeróbico) = (EF 1ª mitad − EF 2ª mitad) ÷ EF 1ª mitad, con EF = velocidad ÷ FC, mismas mitades que la deriva. Fuerza pico por paso (× peso corporal) = π/2 × (tiempo de vuelo ÷ tiempo de contacto + 1), con tiempo de vuelo = 60 ÷ cadencia − contacto (modelo de muelle, Morin 2005); carga mecánica = pasos × fuerza pico promedio, en miles. Son estimaciones propias para seguir tu tendencia, no medidas de laboratorio. Los datos se guardan en tu espacio privado de la nube del artefacto (solo vos los ves) y se ven igual en la compu y en el celular; el botón Respaldo descarga una copia.</footer>
+  <footer>Versión 339 PWA (1 nov, Referencia con diagnóstico). Deriva de la actividad = FC 2ª mitad ÷ 1ª mitad − 1, por tiempo, desde el punto de estabilización (referencia &lt; 5 %). FC limpia: un segundo que se aparta más de 2 % de los 5 s anteriores y de los 5 s posteriores se reemplaza por el promedio de esos 10 s. Normalización por temperatura: FC normalizada = FC − k × (temperatura del reloj − temperatura de referencia); la eficiencia normalizada usa esa FC. La deriva y el TRIMP no se normalizan. TRIMP de Banister segundo a segundo. Pa:HR (desacople aeróbico) = (EF 1ª mitad − EF 2ª mitad) ÷ EF 1ª mitad, con EF = velocidad ÷ FC, mismas mitades que la deriva. Fuerza pico por paso (× peso corporal) = π/2 × (tiempo de vuelo ÷ tiempo de contacto + 1), con tiempo de vuelo = 60 ÷ cadencia − contacto (modelo de muelle, Morin 2005); carga mecánica = pasos × fuerza pico promedio, en miles. Son estimaciones propias para seguir tu tendencia, no medidas de laboratorio. Los datos se guardan en tu espacio privado de la nube del artefacto (solo vos los ves) y se ven igual en la compu y en el celular; el botón Respaldo descarga una copia.</footer>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
@@ -3745,12 +3745,13 @@ function refFit(rows,key){const R=rows.filter(r=>r[key]!=null&&isFinite(r[key]))
 function refCalc(){const rows=refRows(ref.tipo), nz=v=>{const x=num(v); return isFinite(x)?x:null}, pz=v=>parseP(v), dz=v=>v?parseDay(v):null;
   const w0=nz(ref.w0), w1=nz(ref.w1), p0=pz(ref.p0), p1=pz(ref.p1), d0=nz(ref.d0), d1=nz(ref.d1), f0=dz(ref.f0), f1=dz(ref.f1);
   const S=rows.filter(r=>(w0==null||r.W>=w0)&&(w1==null||r.W<=w1)&&(p0==null||r.P>=p0)&&(p1==null||r.P<=p1)&&(d0==null||r.D>=d0)&&(d1==null||r.D<=d1)&&(f0==null||r.day>=f0)&&(f1==null||r.day<=f1));
+  const cnt={w:rows.filter(r=>(w0==null||r.W>=w0)&&(w1==null||r.W<=w1)).length,p:rows.filter(r=>(p0==null||r.P>=p0)&&(p1==null||r.P<=p1)).length,d:rows.filter(r=>(d0==null||r.D>=d0)&&(d1==null||r.D<=d1)).length,f:rows.filter(r=>(f0==null||r.day>=f0)&&(f1==null||r.day<=f1)).length};
   const Wr=nz(ref.wr)??rMed(S.map(r=>r.W)), Pr=rMed(S.map(r=>r.P)), Dr=rMed(S.map(r=>r.D));
   const M={}; for(const m of rmk()){const key=RMET[m].k, F=refFit(rows,key), X=S.filter(r=>r[key]!=null&&!F.flagged.has(r.id));
     const adj=r=>F.ok&&ref.adj?r[key]-F.bW*(r.W-Wr)-F.bP*(r.P-Pr)-F.bD*(r.D-Dr):r[key], A=X.map(adj), n=A.length, mu=n?rMean(A):null, sd=n>1?Math.sqrt(A.reduce((q,x)=>q+(x-mu)**2,0)/(n-1)):null;
     M[m]={key,F,X,adj,n,mu,sd,half:n>1?rT(n-1)*sd/Math.sqrt(n):null,raw:rMed(X.map(r=>r[key])),q1:rQ(X.map(r=>r[key]),.25),q3:rQ(X.map(r=>r[key]),.75),
       reg:F.ok&&Wr!=null?{v:F.at(Wr,Pr,Dr),c:F.ci(Wr,Pr,Dr)}:null,inRange:F.ok&&Wr!=null&&Wr>=F.wMin&&Wr<=F.wMax}}
-  return {rows,S,Wr,Pr,Dr,M,f:{w0,w1,p0,p1,d0,d1,f0,f1}}}
+  return {rows,S,Wr,Pr,Dr,M,cnt,f:{w0,w1,p0,p1,d0,d1,f0,f1}}}
 // corrección de un rodaje al clima de referencia: solo dentro del WBGT observado, y avisos si el ritmo o la duración no son comparables
 function refCorr(r,m,C){const x=C.M[m], F=x.F, v=r[x.key]; if(v==null) return null; const warn=[];
   if(Math.abs(r.D-C.Dr)/C.Dr>0.15) warn.push(`duración ${nf(r.D,0)} min contra ${nf(C.Dr,0)} de la referencia: no se extrapola`);
@@ -3777,7 +3778,7 @@ function renderRef(){const B=document.getElementById('refBox'); if(!B) return; c
   if(!rmk().includes(ref.m)) ref.m='hr';
   const all=refRows(ref.tipo), CAT=refCatalog();
   // primera vez con este tipo: ritmo y duración alrededor de lo típico
-  if(all.length&&ref.p0===''&&ref.p1===''&&ref.d0===''&&ref.d1===''){const mp=rMed(all.map(r=>r.P)), md=rMed(all.map(r=>r.D)); ref.p0=fmtP(mp-20); ref.p1=fmtP(mp+20); ref.d0=String(Math.round(md*0.85)); ref.d1=String(Math.round(md*1.15)); saveRef()}
+  if(all.length&&ref.p0===''&&ref.p1===''&&ref.d0===''&&ref.d1===''){const mp=rMed(all.map(r=>r.P)), md=rMed(all.map(r=>r.D)); ref.p0=fmtP(mp-20); ref.p1=fmtP(mp+20); ref.d0=' '; ref.d1=' '; saveRef()}
   const C=refCalc(), m=ref.m, X=C.M[m], R=RMET[m], F=X.F, selR=ref.sel.map(id=>C.rows.find(r=>r.id===id)).filter(Boolean);
   const inp=(k,l,ph,w)=>`<label>${l}<input class="pace rf" data-k="${k}" value="${esc(ref[k])}" placeholder="${ph||''}" inputmode="decimal" style="width:${w||90}px"></label>`;
   const fm1=(v,d)=>v==null?'—':nf(v,d??R.d);
@@ -3801,7 +3802,10 @@ function renderRef(){const B=document.getElementById('refBox'); if(!B) return; c
       <div class="mdesc" style="margin:2px 0" data-keep>${x.F.ok?`Pendiente de calor: <b>${x.F.bW>=0?'+':'−'}${nf(Math.abs(x.F.bW),k==='hr'?2:3)} ${r.u}/°C</b> (± ${nf(x.F.ciW,k==='hr'?2:3)}) · ${x.F.n} rodajes${x.F.flagged.size?`, ${x.F.flagged.size} atípico(s) fuera del ajuste`:''} · R² ${nf(x.F.R2,2)}`:'Pendiente: no estimable'}${x.F.ok&&!x.F.good?' · <b class="w">pocos datos: tomalo como orientación</b>':''}</div>`
       :`<div class="mdesc" data-keep>Ningún rodaje cumple el filtro para esta métrica.</div>`)+'</div>'}
   h+=`</div><div class="mdesc" data-keep style="margin-top:8px">${ref.adj?`Rodaje sintético a WBGT ${wbtxt}, ritmo ${C.Pr?fmtP(C.Pr):'—'}/km, ${C.Dr?nf(C.Dr,0):'—'} min. `:'Valores oficiales, sin corregir por clima. '}Muestra: ${C.S.length} de ${all.length} ${tl()}. El ± es el intervalo de confianza 95 % del promedio de la muestra corregida (no incluye la incertidumbre de la pendiente; esa va en la tarjeta).</div>`;
-  if(C.S.length<3) h+=`<div class="notice" style="margin-top:8px">Con menos de 3 rodajes en el filtro no hay incertidumbre confiable: ampliá el ritmo, la duración o la banda de WBGT.</div>`;
+  if(C.S.length<3){const g0=CAT.find(g=>g.key===(ref.tipo==='Q'?'Q|'+ref.code:ref.tipo)), nT=g0?g0.n:all.length, nc=C.cnt, lines=[];
+    if(nT>all.length) lines.push(`${nT-all.length} de los ${nT} rodajes no se pueden analizar (sin clima o sin 10 min estables).`);
+    lines.push(`De los ${all.length} analizables pasan: ritmo ${nc.p}, duración ${nc.d}, WBGT ${nc.w}, fechas ${nc.f}; en todos a la vez, ${C.S.length}.`);
+    h+=`<div class="notice" style="margin-top:8px">Con menos de 3 rodajes en el filtro no hay incertidumbre confiable: ampliá el ritmo, la duración o la banda de WBGT. ${lines.join(' ')}</div>`}
   h+=`<div class="chartbox" style="height:340px;margin-top:12px"><canvas id="refChart" aria-label="Gráfico de referencia"></canvas></div><div class="mdesc" data-keep id="refDesc"></div>`;
   h+=seriesHtml(C);
   // rodajes elegidos
