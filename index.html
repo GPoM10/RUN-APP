@@ -545,7 +545,7 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
     </div>
   </section>
 
-  <footer>Versión 336 PWA (1 nov, ajuste por clima y orden). Deriva de la actividad = FC 2ª mitad ÷ 1ª mitad − 1, por tiempo, desde el punto de estabilización (referencia &lt; 5 %). FC limpia: un segundo que se aparta más de 2 % de los 5 s anteriores y de los 5 s posteriores se reemplaza por el promedio de esos 10 s. Normalización por temperatura: FC normalizada = FC − k × (temperatura del reloj − temperatura de referencia); la eficiencia normalizada usa esa FC. La deriva y el TRIMP no se normalizan. TRIMP de Banister segundo a segundo. Pa:HR (desacople aeróbico) = (EF 1ª mitad − EF 2ª mitad) ÷ EF 1ª mitad, con EF = velocidad ÷ FC, mismas mitades que la deriva. Fuerza pico por paso (× peso corporal) = π/2 × (tiempo de vuelo ÷ tiempo de contacto + 1), con tiempo de vuelo = 60 ÷ cadencia − contacto (modelo de muelle, Morin 2005); carga mecánica = pasos × fuerza pico promedio, en miles. Son estimaciones propias para seguir tu tendencia, no medidas de laboratorio. Los datos se guardan en tu espacio privado de la nube del artefacto (solo vos los ves) y se ven igual en la compu y en el celular; el botón Respaldo descarga una copia.</footer>
+  <footer>Versión 337 PWA (1 nov, arreglo de arranque en Referencia). Deriva de la actividad = FC 2ª mitad ÷ 1ª mitad − 1, por tiempo, desde el punto de estabilización (referencia &lt; 5 %). FC limpia: un segundo que se aparta más de 2 % de los 5 s anteriores y de los 5 s posteriores se reemplaza por el promedio de esos 10 s. Normalización por temperatura: FC normalizada = FC − k × (temperatura del reloj − temperatura de referencia); la eficiencia normalizada usa esa FC. La deriva y el TRIMP no se normalizan. TRIMP de Banister segundo a segundo. Pa:HR (desacople aeróbico) = (EF 1ª mitad − EF 2ª mitad) ÷ EF 1ª mitad, con EF = velocidad ÷ FC, mismas mitades que la deriva. Fuerza pico por paso (× peso corporal) = π/2 × (tiempo de vuelo ÷ tiempo de contacto + 1), con tiempo de vuelo = 60 ÷ cadencia − contacto (modelo de muelle, Morin 2005); carga mecánica = pasos × fuerza pico promedio, en miles. Son estimaciones propias para seguir tu tendencia, no medidas de laboratorio. Los datos se guardan en tu espacio privado de la nube del artefacto (solo vos los ves) y se ven igual en la compu y en el celular; el botón Respaldo descarga una copia.</footer>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
@@ -3446,7 +3446,7 @@ function syncZones(){zones.lim.forEach((v,i)=>{const el=document.getElementById(
 document.getElementById('zonesOn').onchange=e=>{zones.on=e.target.checked;save();renderChart()};
 document.querySelectorAll('.zl').forEach((el,i)=>el.onchange=()=>{const v=Math.round(num(el.value)); const lo=i?zones.lim[i-1]:P.rest, hi=i<zones.lim.length-1?zones.lim[i+1]:P.max;
   if(isFinite(v)&&v>lo&&v<hi) zones.lim[i]=v; syncZones(); save(); renderChart()});
-function render(){syncTab(); if(tab==='cal'){renderCal();return} if(tab==='plan'){renderPlanner();return} if(tab==='well'){renderWell();return} if(tab==='ref'){renderRef();return} renderList();renderChart();if(view==='carga')renderPeriodTable();else if(view==='forma')renderPmcTable();else if(view==='tec')renderTecTable();else renderTable()}
+function render(){syncTab(); if(tab==='cal'){renderCal();return} if(tab==='plan'){renderPlanner();return} if(tab==='well'){renderWell();return} if(tab==='ref'){if(typeof REFREADY!=='undefined'&&REFREADY) renderRef(); return} renderList();renderChart();if(view==='carga')renderPeriodTable();else if(view==='forma')renderPmcTable();else if(view==='tec')renderTecTable();else renderTable()}
 load(); if(syncTrimp()) save(); if(applyTests()) save(); if(plans.length||cycle) applyPlans(); syncZones(); syncPlanSum(); p1Fill();
 /* ---------- perfiles: cada atleta guarda sus rodajes, zonas, FC, peso y plan por separado ---------- */
 const curProf=()=>profs.list.find(x=>x.id===profs.cur);
@@ -3891,6 +3891,7 @@ function wireRef(B){
   const al=B.querySelector('#rfAll'); if(al) al.onchange=()=>{ref.all=al.checked; saveRef(); renderRef()};
   B.querySelectorAll('input.rfSel').forEach(i=>i.onchange=()=>{const id=i.dataset.id, k=ref.sel.map(String).indexOf(id); if(i.checked){if(k<0&&ref.sel.length<4){const r=refRows(ref.tipo).find(z=>String(z.id)===id); if(r) ref.sel.push(r.id)}} else if(k>=0) ref.sel.splice(k,1); saveRef(); renderRef()});
 }
+var REFREADY=true; try{if(tab==='ref') renderRef()}catch(e){}
 
 window.cloudSt=function(){};
 
