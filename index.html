@@ -545,7 +545,7 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
     </div>
   </section>
 
-  <footer>Versión 344 PWA (1 nov, origen de la temperatura en Referencia). Deriva de la actividad = FC 2ª mitad ÷ 1ª mitad − 1, por tiempo, desde el punto de estabilización (referencia &lt; 5 %). FC limpia: un segundo que se aparta más de 2 % de los 5 s anteriores y de los 5 s posteriores se reemplaza por el promedio de esos 10 s. Normalización por temperatura: FC normalizada = FC − k × (temperatura del reloj − temperatura de referencia); la eficiencia normalizada usa esa FC. La deriva y el TRIMP no se normalizan. TRIMP de Banister segundo a segundo. Pa:HR (desacople aeróbico) = (EF 1ª mitad − EF 2ª mitad) ÷ EF 1ª mitad, con EF = velocidad ÷ FC, mismas mitades que la deriva. Fuerza pico por paso (× peso corporal) = π/2 × (tiempo de vuelo ÷ tiempo de contacto + 1), con tiempo de vuelo = 60 ÷ cadencia − contacto (modelo de muelle, Morin 2005); carga mecánica = pasos × fuerza pico promedio, en miles. Son estimaciones propias para seguir tu tendencia, no medidas de laboratorio. Los datos se guardan en tu espacio privado de la nube del artefacto (solo vos los ves) y se ven igual en la compu y en el celular; el botón Respaldo descarga una copia.</footer>
+  <footer>Versión 345 PWA (1 nov, corrección de muñeca por defecto 1 °C). Deriva de la actividad = FC 2ª mitad ÷ 1ª mitad − 1, por tiempo, desde el punto de estabilización (referencia &lt; 5 %). FC limpia: un segundo que se aparta más de 2 % de los 5 s anteriores y de los 5 s posteriores se reemplaza por el promedio de esos 10 s. Normalización por temperatura: FC normalizada = FC − k × (temperatura del reloj − temperatura de referencia); la eficiencia normalizada usa esa FC. La deriva y el TRIMP no se normalizan. TRIMP de Banister segundo a segundo. Pa:HR (desacople aeróbico) = (EF 1ª mitad − EF 2ª mitad) ÷ EF 1ª mitad, con EF = velocidad ÷ FC, mismas mitades que la deriva. Fuerza pico por paso (× peso corporal) = π/2 × (tiempo de vuelo ÷ tiempo de contacto + 1), con tiempo de vuelo = 60 ÷ cadencia − contacto (modelo de muelle, Morin 2005); carga mecánica = pasos × fuerza pico promedio, en miles. Son estimaciones propias para seguir tu tendencia, no medidas de laboratorio. Los datos se guardan en tu espacio privado de la nube del artefacto (solo vos los ves) y se ven igual en la compu y en el celular; el botón Respaldo descarga una copia.</footer>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
@@ -1490,7 +1490,7 @@ function renderTable(){
   W.querySelectorAll('select.wxrain').forEach(e=>e.onchange=()=>{const a=acts.find(x=>x.id===e.dataset.id); if(!a) return; if(a.wx&&a.wx.rain) delete a.wx.rain; if(e.value==='') delete a.rain; else a.rain=+e.value; save(); render()});
   W.querySelectorAll('input.wxoff').forEach(e=>e.onchange=()=>{const v=num(e.value); wxOff=isFinite(v)?Math.max(-5,Math.min(10,Math.round(v*10)/10)):0; save(); render()});
   W.querySelectorAll('input.airw').forEach(e=>e.onchange=()=>{const v=num(e.value); airW=isFinite(v)?Math.max(-5,Math.min(15,Math.round(v*10)/10)):2; save(); render()});
-  W.querySelectorAll('select.airsrc').forEach(e=>e.onchange=()=>{airW=e.value==='w'?(airW??2):null; save(); render()});
+  W.querySelectorAll('select.airsrc').forEach(e=>e.onchange=()=>{airW=e.value==='w'?(airW??1):null; save(); render()});
   if(typeof chosen!=='undefined'&&chosen.some(a=>a.lat!=null&&!a.wx)&&!wxErr&&!wxBusy) setTimeout(()=>wxBatch(chosen),0);
   W.querySelectorAll('input.an').forEach(inp=>inp.onchange=()=>setTimeout(()=>{const a=acts.find(x=>x.id===inp.dataset.id), v=inp.value.trim().replace(',','.'), k=inp.dataset.k;
     if(!v){delete a[k]; save(); render(); return} const x=parseFloat(v); if(!isFinite(x)||x<0||x>a.distKm){inp.value=a[k]!=null?nf(a[k],2):''; return}
@@ -2725,7 +2725,7 @@ function renderQTable(chosen,S,W){
   W.querySelectorAll('select.wxrain').forEach(e=>e.onchange=()=>{const a=acts.find(x=>x.id===e.dataset.id); if(!a) return; if(a.wx&&a.wx.rain) delete a.wx.rain; if(e.value==='') delete a.rain; else a.rain=+e.value; save(); render()});
   W.querySelectorAll('input.wxoff').forEach(e=>e.onchange=()=>{const v=num(e.value); wxOff=isFinite(v)?Math.max(-5,Math.min(10,Math.round(v*10)/10)):0; save(); render()});
   W.querySelectorAll('input.airw').forEach(e=>e.onchange=()=>{const v=num(e.value); airW=isFinite(v)?Math.max(-5,Math.min(15,Math.round(v*10)/10)):2; save(); render()});
-  W.querySelectorAll('select.airsrc').forEach(e=>e.onchange=()=>{airW=e.value==='w'?(airW??2):null; save(); render()});
+  W.querySelectorAll('select.airsrc').forEach(e=>e.onchange=()=>{airW=e.value==='w'?(airW??1):null; save(); render()});
   if(typeof chosen!=='undefined'&&chosen.some(a=>a.lat!=null&&!a.wx)&&!wxErr&&!wxBusy) setTimeout(()=>wxBatch(chosen),0);
   W.querySelectorAll('input.qt').forEach(inp=>inp.onchange=()=>setTimeout(()=>{const a=acts.find(x=>x.id===inp.dataset.id), j=+inp.dataset.g, v=inp.value.trim();
     a.qTgt=a.qTgt||a.q.groups.map(()=>null);
@@ -2935,7 +2935,7 @@ function renderTecTable(){
   W.querySelectorAll('select.wxrain').forEach(e=>e.onchange=()=>{const a=acts.find(x=>x.id===e.dataset.id); if(!a) return; if(a.wx&&a.wx.rain) delete a.wx.rain; if(e.value==='') delete a.rain; else a.rain=+e.value; save(); render()});
   W.querySelectorAll('input.wxoff').forEach(e=>e.onchange=()=>{const v=num(e.value); wxOff=isFinite(v)?Math.max(-5,Math.min(10,Math.round(v*10)/10)):0; save(); render()});
   W.querySelectorAll('input.airw').forEach(e=>e.onchange=()=>{const v=num(e.value); airW=isFinite(v)?Math.max(-5,Math.min(15,Math.round(v*10)/10)):2; save(); render()});
-  W.querySelectorAll('select.airsrc').forEach(e=>e.onchange=()=>{airW=e.value==='w'?(airW??2):null; save(); render()});
+  W.querySelectorAll('select.airsrc').forEach(e=>e.onchange=()=>{airW=e.value==='w'?(airW??1):null; save(); render()});
   if(typeof chosen!=='undefined'&&chosen.some(a=>a.lat!=null&&!a.wx)&&!wxErr&&!wxBusy) setTimeout(()=>wxBatch(chosen),0);
   W.querySelectorAll('input.myw').forEach(e=>e.onchange=()=>{const v=num(e.value); myW[e.dataset.k]=isFinite(v)&&v>=0?Math.min(100,Math.round(v)):0; save(); render(); const d=document.querySelector('#tbl details'); if(d) d.open=true});
   {const b=document.getElementById('mywReset'); if(b) b.onclick=()=>{myW={vr:25,gct:20,stiff:20,ang:15,bal:10}; save(); render(); const d=document.querySelector('#tbl details'); if(d) d.open=true}}
