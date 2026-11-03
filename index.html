@@ -547,7 +547,7 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
     </div>
   </section>
 
-  <footer>Versión 349 PWA (3 nov, tanque de sueño de 7 noches: mínimo 7:00 h, de 8 a 10 h el extra cuenta a la mitad). Deriva de la actividad = FC 2ª mitad ÷ 1ª mitad − 1, por tiempo, desde el punto de estabilización (referencia &lt; 5 %). FC limpia: un segundo que se aparta más de 2 % de los 5 s anteriores y de los 5 s posteriores se reemplaza por el promedio de esos 10 s. Normalización por temperatura: FC normalizada = FC − k × (temperatura del reloj − temperatura de referencia); la eficiencia normalizada usa esa FC. La deriva y el TRIMP no se normalizan. TRIMP de Banister segundo a segundo. Pa:HR (desacople aeróbico) = (EF 1ª mitad − EF 2ª mitad) ÷ EF 1ª mitad, con EF = velocidad ÷ FC, mismas mitades que la deriva. Fuerza pico por paso (× peso corporal) = π/2 × (tiempo de vuelo ÷ tiempo de contacto + 1), con tiempo de vuelo = 60 ÷ cadencia − contacto (modelo de muelle, Morin 2005); carga mecánica = pasos × fuerza pico promedio, en miles. Son estimaciones propias para seguir tu tendencia, no medidas de laboratorio. Los datos se guardan en tu espacio privado de la nube del artefacto (solo vos los ves) y se ven igual en la compu y en el celular; el botón Respaldo descarga una copia.</footer>
+  <footer>Versión 350 PWA (3 nov, sueño: casillas por noche del periodo elegido). Deriva de la actividad = FC 2ª mitad ÷ 1ª mitad − 1, por tiempo, desde el punto de estabilización (referencia &lt; 5 %). FC limpia: un segundo que se aparta más de 2 % de los 5 s anteriores y de los 5 s posteriores se reemplaza por el promedio de esos 10 s. Normalización por temperatura: FC normalizada = FC − k × (temperatura del reloj − temperatura de referencia); la eficiencia normalizada usa esa FC. La deriva y el TRIMP no se normalizan. TRIMP de Banister segundo a segundo. Pa:HR (desacople aeróbico) = (EF 1ª mitad − EF 2ª mitad) ÷ EF 1ª mitad, con EF = velocidad ÷ FC, mismas mitades que la deriva. Fuerza pico por paso (× peso corporal) = π/2 × (tiempo de vuelo ÷ tiempo de contacto + 1), con tiempo de vuelo = 60 ÷ cadencia − contacto (modelo de muelle, Morin 2005); carga mecánica = pasos × fuerza pico promedio, en miles. Son estimaciones propias para seguir tu tendencia, no medidas de laboratorio. Los datos se guardan en tu espacio privado de la nube del artefacto (solo vos los ves) y se ven igual en la compu y en el celular; el botón Respaldo descarga una copia.</footer>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
@@ -2064,7 +2064,7 @@ const TKC={azul:'var(--s2)',verde:'var(--ok)',amarillo:'var(--tQ)',rojo:'var(--b
 const nightCredit=v=>v<=8?v:8+Math.min(v-8,2)/2;
 function sleepTank(d){const t=dms(d); let s=0,n=0; for(let i=0;i<7;i++){const v=(well.days[dkey(t-i*DAYW)]||{}).sh; if(v!=null){n++; s+=nightCredit(v)}}
   if(n<5) return {n,v:null}; const v=Math.round(Math.min(TK.max,s/n*7)*10)/10, z=TK.cuts.find(c=>v>=c[0]); return {n,v,z:z[1],lab:z[2],avg:v/7}}
-function tankHTML(d){const fd=ms=>new Date(ms).toLocaleDateString('es-CR',{day:'numeric',month:'short',timeZone:'UTC'}), T=sleepTank(d), H=150, W=74;
+function tankHTML(d,from){const fd=ms=>new Date(ms).toLocaleDateString('es-CR',{day:'numeric',month:'short',timeZone:'UTC'}), T=sleepTank(d), H=150, W=74;
   const y=h=>H-(Math.max(TK.min,Math.min(TK.max,h))-TK.min)/(TK.max-TK.min)*H;
   const col=T.v!=null?TKC[T.z]:'var(--line)', fy=T.v!=null?y(T.v):H;
   const ticks=[42,49,56].map(h=>`<line x1="0" x2="${W}" y1="${y(h)}" y2="${y(h)}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3 3" opacity=".6"/><text x="${W+6}" y="${y(h)+4}" font-size="11" fill="var(--muted)" font-family="IBM Plex Mono,monospace">${h}</text>`).join('');
@@ -2072,19 +2072,24 @@ function tankHTML(d){const fd=ms=>new Date(ms).toLocaleDateString('es-CR',{day:'
     <clipPath id="tkClip"><rect x="0" y="0" width="${W}" height="${H}" rx="10"/></clipPath><rect clip-path="url(#tkClip)" x="0" y="${fy}" width="${W}" height="${H-fy}" fill="${col}" opacity=".85"/>${ticks}
     <text x="${W+6}" y="10" font-size="11" fill="var(--muted)" font-family="IBM Plex Mono,monospace">63</text><text x="${W+6}" y="${H}" font-size="11" fill="var(--muted)" font-family="IBM Plex Mono,monospace">35</text>
     <rect x="0" y="0" width="${W}" height="${H}" rx="10" fill="none" stroke="${T.z==='alarma'?'var(--bad)':'var(--line)'}" stroke-width="${T.z==='alarma'?3:1.5}" class="${T.z==='alarma'?'tkAl':''}"/></svg>`;
-  const strip=[]; for(let i=27;i>=0;i--){const dd=dkey(dms(d)-i*DAYW), q=sleepTank(dd); strip.push(`<span title="${fd(dms(dd))}: ${q.v!=null?nf(q.v,1)+' h · '+q.z:'sin datos suficientes'}" style="flex:1 1 0;height:18px;border-radius:3px;background:${q.v!=null?TKC[q.z]:'transparent'};border:1px solid ${q.v!=null?'transparent':'var(--line)'}${q.z==='alarma'?';box-shadow:inset 0 0 0 2px var(--ink)':''}"></span>`)}
-  const leg=[['azul','56–63 · ideal'],['verde','49–56'],['amarillo','42–49'],['rojo','35–42'],['alarma','< 35 alarma']].map(([k,t])=>`<span style="display:inline-flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:${TKC[k]}${k==='alarma'?';box-shadow:inset 0 0 0 2px var(--ink)':''}"></span>${t}</span>`).join(' ');
+  // franja: una casilla por noche del periodo elegido, coloreada por lo que aportó esa noche (misma escala del tanque ÷ 7)
+  const f0=from??dms(d)-27*DAYW, nd=Math.round((dms(d)-f0)/DAYW)+1, big=nd<=14, wrap=nd>31;
+  const nz=h=>h>=8?'azul':h>=7?'verde':h>=6?'amarillo':h>=5?'rojo':'alarma';
+  const strip=[]; for(let i=0;i<nd;i++){const ms=f0+i*DAYW, v=(well.days[dkey(ms)]||{}).sh, c=v!=null?nightCredit(v):null, z=c!=null?nz(c):null;
+    const box=`<span style="display:block;${wrap?'width:12px;height:12px':'width:100%;height:'+(big?26:18)+'px'};border-radius:3px;background:${z?TKC[z]:'transparent'};border:1px solid ${z?'transparent':'var(--line)'}${z==='alarma'?';box-shadow:inset 0 0 0 2px var(--ink)':''}"></span>`;
+    strip.push(`<span title="${fd(ms)}: ${v!=null?wfmt('sh',v)+' h'+(v<SDEBT?' · déficit '+wfmt('sh',SDEBT-v)+' h':''):'sin dato'}" style="${wrap?'':'flex:1 1 0;min-width:0;'}display:flex;flex-direction:column;align-items:center;gap:2px">${box}${big?`<span style="font-size:10px;font-family:var(--mono);color:var(--muted)">${v!=null?wfmt('sh',v):'—'}</span>`:''}</span>`)}
+  const leg=[['azul','8 h o más'],['verde','7–8'],['amarillo','6–7'],['rojo','5–6'],['alarma','< 5']].map(([k,t])=>`<span style="display:inline-flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:${TKC[k]}${k==='alarma'?';box-shadow:inset 0 0 0 2px var(--ink)':''}"></span>${t}</span>`).join(' ');
   return `<div class="lbl">Tanque de sueño · 7 noches al ${fd(dms(d))}</div>
   <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-top:8px">${svg}
    <div style="min-width:0;flex:1 1 180px">${T.v!=null?`<div class="wv" style="color:${col};margin:0">${nf(T.v,1)} <span style="font-size:18px;color:var(--muted)">de 63 h</span></div>
     <div style="font-weight:600;font-size:15px;color:${col}">${T.z==='alarma'?'⚠ ':''}${T.z[0].toUpperCase()+T.z.slice(1)} · ${T.lab}</div>
     <div class="mdesc" style="margin-top:4px">Promedio efectivo ${wfmt('sh',T.avg)} h por noche · ${T.n} de 7 noches registradas.${T.v<TK.min?` Bajo el fondo del tanque (35 h).`:''}</div>`
     :`<div class="mdesc" style="margin:0">Faltan noches: hay ${T.n} de 7 y se necesitan al menos 5.</div>`}</div></div>
-  <div class="lbl" style="margin-top:12px">Últimas 4 semanas (estado del tanque cada día)</div>
-  <div style="display:flex;gap:2px;margin-top:6px">${strip.join('')}</div>
-  <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px"><span>${fd(dms(d)-27*DAYW)}</span><span>${fd(dms(d))}</span></div>
+  <div class="lbl" style="margin-top:12px">Cada noche del periodo (${nd} días) · color según lo que durmió</div>
+  <div style="display:flex;${wrap?'flex-wrap:wrap;':''}gap:${wrap?3:2}px;margin-top:6px">${strip.join('')}</div>
+  <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px"><span>${fd(f0)}</span><span>${fd(dms(d))}</span></div>
   <div class="mdesc" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">${leg}</div>
-  <div class="mdesc">Cada noche cuenta completa hasta 8 h; de 8 a 10 h lo que pasa de 8 cuenta a la mitad (9 h = 8,5 · 10 h o más = 9 h efectivas). Noches sin dato: se usa el promedio de las registradas. Cada franja de color = 1 h por noche de promedio.</div>
+  <div class="mdesc">Cada noche cuenta completa hasta 8 h; de 8 a 10 h lo que pasa de 8 cuenta a la mitad (9 h = 8,5 · 10 h o más = 9 h efectivas). Noches sin dato: se usa el promedio de las registradas. Tanque: cada franja de color = 1 h por noche de promedio. Casillas: la misma escala aplicada a cada noche (rojo y alarma son las que más déficit sumaron).</div>
   <hr style="border:0;border-top:1px solid var(--line);margin:14px 0 10px">`}
 // deuda de sueño del periodo mostrado: suma de lo que faltó para 7:00 h cada noche registrada (las noches largas no la pagan)
 function wDebtBox(from,to){const el=document.getElementById('wDebt'); if(!el) return;
@@ -2092,7 +2097,7 @@ function wDebtBox(from,to){const el=document.getElementById('wDebt'); if(!el) re
   if(wrange!=='c'){const tk=dms(todayKey()); if(tk>to){from+=tk-to; to=tk}}
   const days=Math.round((to-from)/DAYW)+1, fd=ms=>new Date(ms).toLocaleDateString('es-CR',{day:'numeric',month:'short',timeZone:'UTC'});
   const blk=(a,b)=>{let d=0,n=0,lo=0,s=0; for(let x=a;x<=b;x+=DAYW){const v=(well.days[dkey(x)]||{}).sh; if(v!=null){n++; s+=v; if(v<SDEBT){lo++; d+=SDEBT-v}}} return {d,n,lo,s}};
-  const T=blk(from,to), TKH=tankHTML(dkey(to));
+  const T=blk(from,to), TKH=tankHTML(dkey(to),from);
   if(!T.n){el.innerHTML=TKH+`<div class="lbl">Déficit contra 7:00 h · ${fd(from)} – ${fd(to)}</div><div class="mdesc" style="margin:4px 0 0">No hay noches registradas en este periodo.</div>`; return}
   const wk=T.d*7/days, cl=T.d<0.01?'ok':wk<3?'w':'b';
   const B=[]; if(days>7){for(let b=to;b>=from;b-=7*DAYW){const a=Math.max(from,b-6*DAYW), r=blk(a,b); B.push([a,b,r])}}
