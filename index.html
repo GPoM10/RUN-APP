@@ -376,12 +376,13 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
   <div class="grid">
     <section class="panel" aria-label="Rodajes" id="listPanel"><h2>Rodajes</h2>
       <div class="listhead">
-        <span style="display:flex;align-items:center;gap:8px"><span class="lbl" id="count">Rodajes</span><button type="button" id="selClr" hidden style="padding:3px 9px;font-size:12px">Desmarcar todo</button></span>
+        <span style="display:flex;align-items:center;gap:8px"><span class="lbl" id="count">Rodajes</span><button type="button" id="selClr" hidden style="padding:3px 9px;font-size:12px">Desmarcar todo</button><button type="button" id="lfBtn" aria-expanded="false" title="Qué mostrar en cada rodaje" style="padding:3px 8px;font-size:14px;line-height:1">⚙</button></span>
         <div class="seg" role="group" aria-label="Filtrar por tipo" id="filtSeg">
           <button data-f="all" aria-pressed="true">Todos</button><button data-f="LR" aria-pressed="false">LR</button><button data-f="ER" aria-pressed="false">ER</button><button data-f="Calidad" aria-pressed="false">Calidad</button><button data-f="Test" aria-pressed="false">Test</button><button data-f="Técnica" aria-pressed="false">Técnica</button><button data-f="Competencia" aria-pressed="false">Carrera</button>
         </div>
       </div>
       <label id="codeWrap" class="opts" style="margin:0 0 10px" hidden>Código <select class="tipo" id="codeSel" aria-label="Código de sesión"></select></label>
+      <div id="lfBox" class="pedit" hidden></div>
       <div id="list"></div>
     </section>
 
@@ -548,7 +549,7 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
     </div>
   </section>
 
-  <footer>Versión 355 PWA (3 nov, lista de rodajes: TRIMP y déficit de sueño en vez de FC y aire). Deriva de la actividad = FC 2ª mitad ÷ 1ª mitad − 1, por tiempo, desde el punto de estabilización (referencia &lt; 5 %). FC limpia: un segundo que se aparta más de 2 % de los 5 s anteriores y de los 5 s posteriores se reemplaza por el promedio de esos 10 s. Normalización por temperatura: FC normalizada = FC − k × (temperatura del reloj − temperatura de referencia); la eficiencia normalizada usa esa FC. La deriva y el TRIMP no se normalizan. TRIMP de Banister segundo a segundo. Pa:HR (desacople aeróbico) = (EF 1ª mitad − EF 2ª mitad) ÷ EF 1ª mitad, con EF = velocidad ÷ FC, mismas mitades que la deriva. Fuerza pico por paso (× peso corporal) = π/2 × (tiempo de vuelo ÷ tiempo de contacto + 1), con tiempo de vuelo = 60 ÷ cadencia − contacto (modelo de muelle, Morin 2005); carga mecánica = pasos × fuerza pico promedio, en miles. Son estimaciones propias para seguir tu tendencia, no medidas de laboratorio. Los datos se guardan en tu espacio privado de la nube del artefacto (solo vos los ves) y se ven igual en la compu y en el celular; el botón Respaldo descarga una copia.</footer>
+  <footer>Versión 356 PWA (3 nov, lista de rodajes: ⚙ para elegir qué se muestra). Deriva de la actividad = FC 2ª mitad ÷ 1ª mitad − 1, por tiempo, desde el punto de estabilización (referencia &lt; 5 %). FC limpia: un segundo que se aparta más de 2 % de los 5 s anteriores y de los 5 s posteriores se reemplaza por el promedio de esos 10 s. Normalización por temperatura: FC normalizada = FC − k × (temperatura del reloj − temperatura de referencia); la eficiencia normalizada usa esa FC. La deriva y el TRIMP no se normalizan. TRIMP de Banister segundo a segundo. Pa:HR (desacople aeróbico) = (EF 1ª mitad − EF 2ª mitad) ÷ EF 1ª mitad, con EF = velocidad ÷ FC, mismas mitades que la deriva. Fuerza pico por paso (× peso corporal) = π/2 × (tiempo de vuelo ÷ tiempo de contacto + 1), con tiempo de vuelo = 60 ÷ cadencia − contacto (modelo de muelle, Morin 2005); carga mecánica = pasos × fuerza pico promedio, en miles. Son estimaciones propias para seguir tu tendencia, no medidas de laboratorio. Los datos se guardan en tu espacio privado de la nube del artefacto (solo vos los ves) y se ven igual en la compu y en el celular; el botón Respaldo descarga una copia.</footer>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
@@ -905,10 +906,14 @@ const r2=(v,d)=>v==null||isNaN(v)?undefined:+v.toFixed(d);
 function slim(a){const {_base,...o}=a; o.segs=a.segs.map(g=>({ki:r1(g.ki,3),kf:r1(g.kf,3),d:r1(g.d,1),dur:r1(g.dur,1),pace:r1(g.pace,1),hr:r1(g.hr,2),hi:r1(g.hi,1),hf:r1(g.hf,1),trimp:r1(g.trimp,1),
   cad:r2(g.cad,1),gct:r2(g.gct,1),vo:r2(g.vo,1),F:r2(g.F,3)}));
   o.hrAvg=r1(a.hrAvg,2); o.trimp=r1(a.trimp,2); o.distKm=r1(a.distKm,4); return o}
-function save(){saveN++; syncTrimp(); if(applyTests()){try{syncZones()}catch(e){}} try{LS.setItem(KEY,JSON.stringify({acts:acts.filter(a=>!a.ej).map(slim),zones,sel,metric,filt,res,view,tmetric,norm,per,selP,lmetric,qcode,plans,tab,cycle,pm,body,y2,well,fm,fproj,frng,thr,thrHist,fcHist,tpM,testCfg,fc:{rest:P.rest,max:P.max},goal,myW,surfDef,tsurf,trRng,wxOff,airW,normAir:1}))}
+// qué se muestra en cada rodaje de la lista (⚙); se guarda con el perfil y viaja con la sincronización
+const LF_DEF={well:1,wbgt:1,dist:1,pace:1,hr:0,trimp:1,tkm:0,der:1,air:0,sleep:1};
+const LF_LAB=[['well','Bienestar del día (✓ ~ ✗)'],['wbgt','Calor (WBGT)'],['dist','Distancia'],['pace','Ritmo'],['hr','FC promedio'],['trimp','TRIMP'],['tkm','TRIMP/km'],['der','Deriva (picos en Calidad)'],['air','Temperatura del aire'],['sleep','Déficit de sueño (7 noches)']];
+let listF={...LF_DEF};
+function save(){saveN++; syncTrimp(); if(applyTests()){try{syncZones()}catch(e){}} try{LS.setItem(KEY,JSON.stringify({acts:acts.filter(a=>!a.ej).map(slim),zones,sel,metric,filt,res,view,tmetric,norm,per,selP,lmetric,qcode,plans,tab,cycle,pm,body,y2,well,fm,fproj,frng,thr,thrHist,fcHist,tpM,testCfg,fc:{rest:P.rest,max:P.max},goal,myW,surfDef,tsurf,trRng,wxOff,airW,listF,normAir:1}))}
   catch(e){if(!CL.db) try{setStatus('No hay más espacio en el navegador para guardar rodajes. Quitá algunos antiguos de la lista.')}catch(_){}}
   cloudQueue()}
-function loadFrom(o){acts=o.acts||[];sel=o.sel||[];metric=o.metric||'hr';filt=o.filt||'all';res=o.res&&o.res!=='t15'?o.res:'sm'; if(!['sm','t5','t15','t30','t60'].includes(res)) res='sm';view=o.view==='tec'?'tfecha':(o.view||'km');tmetric=o.tmetric||'der';if(o.norm){norm=o.norm; if(!o.normAir){if(norm.tref>=25) norm.tref=21}}if(o.zones&&o.zones.lim&&o.zones.lim.length===2)zones=o.zones;per=o.per||'week';selP=o.selP||[];lmetric=o.lmetric||'trimp';fm=o.fm==='mech'?'mech':'trimp';fproj=o.fproj!==false;frng=[0,6,12,24].includes(o.frng)?o.frng:12;thr=o.thr||null;thrHist=Array.isArray(o.thrHist)?o.thrHist:[];fcHist=Array.isArray(o.fcHist)?o.fcHist:[];tpM=o.tpM||null;testCfg=o.testCfg&&typeof o.testCfg==='object'?o.testCfg:{};qcode=o.qcode||'';plans=o.plans||[];tab=o.tab||'well';cycle=o.cycle||null;pm=o.pm||'trimp';y2=o.y2||'';if(o.well&&o.well.days)well=o.well;if(o.body&&o.body.kg&&o.body.cm)body=o.body;if(o.fc&&o.fc.rest>30&&o.fc.max>o.fc.rest){P.rest=o.fc.rest;P.max=o.fc.max} if(fcHist.length) fcNow(); goal=o.goal&&o.goal.day?o.goal:null; if(o.myW&&typeof o.myW==='object'){myW={...myW,...o.myW}; delete myW.vgrf} surfDef=o.surfDef||'Asfalto'; tsurf=o.tsurf||'all'; if(o.trRng&&typeof o.trRng==='object') trRng=o.trRng; wxOff=+o.wxOff||0; acts.forEach(a=>{if(a.wx&&a.wx.man){if(a.wx.rain) a.rain=true; if(a.wxS){a.wx=a.wxS; delete a.wxS} else delete a.wx}}); airW=o.airW!=null&&isFinite(+o.airW)?+o.airW:null; acts.forEach(a=>{if(a.surf&&SURF_OLD[a.surf]) a.surf=SURF_OLD[a.surf]})}
+function loadFrom(o){acts=o.acts||[];sel=o.sel||[];metric=o.metric||'hr';filt=o.filt||'all';res=o.res&&o.res!=='t15'?o.res:'sm'; if(!['sm','t5','t15','t30','t60'].includes(res)) res='sm';view=o.view==='tec'?'tfecha':(o.view||'km');tmetric=o.tmetric||'der';if(o.norm){norm=o.norm; if(!o.normAir){if(norm.tref>=25) norm.tref=21}}if(o.zones&&o.zones.lim&&o.zones.lim.length===2)zones=o.zones;per=o.per||'week';selP=o.selP||[];lmetric=o.lmetric||'trimp';fm=o.fm==='mech'?'mech':'trimp';fproj=o.fproj!==false;frng=[0,6,12,24].includes(o.frng)?o.frng:12;thr=o.thr||null;thrHist=Array.isArray(o.thrHist)?o.thrHist:[];fcHist=Array.isArray(o.fcHist)?o.fcHist:[];tpM=o.tpM||null;testCfg=o.testCfg&&typeof o.testCfg==='object'?o.testCfg:{};qcode=o.qcode||'';plans=o.plans||[];tab=o.tab||'well';cycle=o.cycle||null;pm=o.pm||'trimp';y2=o.y2||'';if(o.well&&o.well.days)well=o.well;if(o.body&&o.body.kg&&o.body.cm)body=o.body;if(o.fc&&o.fc.rest>30&&o.fc.max>o.fc.rest){P.rest=o.fc.rest;P.max=o.fc.max} if(fcHist.length) fcNow(); goal=o.goal&&o.goal.day?o.goal:null; if(o.myW&&typeof o.myW==='object'){myW={...myW,...o.myW}; delete myW.vgrf} surfDef=o.surfDef||'Asfalto'; tsurf=o.tsurf||'all'; if(o.trRng&&typeof o.trRng==='object') trRng=o.trRng; wxOff=+o.wxOff||0; listF={...LF_DEF,...(o.listF&&typeof o.listF==='object'?o.listF:{})}; acts.forEach(a=>{if(a.wx&&a.wx.man){if(a.wx.rain) a.rain=true; if(a.wxS){a.wx=a.wxS; delete a.wxS} else delete a.wx}}); airW=o.airW!=null&&isFinite(+o.airW)?+o.airW:null; acts.forEach(a=>{if(a.surf&&SURF_OLD[a.surf]) a.surf=SURF_OLD[a.surf]})}
 function load(){try{const o=JSON.parse(LS.getItem(KEY)||'null'); if(o) loadFrom(o)}catch(e){}
   if(!acts.length){acts=demo();sel=['ej13','ej21']}
   sel=sel.filter(id=>acts.some(a=>a.id===id)); sortSel();}
@@ -962,6 +967,22 @@ const actKey=a=>crParts.format(new Date(a.t0Unix*1000));
 function actSleep(a){if(!a||!a.t0Unix||typeof sleepTank!=='function') return null; const d=actKey(a), T=sleepTank(d,7), x=well.days[d]||{};
   return {T, debt:T.v!=null?Math.max(0,56-T.v):null, night:x.sh??null, nap:x.nap>0?x.nap:0}}
 // en la lista: déficit de sueño de las 7 noches hasta el día del rodaje (incluida), con el color del tanque
+function listLine(a,s){const F=listF, q=isQ(a), P=[];
+  if(q) P.push(`<b style="color:var(--ink)">${a.q.code}</b>`);
+  if(F.der&&q) P.push(`picos ${s.pk==null?'—':(s.pk>=0?'+':'')+nf(s.pk*100,1)+' %'}`);
+  if(F.dist) P.push(`${nf(a.distKm,2)} km`);
+  if(F.pace&&!q) P.push(`${fmtP(s.pace)}/km`);
+  if(F.hr&&s.hrAvg!=null) P.push(`${nf(s.hrAvg,0)} ppm`);
+  if(F.trimp&&a.trimp!=null) P.push(`TRIMP ${nf(a.trimp,0)}`);
+  if(F.tkm&&a.trimp!=null&&a.distKm>0) P.push(`${nf(a.trimp/a.distKm,1)} TRIMP/km`);
+  if(F.der&&!q) P.push(`deriva ${s.der==null?'—':nf(s.der*100,1)+' %'}`);
+  if(F.air&&tAir(a)!=null) P.push(`${nf(tAir(a),0)} °C aire`);
+  let h=P.join(' · '); if(F.sleep){const c=sleepChip(a); h+=h?c:c.replace(/^ · /,'')} return h}
+function renderLF(){const B=document.getElementById('lfBox'); if(!B||B.hidden) return;
+  B.innerHTML=`<div class="lbl" style="margin-bottom:6px">Mostrar en cada rodaje</div><div style="display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px">${LF_LAB.map(([k,t])=>`<label style="display:inline-flex;gap:5px;align-items:center"><input type="checkbox" data-lf="${k}"${listF[k]?' checked':''}>${t}</label>`).join('')}</div><div style="margin-top:8px"><button type="button" data-lfr style="padding:3px 9px;font-size:12px">Restablecer</button></div>`;
+  B.querySelectorAll('[data-lf]').forEach(c=>c.onchange=()=>{listF[c.dataset.lf]=c.checked?1:0; save(); renderList()});
+  B.querySelector('[data-lfr]').onclick=()=>{listF={...LF_DEF}; save(); renderLF(); renderList()}}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#lfBtn'); if(!b) return; const B=document.getElementById('lfBox'); B.hidden=!B.hidden; b.setAttribute('aria-expanded',!B.hidden); renderLF()});
 const sleepChip=a=>{const S=a.ej?null:actSleep(a); return S&&S.debt!=null?` · <span title="Déficit de sueño de las 7 noches hasta el día del rodaje, contra el óptimo de 56 h (tanque ${nf(S.T.v,1)} h, ${S.T.z})" style="color:${TKC[S.T.z]};font-weight:600">sueño −${wfmt('sh',S.debt)} h</span>`:''};
 const sleepTag=a=>{const S=actSleep(a); return S&&S.debt!=null?` · déficit de sueño ${wfmt('sh',S.debt)} h`:''};
 function wxRows(){return [
@@ -1126,11 +1147,11 @@ function renderList(){
     const si=sel.indexOf(a.id), full=sel.length>=4&&si<0, s=summarize(a);
     const el=document.createElement('div'); el.className='item'+(si>=0?' sel':'')+(full?' dis':''); el.dataset.id=a.id; el.tabIndex=0; el.setAttribute('role','checkbox'); el.setAttribute('aria-checked',si>=0);
     el.innerHTML=`<span class="dot" style="${si>=0?`background:${color(si)};border-color:${color(si)}`:''}"></span>
-      <span class="t1" style="display:flex;align-items:center;gap:6px">${dt(a)} <span style="font-weight:400;color:var(--muted)">${hm(a)}</span>${mark(a)}${a.ej?'':wbBox(a)}</span>
+      <span class="t1" style="display:flex;align-items:center;gap:6px">${dt(a)} <span style="font-weight:400;color:var(--muted)">${hm(a)}</span>${listF.well?mark(a):''}${a.ej||!listF.wbgt?'':wbBox(a)}</span>
       <span style="display:flex;gap:6px;align-items:center">${a.ej?'<span class="chip ej">Ejemplo</span>':''}${a.autoT?'<span class="chip" title="Tipo asignado automáticamente: revisalo" style="background:var(--warn);color:#fff">auto</span>':''}${a.noTr?'<span class="chip" title="No se grafica en la tendencia">sin tend.</span>':''}
         <select class="tipo" aria-label="Tipo"><option${a.tipo==='LR'?' selected':''}>LR</option><option${a.tipo==='ER'?' selected':''}>ER</option><option${a.tipo==='Calidad'?' selected':''}>Calidad</option><option${a.tipo==='Competencia'?' selected':''}>Competencia</option><option${a.tipo==='Test'?' selected':''}>Test</option><option${a.tipo==='Técnica'?' selected':''}>Técnica</option><option${a.tipo==='Otro'?' selected':''}>Otro</option></select>
         ${a.tipo==='Test'&&!a.ej?`<button class="btn primary adjz" type="button" style="padding:3px 8px;font-size:11.5px" title="Calcular el umbral con este Test y programar las zonas del perfil">${thr&&thr.actId===String(a.id)?'✓ Zonas':'Ajustar zonas'}</button>`:''}<button class="del" title="Quitar este rodaje" aria-label="Quitar">×</button></span>
-      <span class="t2">${a.ej?'':`<select class="tipo surf" aria-label="Superficie" title="Superficie (sin anotar = ${surfDef}, la de por defecto)"><option value="">${surfDef} ·</option>${SURF.map(x=>`<option${a.surf===x?' selected':''}>${x}</option>`).join('')}</select>`}${isQ(a)?`<b style="color:var(--ink)">${a.q.code}</b> · picos ${s.pk==null?'—':(s.pk>=0?'+':'')+nf(s.pk*100,1)+' %'} · ${nf(a.distKm,2)} km · TRIMP ${nf(a.trimp,0)}`:`${nf(a.distKm,2)} km · ${fmtP(s.pace)}/km · TRIMP ${nf(a.trimp,0)} · deriva ${s.der==null?'—':nf(s.der*100,1)+' %'}`}${sleepChip(a)}${a.tipo==='Calidad'&&!a.q?' · sin series detectadas':''}</span>`;
+      <span class="t2">${a.ej?'':`<select class="tipo surf" aria-label="Superficie" title="Superficie (sin anotar = ${surfDef}, la de por defecto)"><option value="">${surfDef} ·</option>${SURF.map(x=>`<option${a.surf===x?' selected':''}>${x}</option>`).join('')}</select>`}${listLine(a,s)}${a.tipo==='Calidad'&&!a.q?' · sin series detectadas':''}</span>`;
     if(confirmId===a.id){const c=document.createElement('div');c.className='confirm';c.innerHTML='<span>¿Quitar este rodaje del comparador?</span><button class="yes">Quitar</button><button class="no">Cancelar</button>';
       c.querySelector('.yes').onclick=e=>{e.stopPropagation();acts=acts.filter(x=>x.id!==a.id);sel=sel.filter(x=>x!==a.id);confirmId=null;save();render()};
       c.querySelector('.no').onclick=e=>{e.stopPropagation();confirmId=null;renderList()}; el.appendChild(c)}
