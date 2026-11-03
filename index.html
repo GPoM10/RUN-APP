@@ -548,7 +548,7 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
     </div>
   </section>
 
-  <footer>Versión 353 PWA (3 nov, sueño: siesta a la mitad, hasta 60 min, suma al mismo día). Deriva de la actividad = FC 2ª mitad ÷ 1ª mitad − 1, por tiempo, desde el punto de estabilización (referencia &lt; 5 %). FC limpia: un segundo que se aparta más de 2 % de los 5 s anteriores y de los 5 s posteriores se reemplaza por el promedio de esos 10 s. Normalización por temperatura: FC normalizada = FC − k × (temperatura del reloj − temperatura de referencia); la eficiencia normalizada usa esa FC. La deriva y el TRIMP no se normalizan. TRIMP de Banister segundo a segundo. Pa:HR (desacople aeróbico) = (EF 1ª mitad − EF 2ª mitad) ÷ EF 1ª mitad, con EF = velocidad ÷ FC, mismas mitades que la deriva. Fuerza pico por paso (× peso corporal) = π/2 × (tiempo de vuelo ÷ tiempo de contacto + 1), con tiempo de vuelo = 60 ÷ cadencia − contacto (modelo de muelle, Morin 2005); carga mecánica = pasos × fuerza pico promedio, en miles. Son estimaciones propias para seguir tu tendencia, no medidas de laboratorio. Los datos se guardan en tu espacio privado de la nube del artefacto (solo vos los ves) y se ven igual en la compu y en el celular; el botón Respaldo descarga una copia.</footer>
+  <footer>Versión 354 PWA (3 nov, comparador: déficit de sueño de cada rodaje). Deriva de la actividad = FC 2ª mitad ÷ 1ª mitad − 1, por tiempo, desde el punto de estabilización (referencia &lt; 5 %). FC limpia: un segundo que se aparta más de 2 % de los 5 s anteriores y de los 5 s posteriores se reemplaza por el promedio de esos 10 s. Normalización por temperatura: FC normalizada = FC − k × (temperatura del reloj − temperatura de referencia); la eficiencia normalizada usa esa FC. La deriva y el TRIMP no se normalizan. TRIMP de Banister segundo a segundo. Pa:HR (desacople aeróbico) = (EF 1ª mitad − EF 2ª mitad) ÷ EF 1ª mitad, con EF = velocidad ÷ FC, mismas mitades que la deriva. Fuerza pico por paso (× peso corporal) = π/2 × (tiempo de vuelo ÷ tiempo de contacto + 1), con tiempo de vuelo = 60 ÷ cadencia − contacto (modelo de muelle, Morin 2005); carga mecánica = pasos × fuerza pico promedio, en miles. Son estimaciones propias para seguir tu tendencia, no medidas de laboratorio. Los datos se guardan en tu espacio privado de la nube del artefacto (solo vos los ves) y se ven igual en la compu y en el celular; el botón Respaldo descarga una copia.</footer>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
@@ -952,6 +952,16 @@ function drSplit(a,s){if(!a||!['ER','LR'].includes(a.tipo)||s.der==null||s.pahr=
   return {r,c:a.tipo==='LR'?c:null,x:s.der*100-r-(c||0),wb:w?w.w:null,base:drBase.v}}
 // filas de clima de la tabla: (1) aire y todo lo del servicio, el reloj y lo anotado a mano; (2) solo el WBGT
 const WXINS='width:44px;font:inherit;font-size:12px;border:1px solid var(--line);border-radius:4px;padding:2px 4px;text-align:right;background:var(--bg);color:var(--ink)';
+function sleepRows(){return [
+  ['Déficit de sueño (7 noches, vs óptimo 56 h)',(a)=>{const S=actSleep(a); if(!S) return '—'; if(S.debt==null) return `<span class="mdesc" style="margin:0">faltan noches (${S.T.n} de 7)</span>`;
+    const c=TKC[S.T.z]; return `<b style="color:${c};font-size:15px">${wfmt('sh',S.debt)} h</b> <span class="mdesc" style="margin:0;font-size:11px">· tanque ${nf(S.T.v,1)} de 63 h, ${S.T.z}</span>`},
+    (a)=>{const S=actSleep(a); return S&&S.debt!=null?S.debt:null},1,' h'],
+  ['Sueño de la noche previa',(a)=>{const S=actSleep(a); if(!S||S.night==null) return '—'; return `${wfmt('sh',S.night)} h`+(S.nap?` <span class="mdesc" style="margin:0;font-size:11px">+ siesta ${S.nap} min</span>`:'')},(a)=>{const S=actSleep(a); return S&&S.night!=null?S.night:null},1,' h']]}
+// déficit de sueño al día de la actividad: tanque de 7 noches (incluida la noche previa) contra el óptimo de 56 h
+const actKey=a=>crParts.format(new Date(a.t0Unix*1000));
+function actSleep(a){if(!a||!a.t0Unix||typeof sleepTank!=='function') return null; const d=actKey(a), T=sleepTank(d,7), x=well.days[d]||{};
+  return {T, debt:T.v!=null?Math.max(0,56-T.v):null, night:x.sh??null, nap:x.nap>0?x.nap:0}}
+const sleepTag=a=>{const S=actSleep(a); return S&&S.debt!=null?` · déficit de sueño ${wfmt('sh',S.debt)} h`:''};
 function wxRows(){return [
   [`Temperatura del aire y clima <span class="mdesc" style="margin:0;font-size:11px;white-space:nowrap"><br><select class="airsrc" aria-label="Fuente del aire" style="font:inherit;font-size:11.5px;margin-top:2px"><option value="om"${airW==null?' selected':''}>aire: Open-Meteo + ajuste</option><option value="w"${airW!=null?' selected':''}>aire: reloj − corrección</option></select> ${airW==null?`ajuste <input class="wxoff" value="${nf(wxOff,1)}"`:`− <input class="airw" value="${nf(airW,1)}"`} inputmode="decimal" aria-label="Grados" style="width:42px;font:inherit;font-size:11.5px;border:1px solid var(--line);border-radius:4px;padding:1px 4px;text-align:right;background:var(--bg);color:var(--ink)"> °C</span>`,(a)=>{const ins=WXINS, t=tAir(a), d='<div class="mdesc" style="margin:0;font-size:11px">';
     const rv=a.rain===true?'1':a.rain!=null&&a.rain!==false?String(+a.rain):'', S0=wxSv(a), auto=S0&&S0.pr!=null?(S0.pf>=1||(S0.pf==null&&S0.pr>=0.3)?'todo':S0.pf>0?'un rato':'no'):null;
@@ -1245,7 +1255,7 @@ function renderChart(){
     else {const LB=a.q.laps.filter(l=>l.t==='w'&&l.dur>=QW.long); LB.forEach((l,k)=>stabs.push({t:(l.a+QW.start)/60,t1:l.b/60,c:color(i),row:i,lab:LB.length>1?`Bloque ${k+1} analizado`:'Bloque analizado'}))}
     let data;
     if(m.qseries&&isQ(a)){tMax=Math.max(tMax,a.timeS/60);
-      return {$ai:i,label:`${a.q.code} ${dt(a)}`+(tAir(a)!=null?` · ${nf(tAir(a),0)} °C aire`:''),data:m.qseries(a).filter(p=>p.y!=null),borderColor:color(i),backgroundColor:color(i),pointRadius:3.5,showLine:false}}
+      return {$ai:i,label:`${a.q.code} ${dt(a)}`+(tAir(a)!=null?` · ${nf(tAir(a),0)} °C aire`:'')+sleepTag(a),data:m.qseries(a).filter(p=>p.y!=null),borderColor:color(i),backgroundColor:color(i),pointRadius:3.5,showLine:false}}
     const bins=fine&&!(m.seg&&!(a.f5&&a.f5[m.f5k]))?binsR(a):null;
     const cum=d=>{if(m.cum){let c=0; d.forEach(p=>{if(p.y!=null&&isFinite(p.y)) c+=p.y; p.y=c})} return d};
     if(bins){data=cum(bins.map(g=>({x:g.x,y:m.bin(g,a),p:M.pace.bin(g,a),h:hrN(g.hr,a)}))).filter(p=>(!hide||p.x>=tst)&&p.y!=null&&isFinite(p.y))}
@@ -1253,7 +1263,7 @@ function renderChart(){
       data=cum(sg.map(g=>({x:g.tm,ki:g.ki,y:m.get(g,a),p:g.pace,h:hrN(g.hr,a)}))).filter(p=>(!hide||p.ki>=s.stab)&&p.y!=null);}
     const noDyn=(m.dyn&&!a.dyn)||(m.f5k&&!m.seg&&!(a.f5&&a.f5[m.f5k])), noMeas=!noDyn&&m.ok&&!m.ok(a); if(noDyn){data=[];missing=true} if(noMeas) data=[];
     tMax=Math.max(tMax,a.timeS/60);
-    return {$ai:i,label:`${a.tipo} ${dt(a)} · ${fmtP(a.timeS/a.distKm)}/km`+(tAir(a)!=null?` · ${nf(tAir(a),0)} °C aire`:'')+(noDyn?' · sin dinámica: volvé a cargarlo':noMeas?' · sin balance medido (POD en el pie)':''),data,
+    return {$ai:i,label:`${a.tipo} ${dt(a)} · ${fmtP(a.timeS/a.distKm)}/km`+(tAir(a)!=null?` · ${nf(tAir(a),0)} °C aire`:'')+sleepTag(a)+(noDyn?' · sin dinámica: volvé a cargarlo':noMeas?' · sin balance medido (POD en el pie)':''),data,
       borderColor:color(i),backgroundColor:color(i),borderWidth:fine&&res==='t5'?1.5:2,pointRadius:metric==='eff'||m.pts?3.5:0,pointHoverRadius:7,tension:res==='sm'?.3:fine?0:.15,showLine:metric!=='eff'&&!m.pts}});
   // segundo eje: otra variable de los mismos rodajes, en línea punteada del mismo color
   const k2=(y2&&y2!==metric&&M[y2]&&!m.custom)?y2:'', m2=k2?M[k2]:null; document.getElementById('y2Sel').value=y2;
@@ -1364,7 +1374,7 @@ function renderPeaks(m){
   const n=Math.max(...Qs.map(o=>o.S.length)), tick=css('--muted');
   const dsg=v=>(v>=0?'+':'−')+Math.abs(Math.round(v));
   chart=new Chart(document.getElementById('chart'),{type:'line',data:{labels:[...Array(n)].map((_,i)=>'S'+(i+1)),
-    datasets:Qs.map(o=>({label:`${o.a.q.code} ${dt(o.a)}`+(tAir(o.a)!=null?` · ${nf(tAir(o.a),0)} °C aire`:''),data:o.S.map(x=>x.hrm),borderColor:o.c,backgroundColor:o.c,borderWidth:2,pointRadius:6,pointHoverRadius:8,tension:0,$S:o.S}))},
+    datasets:Qs.map(o=>({label:`${o.a.q.code} ${dt(o.a)}`+(tAir(o.a)!=null?` · ${nf(tAir(o.a),0)} °C aire`:'')+sleepTag(o.a),data:o.S.map(x=>x.hrm),borderColor:o.c,backgroundColor:o.c,borderWidth:2,pointRadius:6,pointHoverRadius:8,tension:0,$S:o.S}))},
     options:{responsive:true,maintainAspectRatio:false,animation:false,
       plugins:{legend:{position:'bottom',align:'start',labels:{color:css('--ink'),boxWidth:14,boxHeight:3,font:{family:css('--body')}}},
         tooltip:{callbacks:{label:it=>{const x=it.dataset.$S[it.dataIndex]; return [`${it.dataset.label}`,`FC máx ${x.hrm} ppm`+(x.pk!=null?` (${(x.pk>=0?'+':'')}${nf(x.pk*100,1)} % vs S2)`:''),`Ritmo ${fmtP(x.pace)}/km`+(x.tgt?` (programado ${fmtP(x.tgt)}, ${dsg(x.diff)} s)`:'')]}}}},
@@ -1408,7 +1418,7 @@ function renderTable(){
     ['Superficie',(a)=>`<select class="tsurf" data-id="${a.id}" aria-label="Superficie" style="font:inherit;font-size:12.5px;border:1px solid var(--line);border-radius:5px;padding:3px 5px;background:var(--bg);color:var(--ink);max-width:130px"><option value="">${surfDef} (por defecto)</option>${SURF.map(x=>`<option${a.surf===x?' selected':''}>${x}</option>`).join('')}</select>`],
     ['Graficar en la tendencia',(a)=>`<label style="font-size:12.5px"><input type="checkbox" class="tntr" data-id="${a.id}"${a.noTr?'':' checked'}> sí</label>`],
     ['Hora de inicio',(a)=>hm(a)],
-    ...wxRows(),
+    ...wxRows(),...sleepRows(),
     ['Distancia',(a)=>nf(a.distKm,2)+' km',(a)=>a.distKm,2,' km'],
     ['Tiempo',(a)=>fmtT(a.timeS)],
     ['Ritmo promedio',(a,s)=>fmtP(s.pace)+' /km'+(s.cutT?`<div class="mdesc" style="margin:0;font-size:11px">sin ${fmtT(s.cutT)} excluidos</div>`:''),(a,s)=>s.pace,'p'],
@@ -1452,7 +1462,7 @@ function renderTable(){
       ['TRIMP mecánico/km',(a,s)=>s.mk==null?'—':nf(s.mk/1000,2),(a,s)=>s.mk==null?null:s.mk/1000,2,'']
     ]:[])
   ];
-  regroup(rows,[['Ajustes del análisis',['Ritmo programado','Analizar desde','Excluir del análisis','Peso del día','Zapato','Superficie','Graficar en la tendencia']],['Sesión',['Hora de inicio','Distancia','Tiempo','Ritmo promedio','FC promedio','TRIMP','TRIMP/km']],['Clima',['Temperatura del aire y clima','WBGT']],['Deriva y eficiencia aeróbica',['Deriva de la actividad','Desacople aeróbico','Desglose de la deriva','Índice de desvío','Eficiencia','FC estable','Eficiencia normalizada']]]);
+  regroup(rows,[['Ajustes del análisis',['Ritmo programado','Analizar desde','Excluir del análisis','Peso del día','Zapato','Superficie','Graficar en la tendencia']],['Sesión',['Hora de inicio','Distancia','Tiempo','Ritmo promedio','FC promedio','TRIMP','TRIMP/km']],['Clima',['Temperatura del aire y clima','WBGT']],['Sueño',['Déficit de sueño','Sueño de la noche previa']],['Deriva y eficiencia aeróbica',['Deriva de la actividad','Desacople aeróbico','Desglose de la deriva','Índice de desvío','Eficiencia','FC estable','Eficiencia normalizada']]]);
   let h='<table><thead><tr><th></th>'+chosen.map((a,i)=>`<th style="color:${color(i)}">${a.tipo} ${dt(a)}</th>`).join('')+'</tr></thead><tbody>';
   for(const [lab,f,g,dec,u] of rows){
     if(f===0){h+=`<tr class="sec"><td colspan="${chosen.length+1}">${lab}</td></tr>`;continue}
@@ -2738,7 +2748,7 @@ function renderQTable(chosen,S,W){
     ['Superficie',(a)=>`<select class="tsurf" data-id="${a.id}" aria-label="Superficie" style="font:inherit;font-size:12.5px;border:1px solid var(--line);border-radius:5px;padding:3px 5px;background:var(--bg);color:var(--ink);max-width:130px"><option value="">${surfDef} (por defecto)</option>${SURF.map(x=>`<option${a.surf===x?' selected':''}>${x}</option>`).join('')}</select>`],
     ['Graficar en la tendencia',(a)=>`<label style="font-size:12.5px"><input type="checkbox" class="tntr" data-id="${a.id}"${a.noTr?'':' checked'}> sí</label>`],
     ['Hora de inicio',(a)=>hm(a)],
-    ...wxRows(),
+    ...wxRows(),...sleepRows(),
     ['Sesión completa',(a)=>`${fmtT(a.timeS)} · ${nf(a.distKm,2)} km`],
     ['TRIMP sesión',(a)=>nf(a.trimp,1),(a)=>a.trimp,1,''],
     ['TRIMP mecánico sesión',(a)=>a.dyn&&a.dyn.mech?nf(a.dyn.mech/1000,1):'—',(a)=>a.dyn&&a.dyn.mech?a.dyn.mech/1000:null,1,''],
@@ -2768,7 +2778,7 @@ function renderQTable(chosen,S,W){
    if(st>=0&&en>st){const secs=[]; for(let i=st;i<en;i++){if(rows[i][1]===0) secs.push({k:rows[i][0]==='Series cortas'?'S':'L'+(parseInt(rows[i][0].replace(/\D/g,''))-1),r:[]}); secs[secs.length-1].r.push(rows[i])}
      const ord=[]; let li=0; chosen[0].q.laps.filter(x=>x.t==='w').forEach(x=>{const k=x.dur>=QW.long?'L'+(li++):'S'; if(!ord.includes(k)) ord.push(k)});
      const pos=k=>{const i=ord.indexOf(k); return i<0?99:i}; secs.sort((a,b)=>pos(a.k)-pos(b.k)); rows.splice(st,en-st,...secs.flatMap(s=>s.r))}}
-  regroup(rows,[['Plan y ajustes',['Código','Plan del coach','Ritmo programado por el coach','Zapato','Superficie','Graficar en la tendencia']],['Sesión',['Hora de inicio','Sesión completa','TRIMP sesión','TRIMP mecánico sesión']],['Clima',['Temperatura del aire y clima','WBGT']]]);
+  regroup(rows,[['Plan y ajustes',['Código','Plan del coach','Ritmo programado por el coach','Zapato','Superficie','Graficar en la tendencia']],['Sesión',['Hora de inicio','Sesión completa','TRIMP sesión','TRIMP mecánico sesión']],['Clima',['Temperatura del aire y clima','WBGT']],['Sueño',['Déficit de sueño','Sueño de la noche previa']]]);
   let h='<table><thead><tr><th></th>'+chosen.map((a,i)=>`<th style="color:${color(i)}">Calidad ${dt(a)}</th>`).join('')+'</tr></thead><tbody>';
   for(const [lab,f,g,dec,u] of rows){
     if(f===0){h+=`<tr class="sec"><td colspan="${chosen.length+1}">${lab}</td></tr>`;continue}
@@ -3137,7 +3147,7 @@ function renderTrend(){
     onClick:(e,els)=>{const el=els&&els[0]; if(!el){if(chartPicked.size){sel=sel.filter(id=>!chartPicked.has(id)); chartPicked.clear(); save(); render()} return} const r=chart.data.datasets[el.datasetIndex].data[el.index], a=r&&r.a; if(a) pickRun(a.id)},
     onHover:(e,els)=>{const c=e.native&&e.native.target; if(c) c.style.cursor=els&&els.length?'pointer':''},
     plugins:{legend:{position:'top',align:'start',labels:{color:css('--ink'),boxWidth:12,boxHeight:6,font:{family:css('--body')}}},
-      tooltip:{callbacks:{title:it=>{const a=it[0].raw.a;return a?`${a.tipo} ${dt(a)} · ${fmtP(a.timeS/a.distKm)}/km`+(tAir(a)!=null?` · ${nf(tAir(a),0)} °C aire`:'')+` · ${surfOf(a)}${a.surf?'':' (por defecto)'}`+(a.noTr?' · excluido de la tendencia':''):''},label:it=>it.raw.a?m.fmt(it.parsed.y):it.dataset.label,afterBody:it=>{const a=it[0]&&it[0].raw.a;return a&&a.note?['',...a.note.match(/.{1,60}(\s|$)/g)]:[]}}}},
+      tooltip:{callbacks:{title:it=>{const a=it[0].raw.a;return a?`${a.tipo} ${dt(a)} · ${fmtP(a.timeS/a.distKm)}/km`+(tAir(a)!=null?` · ${nf(tAir(a),0)} °C aire`:'')+sleepTag(a)+` · ${surfOf(a)}${a.surf?'':' (por defecto)'}`+(a.noTr?' · excluido de la tendencia':''):''},label:it=>it.raw.a?m.fmt(it.parsed.y):it.dataset.label,afterBody:it=>{const a=it[0]&&it[0].raw.a;return a&&a.note?['',...a.note.match(/.{1,60}(\s|$)/g)]:[]}}}},
     scales:{x:{type:'linear',...(TR?{min:TR.from,max:TR.to+DAY}:{grace:'3%'}),title:{display:true,text:'fecha',color:tick},grid:{color:grid},ticks:{color:tick,font:{family:css('--mono')},maxTicksLimit:8,callback:(v,i,T)=>axD(v,T)}},
       y:{...dzRange(tmetric,ptsAll.map(p=>p.y)),title:{display:true,text:m.y,color:tick},grid:{color:grid},ticks:{color:tick,font:{family:css('--mono')}}}}};
   if(chart){chart.$stabs=[];chart.$dev=false;chart.$zones=false;chart.$laps=null;chart.$avgs=null;chart.$dz=DZ[tmetric]?tmetric:null;chart.data.datasets=ds;chart.options=opts;chart.update()}
@@ -3409,7 +3419,7 @@ async function makeSnapshot(){
   let tMax=0;
   const ds=chosen.map((a,i)=>{const b=binsR(a); tMax=Math.max(tMax,a.timeS/60);
     const data=b?b.map(g=>({x:g.x,y:hrN(g.hr,a)})):segTimes(a).map(g=>({x:g.tm,y:hrN(g.hr,a)}));
-    return {label:`${a.tipo} ${dt(a)} · ${fmtP(a.timeS/a.distKm)}/km`+(tAir(a)!=null?` · ${nf(tAir(a),0)} °C aire`:''),data,borderColor:SNAP.cols[i],backgroundColor:SNAP.cols[i],borderWidth:2,pointRadius:0,tension:0,showLine:true}});
+    return {label:`${a.tipo} ${dt(a)} · ${fmtP(a.timeS/a.distKm)}/km`+(tAir(a)!=null?` · ${nf(tAir(a),0)} °C aire`:'')+sleepTag(a),data,borderColor:SNAP.cols[i],backgroundColor:SNAP.cols[i],borderWidth:2,pointRadius:0,tension:0,showLine:true}});
   const stS=chosen.map((a,i)=>{const s=summarize(a);return {t:segTimes(a).filter(g=>g.ki<s.stab).reduce((q,g)=>q+g.dur,0)/60,km:s.stab,c:SNAP.cols[i],man:s.man}});
   const stabSnap={id:'stabSnap',afterDatasetsDraw(c){const {ctx,chartArea:ar,scales:{x}}=c;
     stS.forEach((st,i)=>{const px=x.getPixelForValue(st.t); if(px<ar.left||px>ar.right) return;
