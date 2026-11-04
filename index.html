@@ -549,7 +549,7 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
     </div>
   </section>
 
-  <footer>Versión 360 PWA (4 nov, déficit de sueño neto: las noches de más pagan déficit). Deriva de la actividad = FC 2ª mitad ÷ 1ª mitad − 1, por tiempo, desde el punto de estabilización (referencia &lt; 5 %). FC limpia: un segundo que se aparta más de 2 % de los 5 s anteriores y de los 5 s posteriores se reemplaza por el promedio de esos 10 s. Normalización por temperatura: FC normalizada = FC − k × (temperatura del reloj − temperatura de referencia); la eficiencia normalizada usa esa FC. La deriva y el TRIMP no se normalizan. TRIMP de Banister segundo a segundo. Pa:HR (desacople aeróbico) = (EF 1ª mitad − EF 2ª mitad) ÷ EF 1ª mitad, con EF = velocidad ÷ FC, mismas mitades que la deriva. Fuerza pico por paso (× peso corporal) = π/2 × (tiempo de vuelo ÷ tiempo de contacto + 1), con tiempo de vuelo = 60 ÷ cadencia − contacto (modelo de muelle, Morin 2005); carga mecánica = pasos × fuerza pico promedio, en miles. Son estimaciones propias para seguir tu tendencia, no medidas de laboratorio. Los datos se guardan en tu espacio privado de la nube del artefacto (solo vos los ves) y se ven igual en la compu y en el celular; el botón Respaldo descarga una copia.</footer>
+  <footer>Versión 361 PWA (4 nov, sueño: completo hasta 9 h; lo de más, como siesta). Deriva de la actividad = FC 2ª mitad ÷ 1ª mitad − 1, por tiempo, desde el punto de estabilización (referencia &lt; 5 %). FC limpia: un segundo que se aparta más de 2 % de los 5 s anteriores y de los 5 s posteriores se reemplaza por el promedio de esos 10 s. Normalización por temperatura: FC normalizada = FC − k × (temperatura del reloj − temperatura de referencia); la eficiencia normalizada usa esa FC. La deriva y el TRIMP no se normalizan. TRIMP de Banister segundo a segundo. Pa:HR (desacople aeróbico) = (EF 1ª mitad − EF 2ª mitad) ÷ EF 1ª mitad, con EF = velocidad ÷ FC, mismas mitades que la deriva. Fuerza pico por paso (× peso corporal) = π/2 × (tiempo de vuelo ÷ tiempo de contacto + 1), con tiempo de vuelo = 60 ÷ cadencia − contacto (modelo de muelle, Morin 2005); carga mecánica = pasos × fuerza pico promedio, en miles. Son estimaciones propias para seguir tu tendencia, no medidas de laboratorio. Los datos se guardan en tu espacio privado de la nube del artefacto (solo vos los ves) y se ven igual en la compu y en el celular; el botón Respaldo descarga una copia.</footer>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
@@ -2091,15 +2091,16 @@ function sleepRef(d){const t=dms(d), xs=wVals('sh').filter(([dd])=>{const x=dms(
   const ok=xs.filter(v=>v>=SMIN&&v<=SMAX), so=[...ok].sort((a,b)=>a-b), med=so.length%2?so[so.length>>1]:(so[so.length/2-1]+so[so.length/2])/2;
   if(ok.length<5) return null; const hab=Math.max(...ok), lo=Math.min(...ok), opt=SDEBT; let debt=0,nn=0; for(let i=1;i<=7;i++){const v=(well.days[dkey(t-(i-1)*DAYW)]||{}).sh; if(v!=null){nn++; debt+=Math.max(0,SDEBT-v)}}
   return {hab,lo,opt,med,debt,nn,n:xs.length,ex:xs.length-ok.length}}
-// tanque de sueño: últimas 7 noches (incluida la del día). Cada noche cuenta completa hasta 8 h (7–8 h = meta mínima);
-// de 8 a 10 h lo que pasa de 8 cuenta a la mitad (9 h = 8,5 · 10 h o más = 9 h efectivas). Noches sin dato: promedio de las registradas × 7 (mínimo 5 de 7). Tope 63 h.
+// tanque de sueño: últimas 7 noches (incluida la del día). Cada noche cuenta completa hasta 9 h;
+// lo que pasa de 9 h cuenta a la mitad, hasta 60 min (10 h o más = 9:30 efectivas).
 const TK={max:63,min:35,cuts:[[56,'azul','Ideal'],[49,'verde','Bien'],[42,'amarillo','Ya afecta el entrenamiento'],[35,'rojo','Déficit alto'],[-1e9,'alarma','Alarma seria']]};
 const TKC={azul:'var(--s2)',verde:'var(--ok)',amarillo:'var(--tQ)',rojo:'var(--bad)',alarma:'#8B5A2B'}; // alarma en marrón para distinguirla del rojo
 const SOPT=8; // óptimo para rendir: 8 h por noche (56 h en 7 noches)
-const nightCredit=v=>v<=8?v:8+Math.min(v-8,2)/2;
+// noche: completa hasta 9 h; lo que pasa de 9 h cuenta como una siesta (a la mitad, hasta 60 min = 30 min) → tope 9:30 efectivas
+const NMAX=9, nightCredit=v=>v<=NMAX?v:NMAX+Math.min(v-NMAX,1)/2;
 // siesta: cuenta a la mitad, máximo 60 min de siesta (= 30 min); mejora el mismo día; noche + siesta nunca pasa de 9 h efectivas
 const NAPMAX=60, napCredit=m=>m>0?Math.min(m,NAPMAX)/2/60:0;
-const dayCredit=x=>x&&x.sh!=null?Math.min(9,nightCredit(x.sh)+napCredit(x.nap)):null;
+const DAYMAX=9.5, dayCredit=x=>x&&x.sh!=null?Math.min(DAYMAX,nightCredit(x.sh)+napCredit(x.nap)):null;
 const daySleep=x=>x&&x.sh!=null?x.sh+napCredit(x.nap):null; // horas que cuentan para el déficit (noche + siesta a la mitad)
 // tanque de N noches terminando en d (7 por defecto, el del semáforo del día). La capacidad escala con N:
 // fondo 5·N, óptimo 8·N, tope 9·N; las franjas son las mismas por noche (8/7/6/5 h). Hace falta ≥ 70 % de noches con dato.
@@ -2133,14 +2134,14 @@ function tankHTML(d,from){const fd=ms=>new Date(ms).toLocaleDateString('es-CR',{
   <div style="display:flex;${wrap?'flex-wrap:wrap;':''}gap:${wrap?3:2}px;margin-top:6px">${strip.join('')}</div>
   <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px"><span>${fd(f0)}</span><span>${fd(dms(d))}</span></div>
   <div class="mdesc" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">${leg}</div>
-  <div class="mdesc">Cada noche cuenta completa hasta 8 h; de 8 a 10 h lo que pasa de 8 cuenta a la mitad (9 h = 8,5 · 10 h o más = 9 h efectivas). Siesta: cuenta a la mitad, hasta 60 min (= 30 min), y suma al mismo día. Noches sin dato: se usa el promedio de las registradas. Tanque: su tamaño se ajusta a los días elegidos (fondo 5 h, óptimo 8 h y tope 9 h por noche); cada franja de color = 1 h por noche de promedio. Casillas: la misma escala aplicada a cada noche (rojo y alarma son las que más déficit sumaron).</div>
+  <div class="mdesc">Cada noche cuenta completa hasta 9 h; lo que pasa de 9 h cuenta como una siesta, a la mitad y hasta 60 min (10 h o más = 9:30 efectivas). Noche + siesta: tope 9:30 por día. Siesta: cuenta a la mitad, hasta 60 min (= 30 min), y suma al mismo día. Noches sin dato: se usa el promedio de las registradas. Tanque: su tamaño se ajusta a los días elegidos (fondo 5 h, óptimo 8 h y tope 9 h por noche); cada franja de color = 1 h por noche de promedio. Casillas: la misma escala aplicada a cada noche (rojo y alarma son las que más déficit sumaron).</div>
   <hr style="border:0;border-top:1px solid var(--line);margin:14px 0 10px">`}
 // deuda de sueño del periodo mostrado: suma de lo que faltó para 7:00 h cada noche registrada (las noches largas no la pagan)
 function wDebtBox(from,to){const el=document.getElementById('wDebt'); if(!el) return;
   // sin rango personalizado, el tanque y el déficit llegan hasta hoy aunque el último dato sea anterior (misma duración del periodo)
   if(wrange!=='c'){const tk=dms(todayKey()); if(tk>to){from+=tk-to; to=tk}}
   const days=Math.round((to-from)/DAYW)+1, fd=ms=>new Date(ms).toLocaleDateString('es-CR',{day:'numeric',month:'short',timeZone:'UTC'});
-  // déficit neto: cada noche aporta su sueño efectivo (noche + siesta al 50 %; de 8 a 10 h a la mitad, tope 9 h); las noches largas pagan déficit, sin bajar de 0
+  // déficit neto: cada noche aporta su sueño efectivo (completa hasta 9 h; lo de más y la siesta al 50 %, tope 9:30); las noches largas pagan déficit, sin bajar de 0
   const blk=(a,b)=>{let d=0,d8=0,n=0,lo=0,s=0; for(let x=a;x<=b;x+=DAYW){const X=well.days[dkey(x)], v=daySleep(X), c=dayCredit(X); if(v!=null){n++; s+=v; d8+=SOPT-c; d+=SDEBT-c; if(v<SDEBT) lo++}} return {d:Math.max(0,d),d8:Math.max(0,d8),n,lo,s}};
   const T=blk(from,to), TKH=tankHTML(dkey(to),from);
   if(!T.n){el.innerHTML=TKH+`<div class="lbl">Déficit de sueño · ${fd(from)} – ${fd(to)}</div><div class="mdesc" style="margin:4px 0 0">No hay noches registradas en este periodo.</div>`; return}
@@ -2154,7 +2155,7 @@ function wDebtBox(from,to){const el=document.getElementById('wDebt'); if(!el) re
    <div><div class="mdesc" style="margin:0">Contra el mínimo (7:00 h)</div><div class="wv ${cl}" style="margin:2px 0">${wfmt('sh',T.d)} h</div>${days>7?`<div class="mdesc" style="margin:0">${wfmt('sh',wk)} h por cada 7 días</div>`:''}</div></div>
   <div class="mdesc" style="margin-top:6px">${T.lo} de ${T.n} noches registradas bajo 7:00 h · promedio ${wfmt('sh',T.s/T.n)} h por noche.${T.n<days?` ${days-T.n} noche${days-T.n>1?'s':''} sin dato no cuenta${days-T.n>1?'n':''}.`:''}</div>
   ${nb?`<div class="tablewrap"><table style="margin-top:8px;font-size:13px"><thead><tr><th ${th}>Bloque de 7 días</th><th ${th}>vs 8:00</th><th ${th}>vs 7:00</th><th ${th}>Bajo 7:00</th><th ${th}>Promedio</th></tr></thead><tbody>${Bs.map(([a,b,r])=>{const c=!r.n?'':r.d<0.01?'ok':r.d<3?'w':'b', k8=!r.n?'':c8(r.d8*7/r.n); return `<tr><td>${fd(a)} – ${fd(b)}</td><td class="num ${k8}">${r.n?wfmt('sh',r.d8)+' h':'—'}</td><td class="num ${c}">${r.n?wfmt('sh',r.d)+' h':'—'}</td><td class="num">${r.n?r.lo+' de '+r.n:'—'}</td><td class="num">${r.n?wfmt('sh',r.s/r.n)+' h':'—'}</td></tr>`}).join('')}</tbody></table></div>${nb>8?`<div class="mdesc">Se muestran los 8 bloques más recientes de ${nb}.</div>`:''}`:''}
-  <div class="mdesc">Contra 8:00 h, con la escala del tanque: menos de 7 h por semana verde · 7 a 14 h amarillo · 14 h o más rojo. Contra 7:00 h: sin déficit verde · menos de 3 h por semana naranja · 3 h o más rojo. Déficit neto: las noches de más pagan déficit (de 7 a 8 h completo, de 8 a 10 h a la mitad, tope 9 h efectivas); la siesta suma al 50 %. Nunca baja de 0.</div>`}
+  <div class="mdesc">Contra 8:00 h, con la escala del tanque: menos de 7 h por semana verde · 7 a 14 h amarillo · 14 h o más rojo. Contra 7:00 h: sin déficit verde · menos de 3 h por semana naranja · 3 h o más rojo. Déficit neto: las noches de más pagan déficit (completas hasta 9 h; lo que pase de 9 h, a la mitad hasta 30 min); la siesta suma al 50 %. Nunca baja de 0.</div>`}
 const WAVG=4; // días del promedio móvil de bienestar (VFC): 4 reacciona más rápido que 7
 function w7(k,d){const t=dms(d), xs=wVals(k).filter(([dd])=>{const x=dms(dd);return x<=t&&x>t-WAVG*DAYW}).map(x=>x[1]); return xs.length>=3?xs.reduce((a,b)=>a+b,0)/xs.length:null}
 const wDay=d=>well.days[d]||{}, wPrev=d=>dkey(dms(d)-DAYW);
@@ -2183,7 +2184,7 @@ function wellStatus(d){const D0=wDay(d), D1=wDay(wPrev(d)), M=[]; let lvl=null, 
     if(nap>90) M.push(['w',`Siesta de ${nap} min: más de 90 min puede quitarte sueño esta noche.`]);
     if(ds<SDEBT) M.push(['ok',`Dormiste ${hm} h${ntx}: bajo 7:00 h, suma ${wfmt('sh',SDEBT-ds)} h de déficit.`]);
     else if(nap&&D0.sh<=8) M.push(['ok',`Dormiste ${hm} h${ntx}: cuenta ${wfmt('sh',dayCredit(D0))} h en el tanque.`]);
-    else if(D0.sh>8) M.push(['ok',`Dormiste ${hm} h: recuperación; cuenta ${wfmt('sh',dayCredit(D0))} h en el tanque${nap?' con la siesta':''} (lo que pasa de 8 h vale la mitad, tope 9 h efectivas).`]);
+    else if(D0.sh>NMAX) M.push(['ok',`Dormiste ${hm} h: recuperación; cuenta ${wfmt('sh',dayCredit(D0))} h en el tanque${nap?' con la siesta':''} (lo que pasa de 9 h vale la mitad, como una siesta, tope 9:30 efectivas).`]);
     else M.push(['ok',`Dormiste ${hm} h${ntx}: bien.`]);
     if(TQ.v!=null){const t=`Tanque de sueño (7 noches): ${nf(TQ.v,1)} de 63 h, ${TQ.z} (promedio efectivo ${wfmt('sh',TQ.avg)} h por noche).`;
       if(TQ.z==='alarma'){up(2); M.push(['b',t+' Alarma seria: prioriza dormir antes que entrenar.'])}
