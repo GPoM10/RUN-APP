@@ -552,7 +552,7 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
     </div>
   </section>
 
-  <footer>Versión 367 PWA (4 nov, calificación de sueño: productivo ×0,9, bajo ×0,8). Deriva de la actividad = FC 2ª mitad ÷ 1ª mitad − 1, por tiempo, desde el punto de estabilización (referencia &lt; 5 %). FC limpia: un segundo que se aparta más de 2 % de los 5 s anteriores y de los 5 s posteriores se reemplaza por el promedio de esos 10 s. Normalización por temperatura: FC normalizada = FC − k × (temperatura del reloj − temperatura de referencia); la eficiencia normalizada usa esa FC. La deriva y el TRIMP no se normalizan. TRIMP de Banister segundo a segundo. Pa:HR (desacople aeróbico) = (EF 1ª mitad − EF 2ª mitad) ÷ EF 1ª mitad, con EF = velocidad ÷ FC, mismas mitades que la deriva. Fuerza pico por paso (× peso corporal) = π/2 × (tiempo de vuelo ÷ tiempo de contacto + 1), con tiempo de vuelo = 60 ÷ cadencia − contacto (modelo de muelle, Morin 2005); carga mecánica = pasos × fuerza pico promedio, en miles. Son estimaciones propias para seguir tu tendencia, no medidas de laboratorio. Los datos se guardan en tu espacio privado de la nube del artefacto (solo vos los ves) y se ven igual en la compu y en el celular; el botón Respaldo descarga una copia.</footer>
+  <footer>Versión 368 PWA (4 nov, calificación de sueño solo recorta en noches verdes: sin doble castigo). Deriva de la actividad = FC 2ª mitad ÷ 1ª mitad − 1, por tiempo, desde el punto de estabilización (referencia &lt; 5 %). FC limpia: un segundo que se aparta más de 2 % de los 5 s anteriores y de los 5 s posteriores se reemplaza por el promedio de esos 10 s. Normalización por temperatura: FC normalizada = FC − k × (temperatura del reloj − temperatura de referencia); la eficiencia normalizada usa esa FC. La deriva y el TRIMP no se normalizan. TRIMP de Banister segundo a segundo. Pa:HR (desacople aeróbico) = (EF 1ª mitad − EF 2ª mitad) ÷ EF 1ª mitad, con EF = velocidad ÷ FC, mismas mitades que la deriva. Fuerza pico por paso (× peso corporal) = π/2 × (tiempo de vuelo ÷ tiempo de contacto + 1), con tiempo de vuelo = 60 ÷ cadencia − contacto (modelo de muelle, Morin 2005); carga mecánica = pasos × fuerza pico promedio, en miles. Son estimaciones propias para seguir tu tendencia, no medidas de laboratorio. Los datos se guardan en tu espacio privado de la nube del artefacto (solo vos los ves) y se ven igual en la compu y en el celular; el botón Respaldo descarga una copia.</footer>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
@@ -2219,7 +2219,9 @@ function wellStatus(d){const D0=wDay(d), M=[]; let any=false, rest=false, fS=1, 
   if(fR<=.75&&fH<=.75){rest=true; M.push(['b','FC en reposo fuera de rango y VFC baja a la vez: el cuerpo puede estar peleando algo. Descanso total o activo.'])}
   // la nota del día: síntomas → descanso; molestias, mal sueño o estrés → ×0,9; causas puntuales explican valores alterados
   const pre=Math.max(.3,fS*fR*fH*fX), pl=rest||pre<.6?2:pre<.9?1:0;
-  if(D0.sq!=null){any=true; const L=sqLv(D0.sq); fX*=SQF[L[0]]; M.push([L[1],`Calificación de sueño Coros ${D0.sq}: ${L[0]}`+(SQF[L[0]]<1?` (${xf(SQF[L[0]])}).`:'.')])}
+  // la calificación ya incluye la duración: solo recorta en noches verdes (≥ 7 h efectivas); en noches cortas la matriz ya castigó las horas
+  if(D0.sq!=null){any=true; const L=sqLv(D0.sq), green=D0.sh!=null&&dayCredit(D0)>=7, f=green?SQF[L[0]]:1; fX*=f;
+    M.push([f<1?L[1]:'ok',`Calificación de sueño Coros ${D0.sq}: ${L[0]}`+(f<1?` (${xf(f)}): dormiste lo suficiente pero no bien.`:!green&&SQF[L[0]]<1?'. No recorta más: la noche corta ya se cuenta por las horas.':'.')])}
   wNoteFx(D0.note,pl,D0.sq!=null).forEach(([l,c,t])=>{if(l===2) rest=true; else if(l===1) fX*=.9; M.push([c,t])}); if(D0.note) any=true;
   if(!any) return {lvl:null,v:null,M,fac:null};
   const fac=rest?.3:Math.max(.3,fS*fR*fH*fX), lvl=fac>=.9?0:fac>=.6?1:2;
