@@ -267,9 +267,10 @@ footer{font-size:12px;color:var(--muted);max-width:90ch}
 .wv{font-family:var(--display);font-size:26px;font-weight:600;margin:4px 0 6px}
 .wlist{display:flex;flex-direction:column;gap:6px;margin-top:8px;font-size:13px}
 .wlist div{display:flex;gap:8px;align-items:flex-start}
-.xb{display:grid;grid-template-columns:44px 150px;gap:2px 6px;align-items:center;font-size:11px;color:var(--muted);text-align:left}
-.xb .t{height:7px;border-radius:3px;background:var(--line)}.xb .r{height:7px;border-radius:3px}
-.xb .bw{display:flex;flex-direction:column;gap:2px;padding:2px 0}
+.xb{display:flex;gap:12px;align-items:flex-end;width:max-content;font-size:11px;color:var(--muted);text-align:center}
+.xb .g{display:flex;flex-direction:column;align-items:center;gap:3px}
+.xb .bw{display:flex;align-items:flex-end;gap:3px;height:46px}
+.xb .t,.xb .r{width:11px;border-radius:3px 3px 0 0}.xb .t{background:var(--line)}
 .ci.pl.drag{opacity:.4}.cd.dropt{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--panel))}
 .clipbar,.calmsg{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}.clipbar{border-left:4px solid var(--accent)}
 .pact{display:inline-flex;gap:4px;flex-wrap:wrap;margin-left:6px;vertical-align:middle}.pact button{padding:2px 8px;font-size:12px;font-weight:500}
@@ -1617,7 +1618,8 @@ const sgp=v=>`${v>=0?'+':'−'}${nf(Math.abs(v),0)} %`;
 function xBars(x,style){const e=x.e, a=x.a;
   const R=[['km',e.km,a?a.distKm:null,a?XC[xq(x.dk)[1]]:null],['tiempo',e.t,a?a.timeS:null,a?XC[xq(x.dt)[1]]:null],['TRIMP',e.trimp,a?a.trimp:null,a?XC[x.cost[0]]:null]];
   return `<div class="xb"${style?` style="${style}"`:''}>${R.map(([lab,pv,rv,c])=>{const mx=Math.max(pv,rv||0)||1;
-    return `<span>${lab}</span><div class="bw"><div class="t" style="width:${pv/mx*100}%" title="Planeado"></div>${rv!=null?`<div class="r" style="width:${rv/mx*100}%;background:${css(c)}" title="Real"></div>`:''}</div>`}).join('')}</div>`}
+    const h=v=>Math.max(v/mx*100,3);
+    return `<div class="g"><div class="bw"><div class="t" style="height:${h(pv)}%" title="Planeado"></div>${rv!=null?`<div class="r" style="height:${h(rv)}%;background:${css(c)}" title="Real"></div>`:''}</div><span>${lab}</span></div>`}).join('')}</div>`}
 const xReg=x=>x.reg?`Ritmo: <span class="${x.reg[0]}" style="font-weight:600" title="${x.rtip||''}">${x.reg[1]}</span> <span class="mdesc">${nf(x.ix,0)} %</span>`:'';
 // veredicto en una frase: lo que salió y lo que no
 const xVer=x=>{const ok=[],no=[]; (Math.abs(x.dk)<=10?ok:no).push('la distancia'); (Math.abs(x.dt)<=10?ok:no).push('el tiempo');
@@ -1893,7 +1895,7 @@ function renderPmcPlan(){const cv=document.getElementById('fchart2'); if(!cv) re
   document.querySelectorAll('#frSeg2 button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.r===frng));
   const pj=document.getElementById('fProj2'); pj.checked=fproj; pj.disabled=fm==='mech'||!allPlans().length;
   const R=pmcSeries(); document.getElementById('fEmpty2').hidden=!!R; cv.hidden=!R;
-  document.getElementById('fDesc2').textContent=`La misma curva de Comparador → Fitness, fatiga y forma: CTL (fitness) es el promedio exponencial de tu carga diaria de 42 días, ATL (fatiga) el de 7 días y la forma es TSB ÷ CTL en %, con las franjas de intervals.icu; el ACWR es fatiga ÷ fitness (1,0 = lo habitual, 0,8–1,3 zona segura, más de 1,5 riesgo alto de lesión). A la derecha de hoy, en punteado, la proyección con el TRIMP estimado de todo lo planeado (ciclo, entrenos sueltos y plan del coach); los días de descanso cuentan como carga cero. Sirve para revisar antes de ejecutar si la semana que planeaste te deja en la zona de forma que buscás.`;
+  document.getElementById('fDesc2').textContent=`La misma curva de Comparador → Fitness, fatiga y forma: CTL (fitness) es el promedio exponencial de tu carga diaria de 42 días, ATL (fatiga) el de 7 días y la forma es TSB ÷ CTL en %, con las franjas de intervals.icu; el ACWR es fatiga ÷ fitness (1,0 = lo habitual, 0,8–1,3 zona segura, más de 1,5 riesgo alto de lesión). A la derecha de hoy, en gris, la proyección con el TRIMP estimado de todo lo planeado (ciclo, entrenos sueltos y plan del coach); los días de descanso cuentan como carga cero. Sirve para revisar antes de ejecutar si la semana que planeaste te deja en la zona de forma que buscás.`;
   {const N=document.getElementById('fNow2'), t=R?(R.S.find(p=>p.d===R.today)||R.S.filter(p=>!p.fut).pop()):null, dec=fm==='mech'?1:0;
     if(t&&t.ctl>0){const nt=t.ctl-t.atl, pc=nt/t.ctl*100, z=fzOf(pc); N.innerHTML=`Hoy: fitness <b>${nf(t.ctl,dec)}</b> · fatiga <b>${nf(t.atl,dec)}</b> · forma para mañana <b style="color:${css(z[3])}">${nf(pc,0)} %</b> · ACWR <b>${nf(t.atl/t.ctl,2)}</b> · ${z[2]}`} else N.innerHTML=''}
   if(fchart2){fchart2.destroy();fchart2=null} if(!R||typeof Chart==='undefined') return; fchart2=new Chart(cv,pmcConfig(R))}
@@ -3395,7 +3397,7 @@ function renderPmc(){
   const unit=fm==='mech'?'TRIMP mecánico (miles)':'TRIMP';
   let desc=`CTL (fitness) es el promedio exponencial de tu ${unit} diario de los últimos 42 días; ATL (fatiga), el de los últimos 7. TSB (forma) = CTL − ATL del día anterior. Arriba van CTL y ATL en las mismas unidades; abajo, en su propio panel, el ACWR (fatiga ÷ fitness = 1 − forma %), con las franjas de intervals.icu traducidas: por encima de 1,30 riesgo alto, de 1,10 a 1,30 óptimo para entrenar, de 0,95 a 1,10 zona gris, de 0,80 a 0,95 fresco para competir y por debajo de 0,80 perdiendo forma. El selector de semanas solo recorta lo que se ve: la curva siempre se calcula con toda tu historia. Las primeras 6 semanas de datos arrancan del promedio de ese periodo, así que tomalas con cuidado. Los días sin rodaje cuentan como carga cero: si te falta cargar alguno, la curva lo subestima. Junto a la forma va el ACWR (fatiga ÷ fitness = 1 − forma %): 1,0 es entrenar lo habitual, entre 0,8 y 1,3 es la zona segura y por encima de 1,5 sube mucho el riesgo de lesión.`;
   if(fm==='mech') desc+=' Versión mecánica: misma matemática con el impacto (pasos × fuerza relativa). Útil para ver si las piernas acumulan más de lo que el corazón sugiere.'+(R&&R.nodyn?` ${R.nodyn} rodaje(s) sin dinámica no aportan: volvé a cargarlos.`:'');
-  else if(R&&R.proj) desc+=' La parte punteada a la derecha de hoy es la proyección con el TRIMP estimado de tus entrenos planeados (ciclo del Programador y entrenos sueltos o pegados del coach).';
+  else if(R&&R.proj) desc+=' La línea gris a la derecha de hoy es la proyección con el TRIMP estimado de tus entrenos planeados (ciclo del Programador y entrenos sueltos o pegados del coach).';
   else if(fproj) desc+=' Si agregás entrenos planeados (sueltos, pegados del coach o con el ciclo del Programador), aquí se proyecta hacia adelante.';
   document.getElementById('mdesc').textContent=desc;
   if(typeof Chart==='undefined'||empty) return;
@@ -3416,9 +3418,12 @@ function pmcConfig(R){
     {label:'CTL (fitness)',data:P_('ctl'),borderColor:C.ctl,backgroundColor:C.ctl,borderWidth:2.5,pointRadius:0,yAxisID:'y',order:1},
     {label:'ATL (fatiga)',data:P_('atl'),borderColor:C.atl,backgroundColor:C.atl,borderWidth:1.5,pointRadius:0,yAxisID:'y',order:2},
     {label:'ACWR (fatiga ÷ fitness)',data:AC(P_('pct')),borderColor:C.tsb,backgroundColor:C.tsb,borderWidth:1.5,pointRadius:0,yAxisID:'y2',order:3}];
-  if(fut.length) ds.push({label:'Proyección',data:F_('ctl'),borderColor:C.ctl,backgroundColor:C.ctl,borderDash:[5,4],borderWidth:2,pointRadius:0,yAxisID:'y'},
-    {label:'_',data:F_('atl'),borderColor:C.atl,borderDash:[5,4],borderWidth:1.2,pointRadius:0,yAxisID:'y'},
-    {label:'_',data:AC(F_('pct')),borderColor:C.tsb,borderDash:[5,4],borderWidth:1.2,pointRadius:0,yAxisID:'y2'});
+  // proyección en gris continuo; cada curva lleva su nombre para el tooltip, pero en la leyenda va una sola entrada
+  const G=css('--muted');
+  if(fut.length) ds.push({label:'CTL (fitness)',pj:1,data:F_('ctl'),borderColor:G,backgroundColor:G,borderWidth:2.5,pointRadius:0,yAxisID:'y',order:1},
+    {label:'ATL (fatiga)',pj:1,data:F_('atl'),borderColor:G,backgroundColor:G,borderWidth:1.5,pointRadius:0,yAxisID:'y',order:2},
+    {label:'ACWR (fatiga ÷ fitness)',pj:1,data:AC(F_('pct')),borderColor:G,backgroundColor:G,borderWidth:1.5,pointRadius:0,yAxisID:'y2',order:3},
+    {label:'Proyección',data:[],borderColor:G,backgroundColor:G,borderWidth:2,pointRadius:0,yAxisID:'y',order:4});
   const grid=css('--line'), tick=css('--muted'), acs=S.filter(p=>p.pct!=null).map(p=>1-p.pct/100), y2max=Math.max(1.6,...acs), y2min=Math.min(0.6,...acs);
   const bands={id:'fbands',beforeDatasetsDraw(c){const {ctx,chartArea:a,scales:{y2,x}}=c; ctx.save();
     FZ.forEach(z=>{const hi=1-z[0]/100, lo=1-z[1]/100, t=y2.getPixelForValue(Math.min(hi,y2.max)), b=y2.getPixelForValue(Math.max(lo,y2.min)); if(b<=y2.top||t>=y2.bottom) return;
@@ -3427,8 +3432,11 @@ function pmcConfig(R){
     const tx=x.getPixelForValue(R.today); if(tx>=a.left-1&&tx<=a.right+1){ctx.strokeStyle=css('--ink');ctx.setLineDash([2,3]);ctx.beginPath();ctx.moveTo(tx,a.top);ctx.lineTo(tx,a.bottom);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=tick;ctx.font='11px '+css('--mono');ctx.textAlign=tx>a.right-30?'right':'left'; ctx.fillText('hoy',tx+(tx>a.right-30?-4:4),a.top+12); ctx.textAlign='left'}
     ctx.restore()}};
   const opts={responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},
-    plugins:{legend:{position:'top',align:'start',labels:{color:css('--ink'),boxWidth:12,boxHeight:6,font:{family:css('--body')},filter:i=>i.text!=='_'}},
-      tooltip:{filter:i=>i.dataset.label!=='_'&&i.parsed.y!=null&&i.dataset.type!=='bar',callbacks:{title:it=>{if(!it.length) return ''; const p=S.find(q=>q.d===it[0].parsed.x); return dfmt.format(new Date(it[0].parsed.x+6*3600000))+(p&&p.fut?(p.d===R.today+DAY&&!p.pl?' · mañana (con lo que hiciste hasta hoy)':' · proyectado'):'')},
+    plugins:{legend:{position:'top',align:'start',labels:{color:css('--ink'),boxWidth:12,boxHeight:6,font:{family:css('--body')},filter:(i,d)=>!d.datasets[i.datasetIndex].pj},
+      // ocultar una curva oculta también su proyección; «Proyección» oculta las tres grises
+      onClick:(e,it,lg)=>{const c=lg.chart, D=c.data.datasets, d=D[it.datasetIndex], v=!c.isDatasetVisible(it.datasetIndex);
+        D.forEach((x,i)=>{if(i===it.datasetIndex||(x.pj&&(d.label==='Proyección'||x.label===d.label))) c.setDatasetVisibility(i,v)}); c.update()}},
+      tooltip:{filter:i=>i.parsed.y!=null&&i.dataset.type!=='bar'&&(!!i.dataset.pj===!!(S[i.dataIndex]&&S[i.dataIndex].fut)),callbacks:{title:it=>{if(!it.length) return ''; const p=S.find(q=>q.d===it[0].parsed.x); return dfmt.format(new Date(it[0].parsed.x+6*3600000))+(p&&p.fut?(p.d===R.today+DAY&&!p.pl?' · mañana (con lo que hiciste hasta hoy)':' · proyectado'):'')},
         label:it=>it.dataset.yAxisID==='y2'?`ACWR ${nf(it.parsed.y,2)} · forma ${nf((1-it.parsed.y)*100,0)} %`:`${it.dataset.label}: ${nf(it.parsed.y,fm==='mech'?1:0)}`,
         afterBody:it=>{const p=it.length&&S.find(q=>q.d===it[0].parsed.x); if(!p) return []; const ld=`Carga del día ${nf(p.load,fm==='mech'?1:0)}`+(p.pl?' (plan)':''); const z=p.pct!=null?fzOf(p.pct):null; const hm=new Intl.DateTimeFormat('es-CR',{timeZone:'America/Costa_Rica',hour:'2-digit',minute:'2-digit'}); const la=p.acts.map(([a,v])=>`  ${hm.format(new Date(a.t0Unix*1000))} · ${a.tipo} · ${nf(a.distKm,1)} km · ${fmtT(a.timeS)} · ${nf(v,fm==='mech'?1:0)}`);
           return [ld,...(la.length>1?[`${la.length} actividades ese día:`]:[]),...la,`TSB ${nf(p.tsb,fm==='mech'?1:0)}`+(z?` · ${z[2]}`:'')]}}}},
