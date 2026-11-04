@@ -527,15 +527,6 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
     </div>
     <div class="panel" id="wLoad" style="margin-top:16px"></div>
     <div class="panel" style="margin-top:16px">
-      <h2>¿Tolero este cambio de ritmo?</h2>
-      <div class="mdesc" style="margin-top:0">Estima cuánto más te costaría el ritmo propuesto (corazón y piernas) y revisa si la tendencia de tus datos de las últimas semanas (16 por defecto) muestra que estás listo. Los umbrales son provisionales: se ajustarán con tus ciclos.</div>
-      <div class="opts"><label>Tipo <select class="tipo" id="evT"><option value="ER">ER / LR</option><option value="QS">Calidad · series cortas</option><option value="QL">Calidad · bloques largos</option></select></label>
-        <label>Ritmo actual <input class="pace" id="evA" value="7:30"></label><label>Propuesto <input class="pace" id="evB" value="7:25"></label>
-        <label>Analizar las últimas <input class="pace zl" id="evW" inputmode="numeric" value="16"> semanas</label><label>a <input class="pace zl" id="evTemp" inputmode="decimal" value=""> °C</label><label>durante <input class="pace zl" id="evDur" inputmode="numeric" value="45"> min</label>
-        <button class="btn primary" id="evGo" type="button">Evaluar</button></div>
-      <div id="evOut" style="margin-top:12px"></div>
-    </div>
-    <div class="panel" style="margin-top:16px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2>Tendencias</h2>
         <span class="seg" role="group" aria-label="Variable" id="wmSeg"><button data-k="hrv">VFC</button><button data-k="rhr">FC en reposo</button><button data-k="shr">FC del sueño</button><button data-k="sh">Sueño</button></span>
         <span class="seg" role="group" aria-label="Periodo" id="wrSeg" style="max-width:100%;overflow-x:auto"><button data-r="7">7 días</button><button data-r="14">14 días</button><button data-r="30">1 mes</button><button data-r="90">3 meses</button><button data-r="180">6 meses</button><button data-r="365">1 año</button></span>
@@ -548,9 +539,18 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
       <h2 style="margin-top:16px;font-size:18px">Últimos 14 días</h2>
       <div class="tablewrap" id="wTab"></div>
     </div>
+    <div class="panel" style="margin-top:16px">
+      <h2>¿Tolero este cambio de ritmo?</h2>
+      <div class="mdesc" style="margin-top:0">Estima cuánto más te costaría el ritmo propuesto (corazón y piernas) y revisa si la tendencia de tus datos de las últimas semanas (16 por defecto) muestra que estás listo. Los umbrales son provisionales: se ajustarán con tus ciclos.</div>
+      <div class="opts"><label>Tipo <select class="tipo" id="evT"><option value="ER">ER / LR</option><option value="QS">Calidad · series cortas</option><option value="QL">Calidad · bloques largos</option></select></label>
+        <label>Ritmo actual <input class="pace" id="evA" value="7:30"></label><label>Propuesto <input class="pace" id="evB" value="7:25"></label>
+        <label>Analizar las últimas <input class="pace zl" id="evW" inputmode="numeric" value="16"> semanas</label><label>a <input class="pace zl" id="evTemp" inputmode="decimal" value=""> °C</label><label>durante <input class="pace zl" id="evDur" inputmode="numeric" value="45"> min</label>
+        <button class="btn primary" id="evGo" type="button">Evaluar</button></div>
+      <div id="evOut" style="margin-top:12px"></div>
+    </div>
   </section>
 
-  <footer>Versión 362 PWA (4 nov, Bienestar: promedios 7/14/28/rango y recuadro del día junto al tanque). Deriva de la actividad = FC 2ª mitad ÷ 1ª mitad − 1, por tiempo, desde el punto de estabilización (referencia &lt; 5 %). FC limpia: un segundo que se aparta más de 2 % de los 5 s anteriores y de los 5 s posteriores se reemplaza por el promedio de esos 10 s. Normalización por temperatura: FC normalizada = FC − k × (temperatura del reloj − temperatura de referencia); la eficiencia normalizada usa esa FC. La deriva y el TRIMP no se normalizan. TRIMP de Banister segundo a segundo. Pa:HR (desacople aeróbico) = (EF 1ª mitad − EF 2ª mitad) ÷ EF 1ª mitad, con EF = velocidad ÷ FC, mismas mitades que la deriva. Fuerza pico por paso (× peso corporal) = π/2 × (tiempo de vuelo ÷ tiempo de contacto + 1), con tiempo de vuelo = 60 ÷ cadencia − contacto (modelo de muelle, Morin 2005); carga mecánica = pasos × fuerza pico promedio, en miles. Son estimaciones propias para seguir tu tendencia, no medidas de laboratorio. Los datos se guardan en tu espacio privado de la nube del artefacto (solo vos los ves) y se ven igual en la compu y en el celular; el botón Respaldo descarga una copia.</footer>
+  <footer>Versión 363 PWA (4 nov, Bienestar: recuadro del día con techo y actividad máxima; detalle del techo; ¿Tolero? al final). Deriva de la actividad = FC 2ª mitad ÷ 1ª mitad − 1, por tiempo, desde el punto de estabilización (referencia &lt; 5 %). FC limpia: un segundo que se aparta más de 2 % de los 5 s anteriores y de los 5 s posteriores se reemplaza por el promedio de esos 10 s. Normalización por temperatura: FC normalizada = FC − k × (temperatura del reloj − temperatura de referencia); la eficiencia normalizada usa esa FC. La deriva y el TRIMP no se normalizan. TRIMP de Banister segundo a segundo. Pa:HR (desacople aeróbico) = (EF 1ª mitad − EF 2ª mitad) ÷ EF 1ª mitad, con EF = velocidad ÷ FC, mismas mitades que la deriva. Fuerza pico por paso (× peso corporal) = π/2 × (tiempo de vuelo ÷ tiempo de contacto + 1), con tiempo de vuelo = 60 ÷ cadencia − contacto (modelo de muelle, Morin 2005); carga mecánica = pasos × fuerza pico promedio, en miles. Son estimaciones propias para seguir tu tendencia, no medidas de laboratorio. Los datos se guardan en tu espacio privado de la nube del artefacto (solo vos los ves) y se ven igual en la compu y en el celular; el botón Respaldo descarga una copia.</footer>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
@@ -2117,13 +2117,15 @@ function wAvgHTML(f0,t){const W=[[7,'7 d'],[14,'14 d'],[28,'28 d']], nd=Math.rou
   return `<div style="flex:1 1 260px;min-width:0"><div class="lbl" style="margin-bottom:4px">Promedios</div><div class="tablewrap wavg"><table style="font-size:13px"><thead><tr><th style="font-size:13px"></th>${cols.map(c=>`<th style="font-size:13px;font-family:var(--body);font-weight:600">${c[1]}</th>`).join('')}</tr></thead><tbody>${F.map(([lab,k,u,dec])=>`<tr><td>${lab} <span style="font-size:11px">${u}</span></td>${cols.map(c=>`<td class="num">${cell(k,av(c[0],k),dec===0?1:0)}</td>`).join('')}</tr>`).join('')}</tbody></table></div><div class="mdesc" style="margin-top:2px;font-size:11px">Hasta el ${new Date(t).toLocaleDateString('es-CR',{day:'numeric',month:'short',timeZone:'UTC'})}. Sueño = noche + siesta al 50 %.</div></div>`}
 // recuadro de color con la calificación y la recomendación del día (hoy, o el último día con datos)
 function wDayBox(){const tk=todayKey(), last=Object.keys(well.days).sort().pop(), d=well.days[tk]&&Object.keys(well.days[tk]).length?tk:last; if(!d) return '';
-  const st=wellStatus(d); if(!st||!st.v) return '';
-  const C={ok:'var(--ok)',w:'var(--tQ)',b:'var(--bad)'}[st.v[0]], T={ok:'Verde',w:'Amarillo',b:'Rojo'}[st.v[0]], why=st.M.filter(m=>m[0]!=='ok').slice(0,3);
+  const st=wellStatus(d); if(!st||!st.v) return ''; let r=null; try{r=wLoadCalc()}catch(e){}
+  const C={ok:'var(--ok)',w:'var(--tQ)',b:'var(--bad)'}[st.v[0]], T={ok:'Verde',w:'Amarillo',b:'Rojo'}[st.v[0]], c=wlCfg();
+  const pct=r?Math.round(r.fac*100):[100,c.amber,c.red][st.lvl??0], rest=r&&r.plan&&r.plan.rest;
+  const act=!r?'<span class="mdesc" style="margin:0">Sin rodajes cargados para calcular la carga.</span>':rest?'Descanso (planeado)':r.left<1?'Descanso o muy suave':`${nf(r.left,0)} TRIMP${r.tpm?` ≈ ${nf(r.left/r.tpm,0)} min de ER`:''}`;
   return `<div style="flex:1 1 200px;min-width:0;border-radius:10px;padding:10px 12px;background:color-mix(in srgb,${C} 22%,var(--panel));border:2px solid ${C}">
     <div class="lbl" style="color:var(--ink)">Hoy · ${new Date(dms(d)).toLocaleDateString('es-CR',{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'})}</div>
-    <div style="font-family:var(--display);font-size:24px;font-weight:700;color:${C};line-height:1.1;margin-top:2px">${T}</div>
-    <div style="font-weight:600;font-size:14px;margin-top:2px">${st.v[1]}</div>
-    ${why.length?`<div style="font-size:12px;margin-top:6px;color:var(--ink);line-height:1.4">${why.map(m=>'· '+m[1]).join('<br>')}</div>`:''}</div>`}
+    <div style="font-family:var(--display);font-size:26px;font-weight:700;color:${C};line-height:1.1;margin-top:2px">${T}</div>
+    <div style="font-size:14px;margin-top:6px">Techo: <b>${pct} %</b></div>
+    <div style="font-size:14px;margin-top:2px">Actividad máxima: <b>${act}</b></div></div>`}
 function tankHTML(d,from){const fd=ms=>new Date(ms).toLocaleDateString('es-CR',{day:'numeric',month:'short',timeZone:'UTC'}), H=150, W=74;
   const f0=from??dms(d)-6*DAYW, nd=Math.round((dms(d)-f0)/DAYW)+1, T=sleepTank(d,nd), N=nd, mx=9*N, mn=5*N, op=8*N, hf=h=>nf(h,0);
   const y=h=>H-(Math.max(mn,Math.min(mx,h))-mn)/(mx-mn)*H;
@@ -2344,7 +2346,10 @@ function renderWLoad(){const B=document.getElementById('wLoad'); if(!B) return; 
       <div><span>Techo por carga: <b>${nf(r.base,0)} TRIMP</b>, lo máximo que te deja mañana con el ACWR en ${ac(c.floor)}.</span></div>
       <div><span>Bienestar${r.sd?' ('+dShort.format(new Date(dms(r.sd)+6*3600000))+')':''}: ${lv}.</span></div>
       ${r.done>0?`<div><span>Ya hiciste hoy ${nf(r.done,0)} TRIMP: te quedan <b>${nf(r.left,0)}</b>${mins(r.left)}.</span></div>`:''}
-    </div>${pl}
+    </div>
+    <div style="margin-top:10px;padding:8px 10px;border-radius:8px;background:var(--soft)"><div class="lbl" style="margin-bottom:4px">Cómo se llegó al techo</div>
+      <div style="font-family:var(--mono);font-size:13px">${nf(r.base,0)} TRIMP por carga × ${nf(r.fac*100,0)} % por bienestar = <b>${nf(r.max,0)} TRIMP</b>${r.done>0?` − ${nf(r.done,0)} ya hechos = <b>${nf(r.left,0)}</b>`:''}</div>
+      ${r.st&&r.st.M&&r.st.M.length?`<div class="wlist" style="margin-top:6px">${r.st.M.map(([k,t])=>`<div><span class="${k}" style="font-weight:600">${{ok:'✓',w:'~',b:'✗'}[k]}</span><span>${t}</span></div>`).join('')}</div>`:''}</div>${pl}
     <div class="mdesc">Es un techo, no una meta: no hace falta llegar a él. Se calcula con tu TRIMP cardíaco y las mismas fórmulas de la vista Fitness, fatiga y forma; el ajuste por bienestar usa el estado del día de arriba. Los umbrales son tuyos: cambialos aquí.</div>`+cfg}
   B.querySelectorAll('input.wl').forEach(inp=>inp.onchange=()=>setTimeout(()=>{let v=num(inp.value); const k=inp.dataset.k;
     // el tope se escribe como ACWR (1,30) y se guarda como piso de forma (−30 %)
