@@ -498,6 +498,8 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
     <div class="panel" style="margin-top:16px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
         <h2>Planeado vs ejecutado</h2>
+        <span class="seg" role="group" aria-label="Agrupar" id="pgSeg"><button data-g="d">Días</button><button data-g="w">Semanas</button></span>
+        <span class="opts" id="pwNav" style="margin:0;gap:6px"><button type="button" id="pwPrev" aria-label="Semana anterior">‹</button><b id="pwLab" style="min-width:120px;text-align:center;color:var(--ink);font-size:13px"></b><button type="button" id="pwNext" aria-label="Semana siguiente">›</button></span>
         <span class="seg" role="group" aria-label="Variable" id="pmSeg"><button data-m="trimp">TRIMP</button><button data-m="km">Km</button><button data-m="t">Tiempo</button></span>
       </div>
       <div class="chartbox" style="height:300px"><canvas id="pchart" aria-label="Planeado vs ejecutado por semana"></canvas><div class="empty" id="pEmpty">Planeá entrenos (sueltos, del coach o un ciclo) para comparar lo planeado con lo ejecutado.</div></div>
@@ -1880,6 +1882,7 @@ function renderPlanner(){try{renderGoal()}catch(e){console.error(e)} renderThr()
         footer:it=>{const x=W[it[0].dataIndex];return x.ex.n&&val(x.pl,pm)?`Ejecutado ${nf(val(x.ex,pm)/val(x.pl,pm)*100,0)} % de lo planeado`:''}}}},
       scales:{x:{grid:{display:false},ticks:{color:tick,font:{family:css('--mono')},maxRotation:0,autoSkip:true}},y:{beginAtZero:true,title:{display:true,text:unit,color:tick},grid:{color:css('--line')},ticks:{color:tick,font:{family:css('--mono')}}}}};
     if(pchart){pchart.data=data;pchart.options=opts;pchart.update()} else pchart=new Chart(cv,{type:'bar',data,options:opts})}
+  try{pDays()}catch(e){console.error(e)}
   const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const sm=o=>`${fmtT(o.t)} · ${nf(o.km,1)} km · ${nf(o.trimp,0)}`;
   let h='<table class="ptab"><thead><tr><th>Sem</th><th>Semana</th>'+SES.map(S=>`<th>${S.lab}</th>`).join('')+'<th>Planeado<br><span class="sub">tiempo · km · TRIMP</span></th><th>Ejecutado</th><th>Ejec./plan</th><th>Revisión</th></tr></thead><tbody>';
@@ -1897,6 +1900,28 @@ function renderPlanner(){try{renderGoal()}catch(e){console.error(e)} renderThr()
   T.querySelectorAll('input.pl').forEach(inp=>inp.onchange=()=>setTimeout(()=>{const w=cycle.weeks[+inp.dataset.i], k=inp.dataset.k; w.s[k]=w.s[k]||{tipo:SES.find(S=>S.k===k).tipo,plan:''}; w.s[k].plan=inp.value.trim(); applyPlans(); save(); renderPlanner()}));
   T.querySelectorAll('select.wk').forEach(s=>s.onchange=()=>{cycle.weeks[+s.dataset.i].load=s.value==='Carga'; save(); renderPlanner()});
 }
+// planeado vs ejecutado día por día de una semana (Lun a Dom, con los de descanso); usa la misma semana que la Revisión semanal
+let pg=(()=>{try{return LS.getItem('comparador.pg')||'d'}catch(e){return 'd'}})();
+function pDays(){document.querySelectorAll('#pgSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.g===pg)); document.getElementById('pwNav').hidden=pg!=='d';
+  if(pg!=='d'||!pchart||typeof Chart==='undefined') return;
+  const M=hrModel(), easy=easyPace(), today=crDay(Math.floor(Date.now()/1000)), w0=wkOf(today)+rvOff*7*DAY, unit={trimp:'TRIMP',km:'km',t:'minutos'}[pm], val=(o,k)=>k==='t'?o.t/60:o[k];
+  document.getElementById('pwLab').textContent=`${dShort.format(new Date(w0+6*3600000))} al ${dShort.format(new Date(w0+6*DAY+6*3600000))}`;
+  const D=[...Array(7)].map((_,i)=>({d:w0+i*DAY,pl:{t:0,km:0,trimp:0},ex:{t:0,km:0,trimp:0},np:0,ne:0,ps:[],as:[]}));
+  allPlans().filter(p=>wkOf(p.day)===w0).forEach(p=>{const x=D[Math.round((p.day-w0)/DAY)]; if(!x||p.tipo==='Descanso') return; const e=estPlan(p.plan,M,easy); x.ps.push(p.tipo); if(!e) return; x.np++; x.pl.t+=e.t; x.pl.km+=e.km; x.pl.trimp+=e.trimp});
+  acts.filter(a=>!a.ej&&wkOf(crDay(a.t0Unix))===w0).forEach(a=>{const x=D[Math.round((crDay(a.t0Unix)-w0)/DAY)]; if(!x) return; x.ne++; x.as.push(a.tipo); x.ex.t+=a.timeS; x.ex.km+=a.distKm; x.ex.trimp+=a.trimp||0});
+  const dn=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'], tick=css('--muted');
+  pchart.data={labels:D.map((x,i)=>[dn[i],String(new Date(x.d).getUTCDate()),!x.np&&!x.ne?'desc.':'']),datasets:[
+    {label:'Planeado',data:D.map(x=>x.np?val(x.pl,pm):null),backgroundColor:css('--line'),borderWidth:0},
+    {label:'Ejecutado',data:D.map(x=>x.d<=today&&x.ne?val(x.ex,pm):null),backgroundColor:css('--accent'),borderWidth:0}]};
+  const o=pchart.options; o.plugins.tooltip.callbacks={title:it=>{const x=D[it[0].dataIndex];return dfmt.format(new Date(x.d+6*3600000))},
+    label:it=>it.parsed.y==null?null:`${it.dataset.label}: ${nf(it.parsed.y,pm==='km'?1:0)} ${unit}`,
+    footer:it=>{const x=D[it[0].dataIndex]; if(!x.np&&!x.ne) return 'Descanso'; const L=[]; if(x.ps.length) L.push('Plan: '+x.ps.join(', ')); if(x.as.length) L.push('Hecho: '+x.as.join(', ')); if(x.np&&x.ne) L.push(`Ejecutado ${nf(val(x.ex,pm)/val(x.pl,pm)*100,0)} % de lo planeado`); return L}};
+  o.scales.x.ticks={color:tick,font:{family:css('--mono'),size:10.5},maxRotation:0,autoSkip:false};
+  pchart.update();
+  document.getElementById('pDesc').textContent=`Día por día de la semana elegida, de lunes a domingo (la misma que la Revisión semanal). Barras claras: lo planeado; oscuras: lo ejecutado. Los días sin nada salen como «desc.». Tocá «Semanas» para ver la serie de semanas completas.`}
+document.querySelectorAll('#pgSeg button').forEach(b=>b.onclick=()=>{pg=b.dataset.g;try{LS.setItem('comparador.pg',pg)}catch(e){} renderPlanner()});
+document.getElementById('pwPrev').onclick=()=>{rvOff--;renderPlanner()};
+document.getElementById('pwNext').onclick=()=>{rvOff++;renderPlanner()};
 // fitness, fatiga y forma dentro del Programador (mismo cálculo y periodo que en el Comparador)
 let fchart2=null;
 function renderPmcPlan(){const cv=document.getElementById('fchart2'); if(!cv) return;
@@ -1928,6 +1953,7 @@ function renderPvE(){const E=document.getElementById('pEmpty'), cv=document.getE
         footer:it=>{const x=W[it[0].dataIndex];return x.ex.n&&val(x.pl,pm)?`Ejecutado ${nf(val(x.ex,pm)/val(x.pl,pm)*100,0)} % de lo planeado`:''}}}},
       scales:{x:{grid:{display:false},ticks:{color:tick,font:{family:css('--mono')},maxRotation:0,autoSkip:true}},y:{beginAtZero:true,title:{display:true,text:unit,color:tick},grid:{color:css('--line')},ticks:{color:tick,font:{family:css('--mono')}}}}};
     if(pchart){pchart.data=data;pchart.options=opts;pchart.update()} else pchart=new Chart(cv,{type:'bar',data,options:opts})}
+  try{pDays()}catch(e){console.error(e)}
   const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])), sm=o=>`${fmtT(o.t)} · ${nf(o.km,1)} km · ${nf(o.trimp,0)}`;
   let h='<table class="ptab"><thead><tr><th>Semana</th><th style="text-align:left">Planeado</th><th>Planeado<br><span class="sub">tiempo · km · TRIMP</span></th><th>Ejecutado</th><th>Ejec./plan</th><th>Revisión</th></tr></thead><tbody>';
   for(const x of W.slice().reverse()){const r=x.pl.trimp?x.ex.trimp/x.pl.trimp*100:null;
