@@ -550,7 +550,7 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
     </div>
   </section>
 
-  <footer>Versión 363 PWA (4 nov, Bienestar: recuadro del día con techo y actividad máxima; detalle del techo; ¿Tolero? al final). Deriva de la actividad = FC 2ª mitad ÷ 1ª mitad − 1, por tiempo, desde el punto de estabilización (referencia &lt; 5 %). FC limpia: un segundo que se aparta más de 2 % de los 5 s anteriores y de los 5 s posteriores se reemplaza por el promedio de esos 10 s. Normalización por temperatura: FC normalizada = FC − k × (temperatura del reloj − temperatura de referencia); la eficiencia normalizada usa esa FC. La deriva y el TRIMP no se normalizan. TRIMP de Banister segundo a segundo. Pa:HR (desacople aeróbico) = (EF 1ª mitad − EF 2ª mitad) ÷ EF 1ª mitad, con EF = velocidad ÷ FC, mismas mitades que la deriva. Fuerza pico por paso (× peso corporal) = π/2 × (tiempo de vuelo ÷ tiempo de contacto + 1), con tiempo de vuelo = 60 ÷ cadencia − contacto (modelo de muelle, Morin 2005); carga mecánica = pasos × fuerza pico promedio, en miles. Son estimaciones propias para seguir tu tendencia, no medidas de laboratorio. Los datos se guardan en tu espacio privado de la nube del artefacto (solo vos los ves) y se ven igual en la compu y en el celular; el botón Respaldo descarga una copia.</footer>
+  <footer>Versión 364 PWA (4 nov, techo de TRIMP: matriz sueño × tanque, FC en reposo y VFC como multiplicadores). Deriva de la actividad = FC 2ª mitad ÷ 1ª mitad − 1, por tiempo, desde el punto de estabilización (referencia &lt; 5 %). FC limpia: un segundo que se aparta más de 2 % de los 5 s anteriores y de los 5 s posteriores se reemplaza por el promedio de esos 10 s. Normalización por temperatura: FC normalizada = FC − k × (temperatura del reloj − temperatura de referencia); la eficiencia normalizada usa esa FC. La deriva y el TRIMP no se normalizan. TRIMP de Banister segundo a segundo. Pa:HR (desacople aeróbico) = (EF 1ª mitad − EF 2ª mitad) ÷ EF 1ª mitad, con EF = velocidad ÷ FC, mismas mitades que la deriva. Fuerza pico por paso (× peso corporal) = π/2 × (tiempo de vuelo ÷ tiempo de contacto + 1), con tiempo de vuelo = 60 ÷ cadencia − contacto (modelo de muelle, Morin 2005); carga mecánica = pasos × fuerza pico promedio, en miles. Son estimaciones propias para seguir tu tendencia, no medidas de laboratorio. Los datos se guardan en tu espacio privado de la nube del artefacto (solo vos los ves) y se ven igual en la compu y en el celular; el botón Respaldo descarga una copia.</footer>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
@@ -2119,8 +2119,8 @@ function wAvgHTML(f0,t){const W=[[7,'7 d'],[14,'14 d'],[28,'28 d']], nd=Math.rou
 function wDayBox(){const tk=todayKey(), last=Object.keys(well.days).sort().pop(), d=well.days[tk]&&Object.keys(well.days[tk]).length?tk:last; if(!d) return '';
   const st=wellStatus(d); if(!st||!st.v) return ''; let r=null; try{r=wLoadCalc()}catch(e){}
   const C={ok:'var(--ok)',w:'var(--tQ)',b:'var(--bad)'}[st.v[0]], T={ok:'Verde',w:'Amarillo',b:'Rojo'}[st.v[0]], c=wlCfg();
-  const pct=r?Math.round(r.fac*100):[100,c.amber,c.red][st.lvl??0], rest=r&&r.plan&&r.plan.rest;
-  const act=!r?'<span class="mdesc" style="margin:0">Sin rodajes cargados para calcular la carga.</span>':rest?'Descanso (planeado)':r.left<1?'Descanso o muy suave':`${nf(r.left,0)} TRIMP${r.tpm?` ≈ ${nf(r.left/r.tpm,0)} min de ER`:''}`;
+  const pct=Math.round((st.fac??1)*100), rest=r&&r.plan&&r.plan.rest;
+  const act=st.rest?'Descanso total o activo':!r?'<span class="mdesc" style="margin:0">Sin rodajes cargados para calcular la carga.</span>':rest?'Descanso (planeado)':r.left<1?'Descanso o muy suave':`${nf(r.left,0)} TRIMP${r.tpm?` ≈ ${nf(r.left/r.tpm,0)} min de ER`:''}`;
   return `<div style="flex:1 1 200px;min-width:0;border-radius:10px;padding:10px 12px;background:color-mix(in srgb,${C} 22%,var(--panel));border:2px solid ${C}">
     <div class="lbl" style="color:var(--ink)">Hoy · ${new Date(dms(d)).toLocaleDateString('es-CR',{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'})}</div>
     <div style="font-family:var(--display);font-size:26px;font-weight:700;color:${C};line-height:1.1;margin-top:2px">${T}</div>
@@ -2180,46 +2180,48 @@ const WAVG=4; // días del promedio móvil de bienestar (VFC): 4 reacciona más 
 function w7(k,d){const t=dms(d), xs=wVals(k).filter(([dd])=>{const x=dms(dd);return x<=t&&x>t-WAVG*DAYW}).map(x=>x[1]); return xs.length>=3?xs.reduce((a,b)=>a+b,0)/xs.length:null}
 const wDay=d=>well.days[d]||{}, wPrev=d=>dkey(dms(d)-DAYW);
 // estado del día: 0 procede, 1 suaviza, 2 descanso o muy suave
-function wellStatus(d){const D0=wDay(d), D1=wDay(wPrev(d)), M=[]; let lvl=null, rhrUp=0, hrvLow=false; const up=x=>{lvl=Math.max(lvl??0,x)};
+// estado del día = % del techo de TRIMP. Sueño (matriz noche × tanque) × FC en reposo × VFC × otros, con piso de 30 %.
+// 0: ≥ 90 % (verde) · 1: 60–89 % (amarillo) · 2: < 60 % (rojo; 30 % = descanso total o activo)
+const SLEEP_MX={g:[1,.9,.75,.6],y:[.85,.7,.6,.6],r:[.3,.3,.3,.3]}, RHRB=3, xf=f=>'×'+nf(f,2).replace(/,?0+$/,'').replace(/,$/,'');
+function wellStatus(d){const D0=wDay(d), M=[]; let any=false, rest=false, fS=1, fR=1, fH=1, fX=1;
+  // VFC: rango de 60 días (promedio ± desvío), promedio de 4 días
+  const bh=wBase('hrv',d,60); let hrvLow=false;
+  if(bh){const lo=bh.m-HRVK*bh.sd, hi=bh.m+HRVK*bh.sd, a4=w7('hrv',d), a4p=w7('hrv',wPrev(d)), rg=`rango ${nf(lo,0)}–${nf(hi,0)}`;
+    if(a4!=null||D0.hrv!=null) any=true;
+    if(a4!=null&&a4<lo&&D0.hrv!=null&&D0.hrv>=bh.m) M.push(['ok',`VFC de hoy ${D0.hrv} ms, ya en tu promedio o arriba: te estás recuperando (el promedio de ${WAVG} días, ${nf(a4,1)}, todavía arrastra los días bajos).`]);
+    else if(a4!=null&&a4<lo&&a4p!=null&&a4p<lo){fH=.6; hrvLow=true; M.push(['b',`VFC promedio ${WAVG} días ${nf(a4,1)} ms, bajo tu ${rg} por segundo día: ${xf(fH)}.`])}
+    else if(a4!=null&&a4<lo){fH=.75; hrvLow=true; M.push(['w',`VFC promedio ${WAVG} días ${nf(a4,1)} ms, bajo tu ${rg}: ${xf(fH)}.`])}
+    else if(D0.hrv!=null&&D0.hrv<lo){fH=.9; hrvLow=true; M.push(['w',`VFC de hoy ${D0.hrv} ms, bajo tu ${rg} (un día): ${xf(fH)}.`])}
+    else if(a4!=null) M.push(['ok',`VFC promedio ${WAVG} días ${nf(a4,1)} ms, en tu ${rg}.`])}
+  // FC en reposo: promedio de 30 días ± 3 ppm. Arriba siempre cuenta; abajo solo si la VFC también está baja (fatiga profunda)
   const br=wBase('rhr',d,30);
-  if(br&&D0.rhr!=null){const df=D0.rhr-br.m, pdf=D1.rhr!=null?D1.rhr-br.m:null; up(0);
-    if(df>=4&&pdf!=null&&pdf>=4){rhrUp=2; up(1); M.push(['b',`FC en reposo ${D0.rhr} ppm: +${nf(df,0)} sobre tu promedio de 30 días (${nf(br.m,1)}) por segundo día seguido.`])}
-    else if(df>=4){rhrUp=1; if(df>=7) up(1); M.push(['w',`FC en reposo ${D0.rhr} ppm: +${nf(df,0)} sobre tu promedio (${nf(br.m,1)}).`+(df>=7?' Salto grande, aunque sea un solo día.':' Un solo día: vigilá mañana.')])}
-    else M.push(['ok',`FC en reposo ${D0.rhr} ppm, en tu rango (promedio ${nf(br.m,1)}).`])}
-  const bh=wBase('hrv',d,60), h7=w7('hrv',d);
-  if(bh&&h7!=null){const lo=bh.m-HRVK*bh.sd, hi=bh.m+HRVK*bh.sd; up(0);
-    // el promedio de pocos días va atrasado: si hoy la VFC ya volvió a tu promedio o más, es recuperación en curso, no fatiga
-    if(h7<lo&&D0.hrv!=null&&D0.hrv>=bh.m) M.push(['ok',`VFC de hoy ${D0.hrv} ms, ya en tu promedio o arriba (${nf(bh.m,0)}): te estás recuperando. El promedio de ${WAVG} días (${nf(h7,1)}) todavía arrastra los días bajos.`]);
-    else if(h7<lo){hrvLow=true; up(1); M.push(['w',`VFC promedio ${WAVG} días ${nf(h7,1)} ms, bajo tu rango normal (${nf(lo,0)}–${nf(hi,0)}).`])}
-    else M.push(['ok',`VFC promedio ${WAVG} días ${nf(h7,1)} ms (rango normal ${nf(lo,0)}–${nf(hi,0)}).`]);
-    if(D0.hrv!=null&&D0.hrv<bh.m-1.5*bh.sd){up(1); M.push(['w',`VFC de hoy ${D0.hrv} ms, muy por debajo de tu promedio (${nf(bh.m,0)}).`])}}
+  if(br){const m=br.m, a4=w7('rhr',d), a4p=w7('rhr',wPrev(d)), out=v=>v!=null&&(v-m>RHRB||(m-v>RHRB&&hrvLow)), sg=v=>`${v>m?'+':'−'}${nf(Math.abs(v-m),1)}`;
+    if(D0.rhr!=null||a4!=null) any=true;
+    if(out(a4)&&out(a4p)){fR=.6; M.push(['b',`FC en reposo: promedio ${WAVG} días ${nf(a4,1)} ppm (${sg(a4)} sobre tu promedio de 30 días, ${nf(m,1)}) por segundo día: ${xf(fR)}.`])}
+    else if(out(a4)){fR=.75; M.push(['w',`FC en reposo: promedio ${WAVG} días ${nf(a4,1)} ppm (${sg(a4)} vs ${nf(m,1)}), fuera de ±${RHRB}: ${xf(fR)}.`])}
+    else if(out(D0.rhr)){fR=.9; M.push(['w',`FC en reposo de hoy ${D0.rhr} ppm (${sg(D0.rhr)} vs ${nf(m,1)}), fuera de rango un día: ${xf(fR)}.`])}
+    else if(D0.rhr!=null&&m-D0.rhr>RHRB) M.push(['w',`FC en reposo ${D0.rhr} ppm, bajo tu rango con la VFC normal: buena señal, solo vigilar.`]);
+    else if(D0.rhr!=null) M.push(['ok',`FC en reposo ${D0.rhr} ppm, en tu rango (${nf(m,1)} ± ${RHRB}).`])}
+  // FC del sueño: si sube junto con la FC en reposo, esta baja un escalón
   const bs=wBase('shr',d,30);
-  if(bs&&D0.shr!=null){up(0); const df=D0.shr-bs.m, pdf=D1.shr!=null?D1.shr-bs.m:null;
-    if(df>=3&&pdf!=null&&pdf>=3){up(1); M.push(['w',`FC del sueño ${D0.shr} ppm: +${nf(df,0)} sobre tu promedio por segunda noche.`])}
-    else if(df>=3) M.push(['w',`FC del sueño ${D0.shr} ppm: +${nf(df,0)} sobre tu promedio (${nf(bs.m,1)}).`])}
-  // sueño: bajo 7:00 h suma déficit. El estado lo decide el tanque de 7 noches (ver sleepTank):
-  // azul/verde procede · amarillo o rojo suavizá · alarma (< 35 h) descanso o muy suave
-  if(D0.sh!=null){up(0); const hm=wfmt('sh',D0.sh), TQ=sleepTank(d);
-    const ds=daySleep(D0), nap=D0.nap>0?D0.nap:0, ntx=nap?` + ${wfmt('sh',napCredit(nap))} h de siesta (${nap} min al 50 %) = ${wfmt('sh',ds)} h`:'';
+  if(bs&&D0.shr!=null){any=true; const df=D0.shr-bs.m;
+    if(df>=3&&fR<1){const nx=fR>=.9?.75:.6; if(nx<fR){fR=nx; M.push(['w',`FC del sueño ${D0.shr} ppm (+${nf(df,0)}) sube junto con la de reposo: un escalón más (${xf(fR)}).`])}}
+    else if(df>=3) M.push(['w',`FC del sueño ${D0.shr} ppm: +${nf(df,0)} sobre tu promedio (${nf(bs.m,1)}). Vigilar.`])}
+  // sueño: matriz noche (noche + siesta al 50 %) × tanque de 7 noches
+  if(D0.sh!=null){any=true; const hm=wfmt('sh',D0.sh), TQ=sleepTank(d), ds=daySleep(D0), nap=D0.nap>0?D0.nap:0, ntx=nap?` + ${wfmt('sh',napCredit(nap))} h de siesta (${nap} min al 50 %) = ${wfmt('sh',ds)} h`:'';
     if(nap>90) M.push(['w',`Siesta de ${nap} min: más de 90 min puede quitarte sueño esta noche.`]);
-    if(ds<SDEBT) M.push(['ok',`Dormiste ${hm} h${ntx}: bajo 7:00 h, suma ${wfmt('sh',SDEBT-ds)} h de déficit.`]);
-    else if(nap&&D0.sh<=8) M.push(['ok',`Dormiste ${hm} h${ntx}: cuenta ${wfmt('sh',dayCredit(D0))} h en el tanque.`]);
-    else if(D0.sh>NMAX) M.push(['ok',`Dormiste ${hm} h: recuperación; cuenta ${wfmt('sh',dayCredit(D0))} h en el tanque${nap?' con la siesta':''} (lo que pasa de 9 h vale la mitad, como una siesta, tope 9:30 efectivas).`]);
-    else M.push(['ok',`Dormiste ${hm} h${ntx}: bien.`]);
-    if(TQ.v!=null){const t=`Tanque de sueño (7 noches): ${nf(TQ.v,1)} de 63 h, ${TQ.z} (promedio efectivo ${wfmt('sh',TQ.avg)} h por noche).`;
-      if(TQ.z==='alarma'){up(2); M.push(['b',t+' Alarma seria: prioriza dormir antes que entrenar.'])}
-      else if(TQ.z==='rojo'||TQ.z==='amarillo'){up(1); M.push(['w',t+' Ya afecta el entrenamiento.'])}
-      else M.push(['ok',t])}
-    else M.push(['ok',`Tanque de sueño: faltan noches (${TQ.n} de 7; se necesitan 5).`])}
-  if(D0.feel){up(0); if(+D0.feel<=2){up(1); M.push(['w',`Sensación ${D0.feel}/5.`])}}
-  const shrUp=bs&&D0.shr!=null&&D0.shr-bs.m>=3;
-  if(rhrUp>=1&&shrUp) {up(1); M.push(['w','FC en reposo y FC del sueño altas a la vez: el cuerpo puede estar peleando algo.'])}
-  if(rhrUp===2&&hrvLow||rhrUp>=1&&hrvLow&&D0.feel&&+D0.feel<=2) up(2);
-  if(rhrUp===2&&D0.shr!=null&&bs&&D0.shr-bs.m>=3) up(2);
-  // la nota del día: síntomas, molestias, mal sueño o estrés suben la alerta; causas puntuales (entrenar tarde, alcohol…) explican valores alterados
-  wNoteFx(D0.note,lvl).forEach(([l,c,t])=>{if(l!=null) up(l); M.push([c,t])});
-  const v=lvl==null?null:[['ok','Procede con lo planeado'],['w','Suaviza: ER suave o una calidad más corta'],['b','Considerá descanso o un rodaje muy suave']][lvl];
-  return {lvl,v,M}}
+    const eff=dayCredit(D0), nz=eff>=7?'g':eff>=6?'y':'r', tz=TQ.v!=null?TQ.z:null, col=tz==='azul'?0:tz==='verde'||!tz?1:tz==='amarillo'?2:3;
+    fS=SLEEP_MX[nz][col]; if(nz==='r') rest=true;
+    M.push([nz==='r'?'b':fS>=.9?'ok':'w',`Dormiste ${hm} h${ntx}: noche ${({g:'verde',y:'amarilla',r:'roja'})[nz]}`+(TQ.v!=null?` · tanque ${nf(TQ.v,1)} de 63 h, ${tz}`:' · tanque sin datos suficientes (se toma verde)')+` → sueño ${nf(fS*100,0)} % del techo.`+(nz==='r'?' Descanso total o activo; una siesta al mediodía puede subirte a amarillo.':'')])}
+  if(D0.feel){any=true; if(+D0.feel<=2){fX*=.9; M.push(['w',`Sensación ${D0.feel}/5: ${xf(.9)}.`])}}
+  if(fR<=.75&&fH<=.75){rest=true; M.push(['b','FC en reposo fuera de rango y VFC baja a la vez: el cuerpo puede estar peleando algo. Descanso total o activo.'])}
+  // la nota del día: síntomas → descanso; molestias, mal sueño o estrés → ×0,9; causas puntuales explican valores alterados
+  const pre=Math.max(.3,fS*fR*fH*fX), pl=rest||pre<.6?2:pre<.9?1:0;
+  wNoteFx(D0.note,pl).forEach(([l,c,t])=>{if(l===2) rest=true; else if(l===1) fX*=.9; M.push([c,t])}); if(D0.note) any=true;
+  if(!any) return {lvl:null,v:null,M,fac:null};
+  const fac=rest?.3:Math.max(.3,fS*fR*fH*fX), lvl=fac>=.9?0:fac>=.6?1:2;
+  const v=[['ok','Procede con lo planeado'],['w','Ajustá al techo: recortá si lo planeado no entra'],['b',rest?'Descanso total o activo':'Muy suave o descanso']][lvl];
+  return {lvl,v,M,fac,rest,F:{sleep:fS,rhr:fR,hrv:fH,extra:fX}}}
 var wLoaded='';
 function wNoteFx(note,lv){if(!note) return []; const s=String(note).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''), has=re=>re.test(s), R=[];
   if(has(/enferm|gripe|resfri|fiebre|garganta|\btos\b|congest|mocos|malestar general|virus|diarrea|vomit|escalofr/)) R.push([2,'b','Tu nota menciona síntomas de enfermedad: descanso hasta que pasen.']);
@@ -2244,7 +2246,7 @@ function renderWell(){const keys=Object.keys(well.days).sort(), msg=document.get
   else {const st=wellStatus(last), ic={ok:'✓',w:'~',b:'✗'};
     S.innerHTML=`<h2>Estado · ${dShort.format(new Date(dms(last)+6*3600000))}</h2>`+(st.v?`<div class="wv ${st.v[0]}">${st.v[1]}</div>`:'<div class="mdesc">Hacen falta al menos 14 días de historial para calcular tu rango normal.</div>')+
       `<div class="wlist">${st.M.map(([c,t])=>`<div><span class="${c}" style="font-weight:600">${ic[c]}</span><span>${t}</span></div>`).join('')}</div>`+
-      `<div class="mdesc">Rango normal: VFC con tus últimos 60 días (promedio ± ${nf(HRVK,0)} desvío, comparado con tu promedio de ${WAVG} días); FC en reposo y del sueño, con tus últimos 30 días. La nota del día también cuenta: síntomas de enfermedad, molestias, mal sueño o estrés suben la alerta; entrenar tarde, alcohol, una cena tarde o un viaje se señalan como explicación de valores alterados. Es una guía para ajustar el entreno, no un diagnóstico.</div>`+(restOn(dms(todayKey()))?`<div class="notice" style="margin-top:8px"><b>Hoy tenés descanso planeado.</b>${st.lvl>=1?' Tus indicadores lo respaldan: no hace falta ajustar nada más.':''}</div>`:'')}
+      `<div class="mdesc">El estado es el % del techo de TRIMP: <b>sueño</b> (noche + siesta al 50 %: verde ≥ 7 h, amarilla 6–7, roja &lt; 6, cruzada con el tanque de 7 noches: con noche verde azul 100 · verde 90 · amarillo 75 · rojo 60 %; con noche amarilla 85 · 70 · 60 · 60 %; noche roja 30 %, descanso total o activo) × <b>FC en reposo</b> (promedio de 30 días ± ${RHRB} ppm: un día fuera ×0,9, promedio de ${WAVG} días fuera ×0,75, y dos días así ×0,6; abajo solo cuenta con la VFC baja) × <b>VFC</b> (rango de 60 días, promedio ± ${nf(HRVK,0)} desvío: hoy bajo el rango ×0,9, promedio de ${WAVG} días bajo ×0,75, dos días así ×0,6). FC en reposo y VFC mal a la vez (×0,75 o menos las dos): descanso. La FC del sueño alta baja un escalón a la FC en reposo; sensación 2/5 o menos y molestias o estrés en la nota ×0,9; síntomas de enfermedad, descanso. Verde ≥ 90 %, amarillo 60–89 %, rojo &lt; 60 %. Piso 30 %. Es una guía para ajustar el entreno, no un diagnóstico.</div>`+(restOn(dms(todayKey()))?`<div class="notice" style="margin-top:8px"><b>Hoy tenés descanso planeado.</b>${st.lvl>=1?' Tus indicadores lo respaldan: no hace falta ajustar nada más.':''}</div>`:'')}
   renderWLoad();
   // gráfico
   const pts=wVals(wm), E=document.getElementById('wEmpty'), cv=document.getElementById('wchart');
@@ -2322,7 +2324,7 @@ function wLoadCalc(){
   const raw=((1-f)*y.ctl*(1-kc)-y.atl*(1-ka))/(ka-(1-f)*kc), base=Math.max(0,raw);
   const tk=todayKey(), D=well.days[tk], last=Object.keys(well.days).sort().pop();
   let st=null, sd=null; if(D&&Object.keys(D).length){st=wellStatus(tk); sd=tk} else if(last&&dms(last)===dms(tk)-DAYW){st=wellStatus(last); sd=last}
-  const lvl=st?st.lvl:null, fac=lvl===2?c.red/100:lvl===1?c.amber/100:1, max=base*fac, done=t?t.real:0;
+  const lvl=st?st.lvl:null, fac=st&&st.fac!=null?st.fac:1, max=base*fac, done=t?t.real:0;
   // TRIMP por minuto de ER, con tus ER de los últimos 60 días
   const er=acts.filter(a=>a.tipo==='ER'&&a.t0Unix*1000>Date.now()-60*DAY&&a.timeS>0), tpm=er.length?er.reduce((q,a)=>q+a.trimp,0)/er.reduce((q,a)=>q+a.timeS/60,0):null;
   // sesión planeada hoy en el ciclo
@@ -2333,9 +2335,9 @@ function wLoadCalc(){
 }
 function renderWLoad(){const B=document.getElementById('wLoad'); if(!B) return; const r=wLoadCalc(), c=wlCfg();
   const ac=pct=>pct==null?'—':nf(1-pct/100,2);
-  const cfg=`<div class="opts" style="margin-top:12px">Reglas: ACWR máximo para mañana <input class="pace wl" data-k="floor" value="${nf(1-c.floor/100,2)}" aria-label="ACWR máximo para mañana"> · día amarillo <input class="pace wl" data-k="amber" value="${c.amber}" aria-label="Factor amarillo"> % del techo · día rojo <input class="pace wl" data-k="red" value="${c.red}" aria-label="Factor rojo"> %</div>`;
+  const cfg=`<div class="opts" style="margin-top:12px">Reglas: ACWR máximo para mañana <input class="pace wl" data-k="floor" value="${nf(1-c.floor/100,2)}" aria-label="ACWR máximo para mañana"></div>`;
   if(!r){B.innerHTML='<h2>Carga máxima sugerida hoy</h2><div class="mdesc">Hacen falta rodajes cargados hasta ayer en el Comparador para calcular tu fitness y fatiga.</div>'+cfg}
-  else{const zn=r.now!=null?fzOf(r.now):null, lv=r.lvl==null?'sin registro de bienestar reciente: no se ajusta':['verde: techo completo','amarillo: '+c.amber+' % del techo','rojo: '+c.red+' % del techo'][r.lvl];
+  else{const zn=r.now!=null?fzOf(r.now):null, lv=r.lvl==null?'sin registro de bienestar reciente: no se ajusta':`${['verde','amarillo','rojo'][r.lvl]}: ${nf(r.fac*100,0)} % del techo`+(r.st&&r.st.rest?' (descanso total o activo)':'');
     const mins=v=>r.tpm?` ≈ ${nf(v/r.tpm,0)} min de ER`:'';
     const rs=!!(r.plan&&r.plan.rest);
     const pl=rs?`<div style="margin-top:8px">Hoy tenés <b>descanso planeado</b>: mañana llegarías con ACWR ${ac(r.formAfter(0))}.</div>`:r.plan?(()=>{const fa=r.formAfter(r.plan.trimp), ok=r.plan.trimp<=r.max; return `<div style="margin-top:8px">Planeado hoy (${r.plan.tipo}: <code>${r.plan.txt}</code>): ~${nf(r.plan.trimp,0)} TRIMP → <span class="${ok?'ok':'w'}" style="font-weight:600">${ok?'entra en el techo':'supera el techo en '+nf(r.plan.trimp-r.max,0)}</span>; mañana quedarías con ACWR ${ac(fa)}.</div>`})():'';
@@ -2348,7 +2350,7 @@ function renderWLoad(){const B=document.getElementById('wLoad'); if(!B) return; 
       ${r.done>0?`<div><span>Ya hiciste hoy ${nf(r.done,0)} TRIMP: te quedan <b>${nf(r.left,0)}</b>${mins(r.left)}.</span></div>`:''}
     </div>
     <div style="margin-top:10px;padding:8px 10px;border-radius:8px;background:var(--soft)"><div class="lbl" style="margin-bottom:4px">Cómo se llegó al techo</div>
-      <div style="font-family:var(--mono);font-size:13px">${nf(r.base,0)} TRIMP por carga × ${nf(r.fac*100,0)} % por bienestar = <b>${nf(r.max,0)} TRIMP</b>${r.done>0?` − ${nf(r.done,0)} ya hechos = <b>${nf(r.left,0)}</b>`:''}</div>
+      <div style="font-family:var(--mono);font-size:13px">${nf(r.base,0)} TRIMP por carga × ${r.st&&r.st.F?(r.st.rest?'30 % (descanso)':[['sueño',r.st.F.sleep],['FC reposo',r.st.F.rhr],['VFC',r.st.F.hrv],['otros',r.st.F.extra]].filter(([,f])=>f!==1||true).map(([k,f])=>`${k} ${nf(f*100,0)} %`).join(' × ')+(r.st.fac>r.st.F.sleep*r.st.F.rhr*r.st.F.hrv*r.st.F.extra+1e-9?' (piso 30 %)':'')):nf(r.fac*100,0)+' % por bienestar'} = <b>${nf(r.max,0)} TRIMP</b>${r.done>0?` − ${nf(r.done,0)} ya hechos = <b>${nf(r.left,0)}</b>`:''}</div>
       ${r.st&&r.st.M&&r.st.M.length?`<div class="wlist" style="margin-top:6px">${r.st.M.map(([k,t])=>`<div><span class="${k}" style="font-weight:600">${{ok:'✓',w:'~',b:'✗'}[k]}</span><span>${t}</span></div>`).join('')}</div>`:''}</div>${pl}
     <div class="mdesc">Es un techo, no una meta: no hace falta llegar a él. Se calcula con tu TRIMP cardíaco y las mismas fórmulas de la vista Fitness, fatiga y forma; el ajuste por bienestar usa el estado del día de arriba. Los umbrales son tuyos: cambialos aquí.</div>`+cfg}
   B.querySelectorAll('input.wl').forEach(inp=>inp.onchange=()=>setTimeout(()=>{let v=num(inp.value); const k=inp.dataset.k;
