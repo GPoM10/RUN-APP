@@ -293,6 +293,12 @@ footer{font-size:12px;color:var(--muted);max-width:90ch}
 .rvgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:18px}.rvcard{display:grid;grid-row:span 5;grid-template-rows:subgrid;row-gap:8px;align-content:start}
 @media (max-width:860px){.rvgrid{grid-template-columns:minmax(0,1fr);row-gap:18px}.rvtop:empty{display:none}.rvcard{grid-row:auto;grid-template-rows:none;display:flex;flex-direction:column;gap:8px}}
 .rvtop{min-height:34px;display:flex;align-items:center}.rvtop:empty{display:none}
+.dcols{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
+.dc{display:flex;flex-direction:column;gap:2px;min-width:0}.dc.today .dcn{color:var(--accent)}
+.dcv{height:70px;display:flex;align-items:flex-end;justify-content:center;gap:2px;border-bottom:1px solid var(--line)}
+.dcb{width:9px;display:flex;flex-direction:column;border-radius:3px 3px 0 0;overflow:hidden}.dcb:first-child{opacity:.45}
+.dcr{font-size:10px;color:var(--muted);align-self:center}
+.dcn{display:flex;flex-direction:column;align-items:center;font-size:10.5px;font-weight:600;color:var(--muted);line-height:1.15}.dcn span{color:var(--ink);font-weight:400}
 .rvdays{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-top:10px}
 .rvd{border:1px solid var(--line);border-radius:7px;padding:4px;min-height:58px;display:flex;flex-direction:column;gap:3px;font-size:11.5px;min-width:0}
 .rvd.today{box-shadow:inset 0 0 0 2px var(--accent)}.rvdn{display:flex;justify-content:space-between;font-weight:600;color:var(--muted)}.rvdn span{color:var(--ink)}
@@ -2036,6 +2042,16 @@ const bandTxt=(zb,m)=>{const R=RVM[m||'t']; return BANDS.map((b,i)=>`<span style
 // con 'falta' se completa en gris lo que todavía no se ejecuta
 function bandBar(zb,h,sc,falta,m){const R=RVM[m||'t'], T=zb.reduce((q,v)=>q+v,0), S=sc||T||1, g=falta&&falta>T?falta-T:0;
   return `<div style="display:flex;height:${h||8}px;margin:3px 0">${zb.map((v,i)=>v?`<div style="width:${v/S*100}%;background:${BCOL[i]}" title="${BANDS[i][0]}: ${nf(R.f(v),R.d)} ${R.u}"></div>`:'').join('')}${g?`<div style="width:${g/S*100}%;background:var(--line)" title="Falta por ejecutar: ${nf(R.f(g),R.d)} ${R.u}"></div>`:''}</div>`}
+// 7 días de la semana en barras verticales: a la izquierda lo planeado, a la derecha lo ejecutado, apiladas por franja de FC; los días sin nada salen como descanso
+function dayCols(w0,M,easy,m){const R=RVM[m||'t'], key={zb:'t',ztr:'tr',zd:'d'}[R.k], tot={zb:a=>a.timeS,ztr:a=>a.trimp||0,zd:a=>a.distKm*1000}[R.k], z0=()=>[0,0,0,0], today=crDay(Math.floor(Date.now()/1000));
+  const D=[...Array(7)].map((_,i)=>({d:w0+i*DAY,pl:z0(),ex:z0(),exg:0,np:0,ne:0,rest:false}));
+  allPlans().filter(p=>wkOf(p.day)===w0).forEach(p=>{const x=D[Math.round((p.day-w0)/DAY)]; if(!x) return; if(p.tipo==='Descanso'){x.rest=true;return} const e=estPlan(p.plan,M,easy); if(!e) return; x.np++; e[R.k].forEach((v,i)=>x.pl[i]+=v)});
+  acts.filter(a=>!a.ej&&wkOf(crDay(a.t0Unix))===w0).forEach(a=>{const x=D[Math.round((crDay(a.t0Unix)-w0)/DAY)]; if(!x) return; x.ne++; const b=actBands3(a); if(b) b[key].forEach((v,i)=>x.ex[i]+=v); else x.exg+=tot(a)});
+  const sum=z=>z.reduce((q,v)=>q+v,0), mx=Math.max(1,...D.map(x=>Math.max(sum(x.pl),sum(x.ex)+x.exg)));
+  const col=(z,g,lab)=>{const T=sum(z)+g; if(!T) return '<div class="dcb"></div>'; return `<div class="dcb" title="${lab}: ${nf(R.f(T),R.d)} ${R.u}" style="height:${Math.max(T/mx*100,3)}%">${g?`<div style="flex:${g};background:var(--muted)"></div>`:''}${z.map((v,i)=>v?`<div style="flex:${v};background:${BCOL[i]}"></div>`:'').slice().reverse().join('')}</div>`};
+  return `<div class="dcols">${D.map((x,i)=>{const nada=!x.np&&!x.ne;
+    return `<div class="dc${x.d===today?' today':''}"><div class="dcv">${nada?`<span class="dcr">desc.</span>`:col(x.pl,0,'Planeado')+col(x.ex,x.exg,'Ejecutado')}</div><div class="dcn">${['L','K','M','J','V','S','D'][i]}<span>${new Date(x.d).getUTCDate()}</span></div></div>`}).join('')}</div>
+    <div class="sub" style="font-size:11px;margin-top:2px">Cada día: barra clara a la izquierda lo planeado, a la derecha lo ejecutado (${R.u}).</div>`}
 const chk=c=>`<span class="${c[0]==='n'?'':c[0]}" style="${c[0]==='n'?'color:var(--muted)':'font-weight:600'};cursor:help" title="${c[2].replace(/"/g,'&quot;')}">${c[0]==='ok'?'✓':c[0]==='n'?'·':'!'} ${c[1]}</span>`;
 function revCell(w0,M,easy,load){const k=wkChecks(w0,M,easy,load), R=wkRead(w0,M,easy), d=k.d; let h='';
   if(d.pl.n) h+=`<div class="sub">plan ${bandTxt(d.pl.zb)} min</div>`;
@@ -2053,13 +2069,13 @@ function revCard(title,w0,M,easy,load,mode,top){const k=wkChecks(w0,M,easy,load)
   const r2=`<div><div class="lbl">${title}</div><div style="font-family:var(--display);font-size:20px;font-weight:600;margin:2px 0 6px">${dShort.format(new Date(w0+6*3600000))} al ${dShort.format(new Date(w0+6*DAY+6*3600000))}${load===false?' · descarga':''}</div></div>`;
   const wrap=(...rows)=>`<div class="rvcard">${r1}${r2}${rows.join('')}</div>`;
   if(!d.pl.n&&!d.ex.n) return wrap('<div class="mdesc" style="margin:0">No hay nada planeado ni cargado esa semana.</div>','<div></div>','<div></div>');
-  const r3=d.pl.n?`<div><div class="mdesc" style="margin:0">Planeado: ${fmtT(d.pl.t)} · ${nf(d.pl.km,1)} km · TRIMP ${nf(d.pl.trimp,0)}</div>${bandBar(pz,8,sc,0,rvM)}<div class="sub" style="font-family:var(--mono);font-size:11.5px">${bandTxt(pz,rvM)} ${RM.u}</div></div>`:'<div class="mdesc" style="margin:0">Sin plan para esa semana.</div>';
-  const r4=d.ex.n?`<div><div class="mdesc" style="margin:0">Ejecutado: ${fmtT(d.ex.t)} · ${nf(d.ex.km,1)} km · TRIMP ${nf(d.ex.trimp,0)}</div>`+(d.ex.zn?`${bandBar(ez,8,sc,pT,rvM)}<div class="sub" style="font-family:var(--mono);font-size:11.5px">${bandTxt(ez,rvM)} ${RM.u}${pT?` · ${eT>pT?`+${nf(RM.f(eT-pT),RM.d)} sobre lo planeado (${nf((eT/pT-1)*100,0)} %)`:eT<pT?`faltan ${nf(RM.f(pT-eT),RM.d)}`:'completo'}`:''}${d.ex.zn<d.ex.n?` (${d.ex.zn} de ${d.ex.n} rodajes con FC por zona)`:''}</div>`:'')+'</div>':'<div class="mdesc" style="margin:0">Todavía sin rodajes cargados.</div>';
+  const r3=d.pl.n?`<div><div class="mdesc" style="margin:0">Planeado: ${fmtT(d.pl.t)} · ${nf(d.pl.km,1)} km · TRIMP ${nf(d.pl.trimp,0)}</div><div class="sub" style="font-family:var(--mono);font-size:11.5px">${bandTxt(pz,rvM)} ${RM.u}</div></div>`:'<div class="mdesc" style="margin:0">Sin plan para esa semana.</div>';
+  const r4=d.ex.n?`<div><div class="mdesc" style="margin:0">Ejecutado: ${fmtT(d.ex.t)} · ${nf(d.ex.km,1)} km · TRIMP ${nf(d.ex.trimp,0)}</div>`+(d.ex.zn?`<div class="sub" style="font-family:var(--mono);font-size:11.5px">${bandTxt(ez,rvM)} ${RM.u}${pT?` · ${eT>pT?`+${nf(RM.f(eT-pT),RM.d)} sobre lo planeado (${nf((eT/pT-1)*100,0)} %)`:eT<pT?`faltan ${nf(RM.f(pT-eT),RM.d)}`:'completo'}`:''}${d.ex.zn<d.ex.n?` (${d.ex.zn} de ${d.ex.n} rodajes con FC por zona)`:''}</div>`:'')+'</div>':'<div class="mdesc" style="margin:0">Todavía sin rodajes cargados.</div>';
   let r5='';
   if(mode!=='read'&&k.C.length) r5+=`<div class="wlist" style="margin-top:0">${k.C.map(c=>`<div>${chk(c)}</div><div class="mdesc" style="margin:-4px 0 2px 18px;font-size:12px">${c[2]}</div>`).join('')}</div>`;
   if(R) r5+=`<div class="wlist" style="margin-top:0"><div style="display:block"><span class="${R.v[0]==='n'?'':R.v[0]}" style="font-weight:600">${R.v[1]}</span>&nbsp;<span class="mdesc" style="margin:0">${sgp(R.m)} de costo por minuto en ${R.n} sesi${R.n===1?'ón':'ones'} comparable${R.n===1?'':'s'}</span></div>${R.v[2]?`<div class="mdesc" style="margin:-4px 0 0">${R.v[2]}</div>`:''}</div>`;
   else if(mode==='read'&&d.ex.n) r5+='<div class="mdesc" style="margin:0">Sin sesiones comparables: no hay plan emparejado o el ritmo no calzó (±10 s/km).</div>';
-  return wrap(r3,r4,`<div>${r5}</div>`)}
+  return wrap(`<div style="display:flex;flex-direction:column;gap:6px">${r3}${r4}</div>`,dayCols(w0,M,easy,rvM),`<div>${r5}</div>`)}
 function renderReview(){const B=document.getElementById('revBox'); if(!B) return; applyPlans();
   const M=hrModel(), easy=easyPace(), today=crDay(Math.floor(Date.now()/1000)), nowW=wkOf(today), fw=nowW+rvOff*7*DAY, ld=w0=>{if(!cycle) return null; const i=Math.round((w0-cycle.start)/(7*DAY)); return i>=0&&i<cycle.weeks.length?cycle.weeks[i].load:null};
   const S=progSignal(M,easy), mid=bandMid(), {A,P}=calData();
