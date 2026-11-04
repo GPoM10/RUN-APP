@@ -200,6 +200,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,label.btn:focus-wi
 .opts{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:10px;color:var(--muted);font-size:13px}
 .chartbox{position:relative;height:360px;margin-top:12px}
 @media (max-width:600px){.chartbox{height:280px}}
+/* fitness: el panel del ACWR va al doble de alto y la caja crece para que el de arriba no se achique */
+.chartbox.pmc{height:495px}@media (max-width:600px){.chartbox.pmc{height:385px}}
 .mdesc{font-size:12.5px;color:var(--muted);margin-top:8px;max-width:80ch}
 .empty{display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);text-align:center;border:1px dashed var(--line);border-radius:8px;padding:20px}
 .tablewrap{overflow-x:auto;margin-top:6px}
@@ -443,7 +445,7 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2>Fitness, fatiga y forma</h2>
         <span class="opts" style="margin:0"><span class="seg" role="group" aria-label="Periodo" id="frSeg2"><button data-r="6">6 semanas</button><button data-r="12">12 semanas</button><button data-r="24">24 semanas</button><button data-r="0">Todo</button></span>
         <label><input type="checkbox" id="fProj2"> Proyectar con lo planeado</label></span></div>
-      <div class="chartbox"><canvas id="fchart2" aria-label="Fitness, fatiga y forma"></canvas><div class="empty" id="fEmpty2" hidden>Cargá rodajes para ver la curva de forma.</div></div>
+      <div class="chartbox pmc"><canvas id="fchart2" aria-label="Fitness, fatiga y forma"></canvas><div class="empty" id="fEmpty2" hidden>Cargá rodajes para ver la curva de forma.</div></div>
       <div id="fNow2" style="margin-top:6px;font-size:13px;color:var(--ink)"></div>
       <div class="mdesc" id="fDesc2"></div>
     </div>
@@ -1265,7 +1267,7 @@ const stabPlugin={id:'stab',beforeDatasetsDraw(c){
     ctx.fillStyle=css('--panel'); ctx.globalAlpha=.92; ctx.fillRect(cx-w/2-4,y-7,w+8,14); ctx.globalAlpha=1; ctx.fillStyle=st.c; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(lab,cx,y); ctx.restore()})}};
 
 function renderChart(){
-  syncView(); {const lb=document.getElementById('lupaBox'); if(lb) lb.hidden=true} if(!M[metric]||M[metric].hide) metric='hr'; if(!TM[tmetric]) tmetric='der'; if(tmetric==='hr') tmetric='eff'; if(view==='carga') return renderLoad(); if(view==='forma') return renderPmc(); if(view==='tec') return renderTecChart(); if(chart&&chart.config&&chart.config.type!=='scatter'){chart.destroy();chart=null} if(isTrV()) return renderTrend();
+  syncView(); document.getElementById('chart').parentElement.classList.toggle('pmc',view==='forma'); {const lb=document.getElementById('lupaBox'); if(lb) lb.hidden=true} if(!M[metric]||M[metric].hide) metric='hr'; if(!TM[tmetric]) tmetric='der'; if(tmetric==='hr') tmetric='eff'; if(view==='carga') return renderLoad(); if(view==='forma') return renderPmc(); if(view==='tec') return renderTecChart(); if(chart&&chart.config&&chart.config.type!=='scatter'){chart.destroy();chart=null} if(isTrV()) return renderTrend();
   document.querySelectorAll('#metrics button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===metric));
   const m=M[metric]; if(m.bars) return renderIdxBars(m); if(m.custom) return renderPeaks(m); if(chart&&chart.config&&chart.config.type!=='scatter'){chart.destroy();chart=null}
   const chosen=sel.map(id=>acts.find(a=>a.id===id)).filter(Boolean);
@@ -3442,7 +3444,7 @@ function pmcConfig(R){
           return [ld,...(la.length>1?[`${la.length} actividades ese día:`]:[]),...la,`TSB ${nf(p.tsb,fm==='mech'?1:0)}`+(z?` · ${z[2]}`:'')]}}}},
     scales:{x:{type:'linear',grid:{color:grid},ticks:{color:tick,font:{family:css('--mono')},maxTicksLimit:9,callback:(v,i,T)=>axD(v+6*3600000,T)}},
       y:{stack:'pmc',stackWeight:2,beginAtZero:true,title:{display:true,text:unit,color:tick},grid:{color:grid},ticks:{color:tick,font:{family:css('--mono')}}},
-      y2:{position:'left',stack:'pmc',stackWeight:1.2,offset:true,min:Math.floor(y2min*10)/10,max:Math.ceil(y2max*10)/10,title:{display:true,text:'ACWR',color:tick},grid:{color:grid},ticks:{color:tick,font:{family:css('--mono')},stepSize:0.2,callback:v=>nf(v,1)}}}};
+      y2:{position:'left',stack:'pmc',stackWeight:2.4,offset:true,min:Math.floor(y2min*10)/10,max:Math.ceil(y2max*10)/10,title:{display:true,text:'ACWR',color:tick},grid:{color:grid},ticks:{color:tick,font:{family:css('--mono')},stepSize:0.1,callback:v=>nf(v,1)}}}};
   return {type:'line',data:{datasets:ds},options:opts,plugins:[bands]}}
 function renderPmcTable(){
   document.getElementById('tblTitle').textContent='Fitness, fatiga y forma por semana';
