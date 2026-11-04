@@ -516,11 +516,13 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
           <label>FC en reposo<input class="pace" id="wRhr" inputmode="decimal"></label>
           <label>Sueño (h o h:mm)<input class="pace" id="wSh"></label>
           <label>Siesta (min)<input class="pace" id="wNap" inputmode="numeric"></label>
+          <label>Calificación sueño Coros<input class="pace" id="wSq" inputmode="numeric" placeholder="0–100"></label>
           <label>FC durante el sueño<input class="pace" id="wShr" inputmode="decimal"></label>
           <label>Sensación<select class="tipo" id="wFeel"><option value="">—</option><option value="1">1 · muy mal</option><option value="2">2 · mal</option><option value="3">3 · normal</option><option value="4">4 · bien</option><option value="5">5 · muy bien</option></select></label>
           <label class="wide">Nota (opcional)<input id="wNote" style="font:inherit;font-size:13px;border:1px solid var(--line);border-radius:5px;padding:3px 6px;background:var(--bg);color:var(--ink)" placeholder="dormí mal, viaje, dolor de cabeza…"></label>
         </div>
         <div class="opts"><button class="btn primary" id="wSave" type="button">Guardar</button>
+          <button class="btn" id="wSqNotes" type="button" title="Busca la calificación de Coros escrita en tus notas y la pasa al campo nuevo">Calificación desde notas</button>
           <label class="btn" for="wImp">Importar CSV de Runalyze<input id="wImp" type="file" accept=".csv" multiple hidden></label><span id="wMsg" class="mdesc" style="margin:0"></span></div>
       </div>
       <div class="panel" id="wStat"></div>
@@ -528,7 +530,7 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
     <div class="panel" id="wLoad" style="margin-top:16px"></div>
     <div class="panel" style="margin-top:16px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2>Tendencias</h2>
-        <span class="seg" role="group" aria-label="Variable" id="wmSeg"><button data-k="hrv">VFC</button><button data-k="rhr">FC en reposo</button><button data-k="shr">FC del sueño</button><button data-k="sh">Sueño</button></span>
+        <span class="seg" role="group" aria-label="Variable" id="wmSeg"><button data-k="hrv">VFC</button><button data-k="rhr">FC en reposo</button><button data-k="shr">FC del sueño</button><button data-k="sh">Sueño</button><button data-k="sq">Calif. sueño</button></span>
         <span class="seg" role="group" aria-label="Periodo" id="wrSeg" style="max-width:100%;overflow-x:auto"><button data-r="7">7 días</button><button data-r="14">14 días</button><button data-r="30">1 mes</button><button data-r="90">3 meses</button><button data-r="180">6 meses</button><button data-r="365">1 año</button></span>
       </div>
       <div class="opts" id="wRng">Rango de fechas: <input type="date" id="wF" aria-label="Desde"> a <input type="date" id="wT" aria-label="Hasta"> <button id="wRngGo" style="padding:4px 10px;font-size:12.5px">Ver rango</button></div>
@@ -550,7 +552,7 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
     </div>
   </section>
 
-  <footer>Versión 364 PWA (4 nov, techo de TRIMP: matriz sueño × tanque, FC en reposo y VFC como multiplicadores). Deriva de la actividad = FC 2ª mitad ÷ 1ª mitad − 1, por tiempo, desde el punto de estabilización (referencia &lt; 5 %). FC limpia: un segundo que se aparta más de 2 % de los 5 s anteriores y de los 5 s posteriores se reemplaza por el promedio de esos 10 s. Normalización por temperatura: FC normalizada = FC − k × (temperatura del reloj − temperatura de referencia); la eficiencia normalizada usa esa FC. La deriva y el TRIMP no se normalizan. TRIMP de Banister segundo a segundo. Pa:HR (desacople aeróbico) = (EF 1ª mitad − EF 2ª mitad) ÷ EF 1ª mitad, con EF = velocidad ÷ FC, mismas mitades que la deriva. Fuerza pico por paso (× peso corporal) = π/2 × (tiempo de vuelo ÷ tiempo de contacto + 1), con tiempo de vuelo = 60 ÷ cadencia − contacto (modelo de muelle, Morin 2005); carga mecánica = pasos × fuerza pico promedio, en miles. Son estimaciones propias para seguir tu tendencia, no medidas de laboratorio. Los datos se guardan en tu espacio privado de la nube del artefacto (solo vos los ves) y se ven igual en la compu y en el celular; el botón Respaldo descarga una copia.</footer>
+  <footer>Versión 365 PWA (4 nov, calificación de sueño de Coros: campo, niveles y tendencia). Deriva de la actividad = FC 2ª mitad ÷ 1ª mitad − 1, por tiempo, desde el punto de estabilización (referencia &lt; 5 %). FC limpia: un segundo que se aparta más de 2 % de los 5 s anteriores y de los 5 s posteriores se reemplaza por el promedio de esos 10 s. Normalización por temperatura: FC normalizada = FC − k × (temperatura del reloj − temperatura de referencia); la eficiencia normalizada usa esa FC. La deriva y el TRIMP no se normalizan. TRIMP de Banister segundo a segundo. Pa:HR (desacople aeróbico) = (EF 1ª mitad − EF 2ª mitad) ÷ EF 1ª mitad, con EF = velocidad ÷ FC, mismas mitades que la deriva. Fuerza pico por paso (× peso corporal) = π/2 × (tiempo de vuelo ÷ tiempo de contacto + 1), con tiempo de vuelo = 60 ÷ cadencia − contacto (modelo de muelle, Morin 2005); carga mecánica = pasos × fuerza pico promedio, en miles. Son estimaciones propias para seguir tu tendencia, no medidas de laboratorio. Los datos se guardan en tu espacio privado de la nube del artefacto (solo vos los ves) y se ven igual en la compu y en el celular; el botón Respaldo descarga una copia.</footer>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
@@ -2075,7 +2077,7 @@ function renderReview(){const B=document.getElementById('revBox'); if(!B) return
   B.querySelectorAll('.rvgo').forEach(b=>b.onclick=()=>openInCmp(b.dataset.id,'rev'));
   B.querySelectorAll('#rvSeg button').forEach(b=>b.onclick=()=>{rvM=b.dataset.m; try{LS.setItem('comparador.rvM',rvM)}catch(e){} renderReview()})}
 /* ---------- bienestar: registro diario, línea base y alertas ---------- */
-const WK={hrv:['VFC','ms',0],rhr:['FC en reposo','ppm',0],shr:['FC durante el sueño','ppm',0],sh:['Sueño','h',1]};
+const WK={hrv:['VFC','ms',0],rhr:['FC en reposo','ppm',0],shr:['FC durante el sueño','ppm',0],sh:['Sueño','h',1],sq:['Calificación de sueño (Coros)','pts',0]};
 let wm='hrv', wrange=30, wchart=null, wCF=null, wCT=null;
 const DAYW=86400000, dms=k=>Date.UTC(+k.slice(0,4),+k.slice(5,7)-1,+k.slice(8,10)), dkey=ms=>new Date(ms).toISOString().slice(0,10), todayKey=()=>crParts.format(new Date());
 const wfmt=(k,v)=>{if(v==null) return '—'; if(k!=='sh') return nf(v,0); const mn=Math.round(v*60); return `${Math.floor(mn/60)}:${String(mn%60).padStart(2,'0')}`};
@@ -2112,7 +2114,7 @@ function sleepTank(d,nd=7){const t=dms(d); let s=0,n=0; for(let i=0;i<nd;i++){co
 function wAvgHTML(f0,t){const W=[[7,'7 d'],[14,'14 d'],[28,'28 d']], nd=Math.round((t-f0)/DAYW)+1, cols=W.map(([n,l])=>[t-(n-1)*DAYW,l]);
   if(!W.some(([n])=>n===nd)) cols.push([f0,`Rango<br>${nd} d`]);
   const av=(a,k)=>{let s=0,n=0; for(let x=a;x<=t;x+=DAYW){const X=well.days[dkey(x)]; if(!X) continue; const v=k==='sh'?daySleep(X):X[k]; if(v!=null&&isFinite(v)){s+=v;n++}} return n?s/n:null};
-  const F=[['VFC','hrv','ms',0],['FC reposo','rhr','ppm',0],['FC sueño','shr','ppm',0],['Sueño','sh','h',1]];
+  const F=[['VFC','hrv','ms',0],['FC reposo','rhr','ppm',0],['FC sueño','shr','ppm',0],['Sueño','sh','h',1],['Calif. Coros','sq','pts',0]];
   const cell=(k,v,dec)=>v==null?'—':k==='sh'?wfmt('sh',v):nf(v,dec);
   return `<div style="flex:1 1 260px;min-width:0"><div class="lbl" style="margin-bottom:4px">Promedios</div><div class="tablewrap wavg"><table style="font-size:13px"><thead><tr><th style="font-size:13px"></th>${cols.map(c=>`<th style="font-size:13px;font-family:var(--body);font-weight:600">${c[1]}</th>`).join('')}</tr></thead><tbody>${F.map(([lab,k,u,dec])=>`<tr><td>${lab} <span style="font-size:11px">${u}</span></td>${cols.map(c=>`<td class="num">${cell(k,av(c[0],k),dec===0?1:0)}</td>`).join('')}</tr>`).join('')}</tbody></table></div><div class="mdesc" style="margin-top:2px;font-size:11px">Hasta el ${new Date(t).toLocaleDateString('es-CR',{day:'numeric',month:'short',timeZone:'UTC'})}. Sueño = noche + siesta al 50 %.</div></div>`}
 // recuadro de color con la calificación y la recomendación del día (hoy, o el último día con datos)
@@ -2217,23 +2219,29 @@ function wellStatus(d){const D0=wDay(d), M=[]; let any=false, rest=false, fS=1, 
   if(fR<=.75&&fH<=.75){rest=true; M.push(['b','FC en reposo fuera de rango y VFC baja a la vez: el cuerpo puede estar peleando algo. Descanso total o activo.'])}
   // la nota del día: síntomas → descanso; molestias, mal sueño o estrés → ×0,9; causas puntuales explican valores alterados
   const pre=Math.max(.3,fS*fR*fH*fX), pl=rest||pre<.6?2:pre<.9?1:0;
-  wNoteFx(D0.note,pl).forEach(([l,c,t])=>{if(l===2) rest=true; else if(l===1) fX*=.9; M.push([c,t])}); if(D0.note) any=true;
+  if(D0.sq!=null){any=true; const L=sqLv(D0.sq); if(L[0]==='malo') fX*=.9; M.push([L[1],`Calificación de sueño Coros ${D0.sq}: ${L[0]}`+(L[0]==='malo'?` (${xf(.9)}).`:'.')])}
+  wNoteFx(D0.note,pl,D0.sq!=null).forEach(([l,c,t])=>{if(l===2) rest=true; else if(l===1) fX*=.9; M.push([c,t])}); if(D0.note) any=true;
   if(!any) return {lvl:null,v:null,M,fac:null};
   const fac=rest?.3:Math.max(.3,fS*fR*fH*fX), lvl=fac>=.9?0:fac>=.6?1:2;
   const v=[['ok','Procede con lo planeado'],['w','Ajustá al techo: recortá si lo planeado no entra'],['b',rest?'Descanso total o activo':'Muy suave o descanso']][lvl];
   return {lvl,v,M,fac,rest,F:{sleep:fS,rhr:fR,hrv:fH,extra:fX}}}
 var wLoaded='';
-function wNoteFx(note,lv){if(!note) return []; const s=String(note).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''), has=re=>re.test(s), R=[];
+// calificación de sueño de Coros (0–100): bueno ≥ 80 · regular 60–79 · malo < 60
+const SQB=[80,60], sqLv=v=>v>=SQB[0]?['bueno','ok']:v>=SQB[1]?['regular','w']:['malo','b'];
+// lee la calificación escrita en la nota: «Coros 78», «calificación 78», «sueño 78», «score 78», «78/100», «puntaje 78»
+const sqFromNote=n=>{if(!n) return null; const t=String(n).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const m=t.match(/(?:coros|calificacion|calif\.?|puntaje|score|sueno)\D{0,12}(\d{2,3})(?!\s*(?:h|min|ppm|ms|%|:))/)||t.match(/\b(\d{2,3})\s*\/\s*100\b/); if(!m) return null; const v=+m[1]; return v>=20&&v<=100?v:null};
+function wNoteFx(note,lv,hasSq){if(!note) return []; const s=String(note).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''), has=re=>re.test(s), R=[];
   if(has(/enferm|gripe|resfri|fiebre|garganta|\btos\b|congest|mocos|malestar general|virus|diarrea|vomit|escalofr/)) R.push([2,'b','Tu nota menciona síntomas de enfermedad: descanso hasta que pasen.']);
   if(has(/dolor(?! de cabeza)|molestia|lesion|tendon|rodilla|tobillo|gemelo|pantorrilla|cadera|espalda|fascitis|esguince|calambre/)) R.push([1,'w','Tu nota menciona una molestia física: evitá el impacto o suavizá, y vigilá que no empeore.']);
-  if(has(/dormi mal|mal dormi|insomnio|desvel|dormi poco|poco sueno|me desperte/)) R.push([1,'w','Tu nota indica que dormiste mal.']);
+  if(!hasSq&&has(/dormi mal|mal dormi|insomnio|desvel|dormi poco|poco sueno|me desperte/)) R.push([1,'w','Tu nota indica que dormiste mal.']);
   if(has(/estres|ansie|agotad|cansad|fatiga|pesad|sin energia|dolor de cabeza/)) R.push([1,'w','Tu nota indica cansancio, estrés o malestar: suavizá aunque los números estén bien.']);
   const ex=[[/entren\w* tarde|corri tarde|de noche|entreno tarde|entrenamiento tarde/,'entrenaste tarde'],[/alcohol|tragos|cerveza|vino|guaro|fiesta/,'alcohol'],[/cena tarde|comi tarde|cene tarde|comida pesada|cena pesada/,'cena tarde o pesada'],[/viaje|vuelo|manej/,'viaje'],[/cafe tarde|cafeina/,'cafeína tarde'],[/calor|sin aire/,'calor de noche']], ca=ex.filter(([re])=>has(re)).map(x=>x[1]);
   if(ca.length) R.push([null,'w',`Tu nota explica parte de los valores (${ca.join(', ')}): la FC en reposo, la del sueño y la VFC suelen alterarse por eso${lv>=1?', así que la alerta puede no ser fatiga acumulada. Igual, hoy lo más seguro es un día suave o de descanso, y mirá si mañana vuelven a tu rango.':'; hoy igual están en tu rango.'}`]);
   return R}
 function syncWForm(d){const x=wDay(d); document.getElementById('wD').value=d; wLoaded=d;
   document.getElementById('wHrv').value=x.hrv??''; document.getElementById('wRhr').value=x.rhr??''; document.getElementById('wShr').value=x.shr??'';
-  document.getElementById('wSh').value=x.sh!=null?wfmt('sh',x.sh):''; document.getElementById('wNap').value=x.nap??''; document.getElementById('wFeel').value=x.feel||''; document.getElementById('wNote').value=x.note||''}
+  document.getElementById('wSh').value=x.sh!=null?wfmt('sh',x.sh):''; document.getElementById('wNap').value=x.nap??''; document.getElementById('wSq').value=x.sq??''; document.getElementById('wFeel').value=x.feel||''; document.getElementById('wNote').value=x.note||''}
 function renderWell(){const keys=Object.keys(well.days).sort(), msg=document.getElementById('wMsg');
   {const ew=document.getElementById('evW'); if(well.cfg&&well.cfg.evW&&!ew.dataset.s){ew.value=well.cfg.evW; ew.dataset.s=1}}
   if(!document.getElementById('wD').value) syncWForm(todayKey());
@@ -2278,9 +2286,9 @@ function renderWell(){const keys=Object.keys(well.days).sort(), msg=document.get
     if(wchart){wchart.data.datasets=ds;wchart.options=opts;wchart.update()} else wchart=new Chart(cv,{type:'scatter',data:{datasets:ds},options:opts})}
   // tabla de 14 días
   const T=document.getElementById('wTab'), ref=last?dms(last):dms(todayKey()), ic={ok:'✓',w:'~',b:'✗'};
-  let h='<table><thead><tr><th>Fecha</th><th>VFC</th><th>FC reposo</th><th>FC sueño</th><th>Sueño</th><th>Sensación</th><th>Estado</th><th style="text-align:left">Nota</th></tr></thead><tbody>';
+  let h='<table><thead><tr><th>Fecha</th><th>VFC</th><th>FC reposo</th><th>FC sueño</th><th>Sueño</th><th>Calif.</th><th>Sensación</th><th>Estado</th><th style="text-align:left">Nota</th></tr></thead><tbody>';
   for(let i=0;i<14;i++){const d=dkey(ref-i*DAYW), x=wDay(d), st=Object.keys(x).length?wellStatus(d):null, c=st&&st.v?st.v[0]:'';
-    h+=`<tr><td>${dShort.format(new Date(dms(d)+6*3600000))}</td><td class="num">${wfmt('hrv',x.hrv)}</td><td class="num">${wfmt('rhr',x.rhr)}</td><td class="num">${wfmt('shr',x.shr)}</td><td class="num${x.sh!=null&&daySleep(x)<SDEBT?' w':''}">${wfmt('sh',x.sh)}${x.sh!=null&&x.nap>0?`<span class="delta" title="Siesta de ${x.nap} min al 50 %">+ ${wfmt('sh',napCredit(x.nap))} siesta = ${wfmt('sh',daySleep(x))}</span>`:''}</td><td class="num">${x.feel||'—'}</td><td class="num ${c}" title="${st&&st.v?st.v[1]:''}">${c?ic[c]:'—'}</td><td style="text-align:left;white-space:normal;color:var(--ink)">${x.note?String(x.note).replace(/</g,'&lt;'):''}</td></tr>`}
+    h+=`<tr><td>${dShort.format(new Date(dms(d)+6*3600000))}</td><td class="num">${wfmt('hrv',x.hrv)}</td><td class="num">${wfmt('rhr',x.rhr)}</td><td class="num">${wfmt('shr',x.shr)}</td><td class="num${x.sh!=null&&daySleep(x)<SDEBT?' w':''}">${wfmt('sh',x.sh)}${x.sh!=null&&x.nap>0?`<span class="delta" title="Siesta de ${x.nap} min al 50 %">+ ${wfmt('sh',napCredit(x.nap))} siesta = ${wfmt('sh',daySleep(x))}</span>`:''}</td><td class="num ${x.sq!=null?sqLv(x.sq)[1]:''}">${x.sq??'—'}</td><td class="num">${x.feel||'—'}</td><td class="num ${c}" title="${st&&st.v?st.v[1]:''}">${c?ic[c]:'—'}</td><td style="text-align:left;white-space:normal;color:var(--ink)">${x.note?String(x.note).replace(/</g,'&lt;'):''}</td></tr>`}
   T.innerHTML=h+'</tbody></table><div class="mdesc">Estado: <span class="ok" style="font-weight:600">✓</span> verde, procede con lo planeado · <span class="w" style="font-weight:600">~</span> amarillo, suavizá (ER suave o calidad más corta) · <span class="b" style="font-weight:600">✗</span> rojo, descanso o rodaje muy suave. Pasá el cursor sobre el símbolo para ver el motivo. El sueño en naranja es una noche de menos de 7:00 h.</div>';
 }
 function parseH(s){s=String(s).trim(); if(!s) return null; const m=s.match(/^(\d{1,2})[:h](\d{1,2})$/); if(m) return +m[1]+(+m[2])/60; const v=num(s); return isFinite(v)&&v>0&&v<16?v:null}
@@ -2290,11 +2298,13 @@ function parseH(s){s=String(s).trim(); if(!s) return null; const m=s.match(/^(\d
   ['input','change','blur'].forEach(t=>document.getElementById('wD').addEventListener(t,ldW))}
 document.getElementById('wSave').onclick=()=>{const d=document.getElementById('wD').value, msg=document.getElementById('wMsg'); if(!d){msg.textContent='Elegí la fecha.';return}
   const g=id=>{const v=num(document.getElementById(id).value); return isFinite(v)&&v>0?v:null};
-  const x={hrv:g('wHrv'),rhr:g('wRhr'),shr:g('wShr'),sh:parseH(document.getElementById('wSh').value),nap:(v=>v!=null?Math.round(v):null)(g('wNap')),feel:document.getElementById('wFeel').value||null,note:document.getElementById('wNote').value.trim()||null};
+  const x={hrv:g('wHrv'),rhr:g('wRhr'),shr:g('wShr'),sh:parseH(document.getElementById('wSh').value),nap:(v=>v!=null?Math.round(v):null)(g('wNap')),sq:(v=>v!=null&&v<=100?Math.round(v):null)(g('wSq')),feel:document.getElementById('wFeel').value||null,note:document.getElementById('wNote').value.trim()||null};
   Object.keys(x).forEach(k=>{if(x[k]==null) delete x[k]});
   if(!Object.keys(x).length){delete well.days[d]; msg.textContent='Día vacío: se borró ese registro.'} else {well.days[d]={...x,man:true}; msg.textContent='Guardado.'}
   save(); renderWell()};
 // CSV de Runalyze: hrv.csv (hrv), heart-rate-rest.csv (heartRate), sleep.csv (duration, hrAverage, isNap)
+document.getElementById('wSqNotes').onclick=()=>{let n=0; const ex=[]; for(const d in well.days){const x=well.days[d]; if(x.sq!=null||!x.note) continue; const v=sqFromNote(x.note); if(v!=null){x.sq=v; n++; if(ex.length<3) ex.push(`${d.slice(8)}/${d.slice(5,7)}: ${v}`)}}
+  save(); renderWell(); document.getElementById('wMsg').textContent=n?`Calificación tomada de ${n} nota(s) (${ex.join(' · ')}${n>3?'…':''}). Revisá la tabla de 14 días.`:'No encontré calificaciones en tus notas. Escribila como «Coros 78» o usá el campo nuevo.'};
 document.getElementById('wImp').onchange=async ev=>{const msg=document.getElementById('wMsg'); let tot=0, kinds=[];
   for(const f of ev.target.files){const lines=(await f.text()).split(/\r?\n/).filter(Boolean); if(lines.length<2) continue; const H=lines[0].split(',').map(s=>s.trim()), ix=n=>H.indexOf(n);
     const acc={}, put=(d,k,v)=>{(acc[d]=acc[d]||{})[k]=(acc[d][k]||[]).concat(v)};
