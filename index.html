@@ -362,7 +362,7 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
   <header>
     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><h1>Comparador de rodajes</h1>
       <div class="prof"><label for="profSel">Atleta</label><select id="profSel" aria-label="Perfil"></select><button type="button" id="profNew">+ Nuevo perfil</button><button type="button" id="profEdit">Editar</button><button type="button" id="profDel">Borrar</button><button type="button" id="bkBtn" onclick="try{backupDialog()}catch(e){alert('No se pudo abrir el respaldo: '+e.message)}">Respaldo</button><span id="cloudSt" style="font-size:12px"></span></div>
-      <span class="seg" role="group" aria-label="Pestaña" id="tabSeg"><button data-t="cal" aria-pressed="false">Calendario</button><button data-t="well" aria-pressed="true">Bienestar</button><button data-t="plan" aria-pressed="false">Programador</button><button data-t="cmp" aria-pressed="false">Comparador</button><button data-t="ref" aria-pressed="false">Referencia</button></span><div style="display:flex;justify-content:flex-end;margin-top:6px"><button type="button" id="uiBtn" aria-expanded="false" title="Elegir qué paneles y qué gráficos se ven en esta pestaña" style="font-size:12.5px;padding:4px 10px;margin-right:6px">⚙ Personalizar</button><button type="button" id="foldAll" style="font-size:12.5px;padding:4px 10px">▸ Contraer todo</button></div><div id="uiBox" class="pedit" hidden style="margin-top:8px"></div></div>
+      <span class="seg" role="group" aria-label="Pestaña" id="tabSeg"><button data-t="cal" aria-pressed="false">Calendario</button><button data-t="well" aria-pressed="true">Bienestar</button><button data-t="plan" aria-pressed="false">Programador</button><button data-t="ref" aria-pressed="false">Referencia</button><button data-t="cmp" aria-pressed="false">Comparador</button></span><div style="display:flex;justify-content:flex-end;margin-top:6px"><button type="button" id="uiBtn" aria-expanded="false" title="Elegir qué paneles y qué gráficos se ven en esta pestaña" style="font-size:12.5px;padding:4px 10px;margin-right:6px">⚙ Personalizar</button><button type="button" id="foldAll" style="font-size:12.5px;padding:4px 10px">▸ Contraer todo</button></div><div id="uiBox" class="pedit" hidden style="margin-top:8px"></div></div>
     <p>Cargá los .fit de Coros, marcá hasta cuatro entrenamientos y superponé sus curvas. Usa las mismas definiciones del informe de LR: tramos de 250 m, FC reposo <span id="hRest">50</span>, FC máx <span id="hMax">190</span><span id="hThr"></span>, estabilización al 0,75 %.</p>
   </header>
 
@@ -2882,13 +2882,13 @@ function fitCard(M,pa,pb){if(!M.ok) return `<div class="mdesc" style="margin-top
    ${r('Confiabilidad',`<span class="${lv[0]}" style="font-weight:600">${lv[1]}</span>`)}</tbody></table>
    <div class="mdesc">FC estable = promedio desde el punto de estabilización (ER/LR) o desde el min 3 (bloques largos), ponderada por duración. ${why.length?'Para que la confiabilidad suba: '+why.join('; ')+'. Lo que más ayuda es tener sesiones a ritmos más variados.':''}</div>`}
 document.getElementById('evGo').onclick=evalChange;
-function syncTab(){{const bc=document.getElementById('backCal'); if(bc){bc.hidden=!(fromCal&&tab==='cmp'); bc.textContent=backTo==='rev'?'← Volver a la revisión semanal':'← Volver al calendario'}}document.querySelectorAll('#tabSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===tab));
+function syncTab(){{const bc=document.getElementById('backCal'); if(bc){bc.hidden=!(fromCal&&tab==='cmp'); bc.textContent=backTo==='rev'?'← Volver a la revisión semanal':backTo==='ref'?'← Volver a Referencia':'← Volver al calendario'}}document.querySelectorAll('#tabSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===tab));
   document.querySelector('.grid').hidden=tab!=='cmp'; document.getElementById('planner').hidden=tab!=='plan'; document.getElementById('planBox').hidden=tab!=='cmp';
   document.getElementById('wellness').hidden=tab!=='well'; document.getElementById('calendar').hidden=tab!=='cal'; document.getElementById('refTab').hidden=tab!=='ref'; document.getElementById('drop').hidden=tab!=='cmp'}
 document.querySelectorAll('#tabSeg button').forEach(b=>b.onclick=()=>{fromCal=false;tab=b.dataset.t;save();render()});
 // volver al calendario en el mes y el día desde donde se abrió el rodaje
-document.getElementById('backCal').onclick=e=>{e.stopPropagation(); fromCal=false; tab=backTo==='rev'?'plan':'cal'; save(); render();
-  requestAnimationFrame(()=>{const t=document.getElementById(backTo==='rev'?'revBox':calSel!=null?'calDet':'calBox'); if(t&&!t.hidden) t.scrollIntoView({behavior:'smooth',block:'start'})})};
+document.getElementById('backCal').onclick=e=>{e.stopPropagation(); fromCal=false; tab=backTo==='rev'?'plan':backTo==='ref'?'ref':'cal'; save(); render();
+  requestAnimationFrame(()=>{const t=document.getElementById(backTo==='rev'?'revBox':backTo==='ref'?'rfTL':calSel!=null?'calDet':'calBox'); if(t&&!t.hidden) t.scrollIntoView({behavior:'smooth',block:'start'})})};
 document.querySelectorAll('#pmSeg button').forEach(b=>b.onclick=()=>{pm=b.dataset.m;save();renderPlanner()});
 document.getElementById('gGo').onclick=genCycle;
 
@@ -3957,7 +3957,7 @@ function xqScan(){document.querySelectorAll('.mdesc, header > p, footer').forEac
   b.addEventListener('click',e=>{e.stopPropagation(); e.preventDefault(); xqOpen(el,b)}); el._xqb=b; xqPlace(el,b)})}
 {let pend=false; new MutationObserver(()=>{if(pend) return; pend=true; requestAnimationFrame(()=>{pend=false; foldPanels(); xqScan()})}).observe(document.body,{childList:true,subtree:true}); foldPanels(); xqScan()}
 /* ---------- Referencia: evolución sin el ruido del clima (rodaje sintético a un WBGT común) ---------- */
-const REFK='comparador.ref', REF0={tipo:'ER',code:'',adj:false,vs:1,w0:'',w1:'',p0:'',p1:'',d0:'',d1:'',wr:'',f0:'',f1:'',m:'hr',v:'curvas',all:false,sel:[]};
+const REFK='comparador.ref', REF0={tipo:'ER',code:'',adj:false,vs:1,w0:'',w1:'',p0:'',p1:'',d0:'',d1:'',wr:'',f0:'',f1:'',m:'hr',v:'curvas',all:false,sel:[],tm:'hr'};
 let ref=(()=>{try{return {...REF0,...JSON.parse(LS.getItem(REFK)||'{}')}}catch(e){return {...REF0}}})(), refChart=null;
 const saveRef=()=>{try{LS.setItem(REFK,JSON.stringify(ref))}catch(e){}};
 const RMET={hr:{n:'FC promedio estable',u:'ppm',d:1,k:'hr'},hre:{n:'FC al final de la serie',u:'ppm',d:1,k:'hre'},der:{n:'Deriva',u:'pp',d:2,k:'der'},pahr:{n:'Pa:HR',u:'pp',d:2,k:'pahr'}};
@@ -3982,11 +3982,11 @@ function refRows(tipo){const out=[];
       const wavg=(xs,f)=>{const t=xs.reduce((q,l)=>q+l.dur,0); return t?xs.reduce((q,l)=>q+f(l)*l.dur,0)/t:null};
       const LD=W.filter(l=>l.der!=null), LP=W.filter(l=>l.pahr!=null), hd=wavg(LD,l=>l.der), hp=wavg(LP,l=>l.pahr);
       out.push({a,id:a.id,t:a.t0Unix,day:crDay(a.t0Unix),W:w.w,P:du/(d/1000),D:du/60,T:a.timeS/60,sT:null,sD:null,...(()=>{const t0=W[0].a+REF_STAB_Q, ww=(f)=>{const t=W.reduce((q,l)=>q+l.dur,0); return W.reduce((q,l)=>q+f(l)*l.dur,0)/t}, LDs=W.filter(l=>l.der!=null), td=LDs.reduce((q,l)=>q+l.dur,0);
-      return {tH:ww(l=>Math.max(0,((l.a+l.b)/2-t0)/60)),tE:ww(l=>Math.max(0,(l.b-t0)/60)),Ta:td?LDs.reduce((q,l)=>q+Math.max(0,(l.dur-REF_STAB_Q)/60)*l.dur,0)/td:0}})(),hr:wavg(W,l=>l.hra),hre:wavg(W,l=>l.hre||l.hra),der:hd==null?null:hd*100,pahr:hp==null?null:hp*100,S:W})});
+      return {tH:ww(l=>Math.max(0,((l.a+l.b)/2-t0)/60)),tE:ww(l=>Math.max(0,(l.b-t0)/60)),Ta:td?LDs.reduce((q,l)=>q+Math.max(0,(l.dur-REF_STAB_Q)/60)*l.dur,0)/td:0}})(),hr:wavg(W,l=>l.hra),hre:wavg(W,l=>l.hre||l.hra),ef:wavg(W,l=>l.hra)?(d/(du/60))/wavg(W,l=>l.hra):null,der:hd==null?null:hd*100,pahr:hp==null?null:hp*100,S:W})});
     return out.sort((x,y)=>x.t-y.t)}
   acts.forEach(a=>{if(a.ej||a.tipo!==tipo||!a.segs) return; let s; try{s=summarize(a)}catch(e){return} if(!s||s.fallback||!s.vel||!s.hrSt) return;
     const w=wbgtOf(a); if(!w||!isFinite(w.w)) return; const tst=a.segs.filter(g=>g.ki<s.stab).reduce((q,g)=>q+g.dur,0), dur=(a.timeS-tst)/60; if(!(dur>=10)) return;
-    const stg=a.segs.filter(g=>g.ki<s.stab); out.push({a,id:a.id,t:a.t0Unix,day:crDay(a.t0Unix),W:w.w,P:60000/s.vel,D:dur,T:a.timeS/60,sT:tst/60,sD:stg.reduce((q,g)=>q+(g.d||0),0),tH:dur/2,tE:null,Ta:dur,hr:s.hrSt,der:s.der==null?null:s.der*100,pahr:s.pahr==null?null:s.pahr*100})});
+    const stg=a.segs.filter(g=>g.ki<s.stab); out.push({a,id:a.id,t:a.t0Unix,day:crDay(a.t0Unix),W:w.w,P:60000/s.vel,D:dur,T:a.timeS/60,sT:tst/60,sD:stg.reduce((q,g)=>q+(g.d||0),0),tH:dur/2,tE:null,Ta:dur,hr:s.hrSt,ef:s.vel/s.hrSt,der:s.der==null?null:s.der*100,pahr:s.pahr==null?null:s.pahr*100})});
   return out.sort((x,y)=>x.t-y.t)}
 function rInv(M){const n=M.length, A=M.map((r,i)=>[...r,...Array.from({length:n},(_,j)=>+(i===j))]);
   for(let c=0;c<n;c++){let p=c; for(let r=c+1;r<n;r++) if(Math.abs(A[r][c])>Math.abs(A[p][c])) p=r; if(Math.abs(A[p][c])<1e-9) return null; [A[c],A[p]]=[A[p],A[c]];
@@ -4083,6 +4083,14 @@ function renderRef(){const B=document.getElementById('refBox'); if(!B) return; c
     <label>Periodo de referencia desde<input type="date" class="rf" data-k="f0" value="${esc(ref.f0)}"></label><label>hasta<input type="date" class="rf" data-k="f1" value="${esc(ref.f1)}"></label></div>
   <div class="opts"><button type="button" id="rfReset">Limpiar filtros</button><span class="mdesc" style="margin:0" data-keep>Duración = minutos desde la estabilización. Con un periodo de referencia fijo, la vara de medir no se mueve con el tiempo.</span></div>`;
   if(!all.length){B.innerHTML=h+`<div class="notice" style="margin-top:12px">No hay ${tl()} con clima y estabilización detectada. Hace falta WBGT (buscá el clima) y rodajes de 10 min o más desde la estabilización.</div>`; wireRef(B); return}
+  // 0) los rodajes en el tiempo para elegir tocando los puntos (hasta 4) y mandarlos al Comparador
+  {const TM=REFTM, tm=TM[ref.tm]?ref.tm:'hr';
+    h+=`<div id="rfTL"><h2 style="margin-top:18px;font-size:18px">Elegí en el tiempo</h2>
+    <div class="opts" style="margin-top:0"><span class="seg" role="group" aria-label="Criterio del gráfico">${Object.entries(TM).map(([k,t])=>`<button type="button" data-rtm="${k}" aria-pressed="${k===tm}">${t.n}</button>`).join('')}</span></div>
+    <div class="chartbox" style="height:300px;margin-top:8px"><canvas id="refTL" aria-label="Rodajes en el tiempo"></canvas></div>
+    <div class="opts" style="margin-top:6px">${selR.length?selR.map(r=>`<span style="display:inline-flex;align-items:center;gap:4px;font-size:13px"><span style="width:10px;height:10px;border-radius:50%;background:${color(ref.sel.indexOf(r.id))}"></span>${dt(r.a)} <button type="button" data-rx="${esc(r.id)}" aria-label="Quitar" style="padding:0 6px;font-size:12px">✕</button></span>`).join(''):'<span class="mdesc" style="margin:0" data-keep>Tocá hasta 4 puntos para elegirlos.</span>'}
+      <button type="button" class="btn primary" id="rfCmp"${selR.length?'':' disabled'}>Comparar en el Comparador →</button></div>
+    <div class="mdesc" data-keep>Cada punto es un ${tl()} ${ref.all?'':'del filtro '}en su fecha, con su valor real (sin corregir por clima). ${TM[tm].tip} Tocá un punto para elegirlo o quitarlo; «Comparar» abre los elegidos en el Comparador, con un botón para volver aquí.</div></div>`}
   // tarjeta del rodaje sintético
   const wbtxt=C.Wr!=null?`${nf(C.Wr,1)} °C ${wbTag(C.Wr)}`:'—';
   h+=`<div style="margin-top:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">`;
@@ -4121,7 +4129,26 @@ function renderRef(){const B=document.getElementById('refBox'); if(!B) return; c
   h+=`<div class="mdesc" data-keep>«Ajustar por WBGT» lleva cada rodaje al WBGT, ritmo y duración de referencia con la regresión de calor de todos tus rodajes de este tipo. Atípico = más de 3 desviaciones robustas (MAD) del ajuste: se marca y no entra en el ajuste, pero no se borra. La pendiente de calor es en sí una medida de tu tolerancia al calor.</div>`;
   // 3) gráfico al final
   h+=`<div class="chartbox" style="height:340px;margin-top:14px"><canvas id="refChart" aria-label="Gráfico de referencia"></canvas></div><div class="mdesc" data-keep id="refDesc"></div>`;
-  B.innerHTML=h; wireRef(B); drawRef(C,m)}
+  B.innerHTML=h; wireRef(B); drawRef(C,m); try{drawRefTL(ref.all?C.rows:C.S)}catch(e){console.error(e)}}
+// criterios del gráfico en el tiempo (valores reales de cada rodaje)
+const REFTM={hr:{n:'FC promedio',k:'hr',u:'ppm',d:0,tip:'FC promedio desde la estabilización: más baja es mejor a igual ritmo.'},der:{n:'Deriva',k:'der',u:'%',d:1,tip:'Deriva: cuánto sube la FC de la primera a la segunda mitad; menos es mejor.'},pahr:{n:'Pa:HR',k:'pahr',u:'%',d:1,tip:'Pa:HR: desacople de ritmo y FC entre mitades; bajo 5 % es buena base aeróbica.'},ef:{n:'Eficiencia aeróbica',k:'ef',u:'m/min por ppm',d:3,tip:'Eficiencia aeróbica: metros por minuto por cada latido; más alta es mejor.'}};
+let refTL=null;
+function refTog(id){id=String(id); const k=ref.sel.map(String).indexOf(id); if(k>=0) ref.sel.splice(k,1); else if(ref.sel.length<4){const r=refRows(ref.tipo).find(z=>String(z.id)===id); if(r) ref.sel.push(r.id)} else {try{alertMsg('Máximo 4 rodajes: quitá uno para elegir otro.')}catch(e){}} saveRef(); renderRef()}
+function drawRefTL(rows){const cv=document.getElementById('refTL'); if(refTL){refTL.destroy();refTL=null} if(!cv||typeof Chart==='undefined') return;
+  const T=REFTM[ref.tm]||REFTM.hr, key=T.k, tick=css('--muted'), grid=css('--line'), pts=rows.filter(r=>r[key]!=null&&isFinite(r[key])).map(r=>({x:r.t*1000,y:r[key],r}));
+  const sel=ref.sel.map(String), ds=[{label:tl(),data:pts,borderColor:css('--line'),backgroundColor:css('--muted')+'aa',pointRadius:5,pointHoverRadius:7,pointHitRadius:12,borderWidth:1,showLine:true,order:2}];
+  ref.sel.forEach((id,i)=>{const p=pts.find(q=>String(q.r.id)===String(id)); if(p) ds.push({label:dt(p.r.a),data:[p],backgroundColor:color(i),borderColor:css('--ink'),pointRadius:9,pointHoverRadius:10,pointBorderWidth:2,showLine:false,order:1})});
+  refTL=new Chart(cv,{type:'scatter',data:{datasets:ds},options:{responsive:true,maintainAspectRatio:false,animation:false,
+    interaction:{mode:'nearest',intersect:false},
+    onClick:(e,els,c)=>{const it=c.getElementsAtEventForMode(e,'nearest',{intersect:false},true)[0]; if(!it) return; const r=c.data.datasets[it.datasetIndex].data[it.index].r; if(r) setTimeout(()=>refTog(r.id),0)},
+    plugins:{legend:{display:false},tooltip:{filter:(it,i)=>i===0,callbacks:{title:it=>{const r=it[0].raw.r; return `${r.a.tipo} ${dt(r.a)}${sel.includes(String(r.id))?' · elegido':''}`},
+      label:it=>{const r=it.raw.r; return [`${T.n}: ${nf(r[key],T.d)} ${T.u}`,`${fmtP(r.P)}/km · ${nf(r.T,0)} min · WBGT ${nf(r.W,1)} °C`]}}}},
+    scales:{x:{type:'linear',grid:{color:grid},ticks:{color:tick,font:{family:css('--mono')},maxTicksLimit:7,callback:(v,i,X)=>axD(v,X)}},
+      y:{title:{display:true,text:`${T.n} (${T.u})`,color:tick},grid:{color:grid},ticks:{color:tick,font:{family:css('--mono')}}}}}})}
+// abrir los elegidos de Referencia en el Comparador (con botón para volver)
+function refToCmp(){const ids=ref.sel.filter(id=>acts.some(a=>String(a.id)===String(id))).map(id=>acts.find(a=>String(a.id)===String(id)).id); if(!ids.length) return;
+  fromCal=true; backTo='ref'; sel=ids.slice(0,4); view='km'; filt='all'; tab='cmp'; save(); render();
+  requestAnimationFrame(()=>{const g=document.getElementById('cmpPanel')||document.querySelector('.grid'); if(g) g.scrollIntoView({behavior:'smooth',block:'start'})})}
 const r0W=sel=>sel.length?Math.min(...sel.map(r=>r.W)):18;
 function drawRef(C,m){const cv=document.getElementById('refChart'); if(refChart){refChart.destroy();refChart=null} if(!cv||typeof Chart==='undefined'||(ref.v!=='curvas'&&!C.S.length)) {const d=document.getElementById('refDesc'); if(d) d.textContent=C.S.length?'':'Sin rodajes en el filtro para graficar.'; return}
   const x=C.M[m], R=RMET[m], F=x.F, key=x.key, tick=css('--muted'), grid=css('--line'), acc=css('--accent'), selR=ref.sel.map(id=>C.rows.find(r=>r.id===id)).filter(Boolean);
@@ -4169,6 +4196,9 @@ function wireRef(B){
     const r=refRows(I.tipo).find(z=>String(z.id)===String(a.id)), P=r?r.P:I.P, D=r?r.D:I.D; ref.p0=fmtP(P-20); ref.p1=fmtP(P+20); ref.d0=String(Math.round(D*0.85)); ref.d1=String(Math.round(D*1.15)); saveRef(); renderRef()};
   B.querySelectorAll('[data-rspan]').forEach(b=>b.onclick=()=>{const d=+b.dataset.rspan, on=b.getAttribute('aria-pressed')==='true'; ref.f1=''; ref.f0=d&&!on?new Date(Date.now()-6*3600000-d*864e5).toISOString().slice(0,10):''; saveRef(); renderRef()});
   B.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{ref.m=b.dataset.rm; saveRef(); renderRef()});
+  B.querySelectorAll('[data-rtm]').forEach(b=>b.onclick=()=>{ref.tm=b.dataset.rtm; saveRef(); renderRef()});
+  B.querySelectorAll('[data-rx]').forEach(b=>b.onclick=()=>refTog(b.dataset.rx));
+  {const c=B.querySelector('#rfCmp'); if(c) c.onclick=refToCmp}
   B.querySelectorAll('[data-rv]').forEach(b=>b.onclick=()=>{ref.v=b.dataset.rv; saveRef(); renderRef()});
   const rs=B.querySelector('#rfReset'); if(rs) rs.onclick=()=>{ref={...ref,w0:'',w1:'',p0:'',p1:'',d0:'',d1:'',wr:'',f0:'',f1:''}; saveRef(); renderRef()};
   B.querySelectorAll('input.rb').forEach(i=>i.onchange=()=>{const v=num(i.value); if(isFinite(v)&&v>0) ref[i.dataset.k]=v; else delete ref[i.dataset.k]; saveRef(); renderRef()});
