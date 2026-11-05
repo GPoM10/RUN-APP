@@ -447,7 +447,6 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
   </div>
 
   <section id="planner" hidden>
-    <div class="panel" id="goalBox" style="margin-bottom:16px"></div>
     <div class="panel" id="thrBox" style="margin-bottom:16px"></div>
     <div class="panel" style="margin-bottom:16px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2>Fitness, fatiga y forma</h2>
@@ -457,7 +456,36 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
       <div id="fNow2" style="margin-top:6px;font-size:13px;color:var(--ink)"></div>
       <div class="mdesc" id="fDesc2"></div>
     </div>
-    <details class="panel" id="genBox">
+    <div class="panel">
+    <h2>Entrenos sueltos</h2>
+    <div class="mdesc" style="margin-top:0">Para planear sesiones una por una, sin generar un ciclo. Cada paso puede ir por tiempo (min) o por distancia (km o m) y se pueden combinar: 15' de calentamiento + 6×1 km con recuperación de 400 m + 10'. Cuentan en la proyección de fitness, fatiga y forma, en la carga máxima de Bienestar y para calificar el ritmo del rodaje real de esa semana y tipo. En las semanas de un ciclo generado, manda el ciclo para ese tipo.</div>
+    <div class="opts" style="margin-top:4px"><label>Fecha <input type="date" id="p1D" aria-label="Fecha" style="font:inherit;font-family:var(--mono);font-size:13px;border:1px solid var(--line);border-radius:5px;padding:3px 5px;background:var(--bg);color:var(--ink)"></label>
+      <label>Tipo <select class="tipo" id="p1T" aria-label="Tipo"><option>ER</option><option>LR</option><option>Calidad</option><option>Competencia</option><option>Test</option><option>Descanso</option></select></label></div>
+    <div class="opts" id="p1Btns" style="margin-top:8px"><span>Agregar paso:</span>
+      <button type="button" data-add="cal">+ Calentamiento</button><button type="button" data-add="blk">+ Bloque continuo</button><button type="button" data-add="rest">+ Descanso</button><button type="button" data-add="vc">+ Vuelta a la calma</button><button type="button" data-add="grp" title="Un grupo de pasos que se repite N veces">+ Series</button><button type="button" id="p1Grp" class="btn primary" style="padding:4px 10px;font-size:12.5px" hidden></button>
+      <button type="button" id="p1Clr" class="del" style="font-size:13px">Vaciar</button></div>
+    <div class="mdesc" style="margin:6px 0 0">«+ Series» arma un grupo de pasos que se repite las veces que digas (p. ej. 1 km rápido + recuperación de 2', × 6). También podés marcar pasos con la casilla y tocar «Agrupar».</div>
+    <div class="notice" id="p1EdN" style="margin-top:8px;border-left:4px solid var(--accent)" hidden></div>
+    <div id="p1B" class="p1steps"></div>
+    <div class="opts"><span>Queda así:</span><input id="p1P" aria-label="Plan" style="flex:1 1 240px;min-width:0;font-family:var(--mono);font-size:12.5px;border:1px solid var(--line);border-radius:5px;padding:4px 6px;background:var(--bg);color:var(--ink)">
+      <span id="p1Est" class="mdesc" style="margin:0"></span>
+      <button class="btn primary" id="p1Add" type="button">Agregar</button><button class="btn" id="p1Cancel" type="button" hidden>Cancelar edición</button><span id="p1Msg"></span></div>
+    <div class="tablewrap" id="pList"></div>
+    </div>
+    <div class="panel" style="margin-top:16px" id="revBox"></div>
+    <div class="panel" id="goalBox" style="margin-top:16px"></div>
+    <div class="panel" style="margin-top:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+        <h2>Planeado vs ejecutado</h2>
+        <span class="seg" role="group" aria-label="Agrupar" id="pgSeg"><button data-g="d">Días</button><button data-g="w">Semanas</button></span>
+        <span class="opts" id="pwNav" style="margin:0;gap:6px"><button type="button" id="pwPrev" aria-label="Semana anterior">‹</button><b id="pwLab" style="min-width:120px;text-align:center;color:var(--ink);font-size:13px"></b><button type="button" id="pwNext" aria-label="Semana siguiente">›</button></span>
+        <span class="seg" role="group" aria-label="Variable" id="pmSeg"><button data-m="trimp">TRIMP</button><button data-m="km">Km</button><button data-m="t">Tiempo</button></span>
+      </div>
+      <div class="chartbox" style="height:300px"><canvas id="pchart" aria-label="Planeado vs ejecutado por semana"></canvas><div class="empty" id="pEmpty">Planeá entrenos (sueltos, del coach o un ciclo) para comparar lo planeado con lo ejecutado.</div></div>
+      <div class="mdesc" id="pDesc"></div>
+      <div class="tablewrap" id="ptab" style="margin-top:14px"></div>
+    </div>
+    <details class="panel" id="genBox" style="margin-top:16px">
       <summary style="cursor:pointer"><b>Generar ciclo</b> <span class="mdesc">· reglas de partida; después editás cada sesión en la tabla</span></summary>
       <div class="gen">
         <label>Inicio (lunes de la semana 1)<input type="date" id="gStart"></label>
@@ -480,34 +508,6 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
       </div>
       <div class="opts"><button class="btn primary" id="gGo" type="button">Generar ciclo</button><span id="gMsg"></span></div>
     </details>
-    <div class="panel" style="margin-top:16px">
-    <h2>Entrenos sueltos</h2>
-    <div class="mdesc" style="margin-top:0">Para planear sesiones una por una, sin generar un ciclo. Cada paso puede ir por tiempo (min) o por distancia (km o m) y se pueden combinar: 15' de calentamiento + 6×1 km con recuperación de 400 m + 10'. Cuentan en la proyección de fitness, fatiga y forma, en la carga máxima de Bienestar y para calificar el ritmo del rodaje real de esa semana y tipo. En las semanas de un ciclo generado, manda el ciclo para ese tipo.</div>
-    <div class="opts" style="margin-top:4px"><label>Fecha <input type="date" id="p1D" aria-label="Fecha" style="font:inherit;font-family:var(--mono);font-size:13px;border:1px solid var(--line);border-radius:5px;padding:3px 5px;background:var(--bg);color:var(--ink)"></label>
-      <label>Tipo <select class="tipo" id="p1T" aria-label="Tipo"><option>ER</option><option>LR</option><option>Calidad</option><option>Competencia</option><option>Test</option><option>Descanso</option></select></label></div>
-    <div class="opts" id="p1Btns" style="margin-top:8px"><span>Agregar paso:</span>
-      <button type="button" data-add="cal">+ Calentamiento</button><button type="button" data-add="blk">+ Bloque continuo</button><button type="button" data-add="rest">+ Descanso</button><button type="button" data-add="vc">+ Vuelta a la calma</button><button type="button" data-add="grp" title="Un grupo de pasos que se repite N veces">+ Series</button><button type="button" id="p1Grp" class="btn primary" style="padding:4px 10px;font-size:12.5px" hidden></button>
-      <button type="button" id="p1Clr" class="del" style="font-size:13px">Vaciar</button></div>
-    <div class="mdesc" style="margin:6px 0 0">«+ Series» arma un grupo de pasos que se repite las veces que digas (p. ej. 1 km rápido + recuperación de 2', × 6). También podés marcar pasos con la casilla y tocar «Agrupar».</div>
-    <div class="notice" id="p1EdN" style="margin-top:8px;border-left:4px solid var(--accent)" hidden></div>
-    <div id="p1B" class="p1steps"></div>
-    <div class="opts"><span>Queda así:</span><input id="p1P" aria-label="Plan" style="flex:1 1 240px;min-width:0;font-family:var(--mono);font-size:12.5px;border:1px solid var(--line);border-radius:5px;padding:4px 6px;background:var(--bg);color:var(--ink)">
-      <span id="p1Est" class="mdesc" style="margin:0"></span>
-      <button class="btn primary" id="p1Add" type="button">Agregar</button><button class="btn" id="p1Cancel" type="button" hidden>Cancelar edición</button><span id="p1Msg"></span></div>
-    <div class="tablewrap" id="pList"></div>
-    </div>
-    <div class="panel" style="margin-top:16px" id="revBox"></div>
-    <div class="panel" style="margin-top:16px">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-        <h2>Planeado vs ejecutado</h2>
-        <span class="seg" role="group" aria-label="Agrupar" id="pgSeg"><button data-g="d">Días</button><button data-g="w">Semanas</button></span>
-        <span class="opts" id="pwNav" style="margin:0;gap:6px"><button type="button" id="pwPrev" aria-label="Semana anterior">‹</button><b id="pwLab" style="min-width:120px;text-align:center;color:var(--ink);font-size:13px"></b><button type="button" id="pwNext" aria-label="Semana siguiente">›</button></span>
-        <span class="seg" role="group" aria-label="Variable" id="pmSeg"><button data-m="trimp">TRIMP</button><button data-m="km">Km</button><button data-m="t">Tiempo</button></span>
-      </div>
-      <div class="chartbox" style="height:300px"><canvas id="pchart" aria-label="Planeado vs ejecutado por semana"></canvas><div class="empty" id="pEmpty">Planeá entrenos (sueltos, del coach o un ciclo) para comparar lo planeado con lo ejecutado.</div></div>
-      <div class="mdesc" id="pDesc"></div>
-      <div class="tablewrap" id="ptab" style="margin-top:14px"></div>
-    </div>
   </section>
 
   <section id="calendar" hidden>
@@ -2884,7 +2884,7 @@ function fitCard(M,pa,pb){if(!M.ok) return `<div class="mdesc" style="margin-top
 document.getElementById('evGo').onclick=evalChange;
 function syncTab(){{const bc=document.getElementById('backCal'); if(bc){bc.hidden=!(fromCal&&tab==='cmp'); bc.textContent=backTo==='rev'?'← Volver a la revisión semanal':'← Volver al calendario'}}document.querySelectorAll('#tabSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===tab));
   document.querySelector('.grid').hidden=tab!=='cmp'; document.getElementById('planner').hidden=tab!=='plan'; document.getElementById('planBox').hidden=tab!=='cmp';
-  document.getElementById('wellness').hidden=tab!=='well'; document.getElementById('calendar').hidden=tab!=='cal'; document.getElementById('refTab').hidden=tab!=='ref'; document.getElementById('drop').hidden=tab==='well'||tab==='cal'||tab==='ref'}
+  document.getElementById('wellness').hidden=tab!=='well'; document.getElementById('calendar').hidden=tab!=='cal'; document.getElementById('refTab').hidden=tab!=='ref'; document.getElementById('drop').hidden=tab!=='cmp'}
 document.querySelectorAll('#tabSeg button').forEach(b=>b.onclick=()=>{fromCal=false;tab=b.dataset.t;save();render()});
 // volver al calendario en el mes y el día desde donde se abrió el rodaje
 document.getElementById('backCal').onclick=e=>{e.stopPropagation(); fromCal=false; tab=backTo==='rev'?'plan':'cal'; save(); render();
