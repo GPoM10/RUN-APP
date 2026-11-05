@@ -4109,23 +4109,33 @@ function renderRef(){const B=document.getElementById('refBox'); if(!B) return; c
   // 2) comparación solo de lo elegido: por criterio (menos = mejor) y, con el botón, corregido por WBGT
   h+=`<h2 style="margin-top:18px;font-size:18px">Comparación de lo elegido (${selR.length})</h2><div class="opts" style="margin-top:0"><span class="mdesc" style="margin:0" data-keep>Criterio: <b>${R.n}</b>, de menos a más (menos = mejor).</span><button type="button" class="btn ${ref.adj?'':'primary'}" id="rfAdj">${ref.adj?'Quitar ajuste por WBGT':'Ajustar por WBGT'}</button></div>`;
   if(!selR.length) h+=`<div class="mdesc" data-keep>Elegí rodajes tocando los puntos del gráfico «Elegí en el tiempo» para compararlos.</div>`;
-  else {const val=r=>r[X.key], srt=(arr,f)=>arr.slice().sort((p,q)=>(f(p)==null)-(f(q)==null)||f(p)-f(q)), O=srt(selR,val), pos=new Map(O.map((r,i)=>[r.id,i+1])), col=r=>color(ref.sel.indexOf(r.id));
-    const left=`<div><div class="lbl">Oficial, de menos a más</div><div class="tablewrap"><table><thead><tr><th>#</th><th>Fecha</th><th>WBGT</th><th>Ritmo</th><th>Tiempo total</th><th>Estabilización</th><th>${R.n}</th></tr></thead><tbody>${O.map(r=>`<tr><td class="num"><b>${val(r)==null?'—':pos.get(r.id)}</b></td><td style="color:${col(r)};font-weight:600">${dt(r.a)}</td><td class="num">${wbc(r.W)}${wbMark(r.a)}</td><td class="num">${fmtP(r.P)}</td><td class="num">${nf(r.T,0)} min</td><td class="num">${stb(r)}</td><td class="num"><b>${fm1(val(r))}</b></td></tr>`).join('')}</tbody></table></div></div>`;
-    let right='';
-    if(ref.adj){const cs=new Map(selR.map(r=>[r.id,refCorr(r,m,C)])), av=r=>{const c=cs.get(r.id); return c&&c.adj!=null?c.adj:null}, OR=srt(selR,av), sub=selR.filter(r=>av(r)!=null&&val(r)!=null), pl=new Map(srt(sub,val).map((r,i)=>[r.id,i+1])), pr=new Map(srt(sub,av).map((r,i)=>[r.id,i+1]));
-      right=`<div><div class="lbl">Ajustado a ${wbc(C.Wr)}${ref.wr===''?' (el WBGT más bajo de los elegidos)':''}, de menos a más</div>
-      <div class="tablewrap"><table><thead><tr><th>#</th><th></th><th>Fecha</th><th>WBGT</th><th>${R.n} a ${nf(C.Wr,1)} °C</th></tr></thead><tbody>${OR.map((r,i)=>{const c=cs.get(r.id), a=av(r), d=a!=null&&pl.has(r.id)?pl.get(r.id)-pr.get(r.id):null;
-        const ar=d==null?'':d>0?`<span class="ok" title="Sube ${d} lugar(es) al corregir por clima">▲${d}</span>`:d<0?`<span class="b" title="Baja ${-d} lugar(es) al corregir por clima">▼${-d}</span>`:'<span style="color:var(--muted)" title="Misma posición">＝</span>';
-        return `<tr><td class="num"><b>${a==null?'—':pr.get(r.id)||i+1}</b></td><td class="num">${ar}</td><td style="color:${col(r)};font-weight:600">${dt(r.a)}</td><td class="num">${wbc(r.W)}${wbMark(r.a)}</td><td class="num"><b>${a==null?'—':nf(a,R.d)}</b>${a!=null&&c.half!=null?` <span class="mdesc" style="margin:0">± ${nf(c.half,R.d)}</span>`:''}</td></tr>`}).join('')}</tbody></table></div>
-      ${selR.map(r=>{const c=cs.get(r.id); return c&&c.warn&&c.warn.length&&c.adj==null?`<div class="mdesc" data-keep style="margin:2px 0">${dt(r.a)}: ${c.warn.map(esc).join('; ')}</div>`:''}).join('')}</div>`}
-    else right=`<div><div class="lbl">Ajustado por WBGT</div><div class="mdesc" data-keep>Tocá «Ajustar por WBGT» para ver acá los mismos rodajes con el clima corregido, reordenados, con una flecha si cambian de lugar.</div></div>`;
-    h+=`<style>.rfPair{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(440px,100%),1fr));gap:14px;align-items:start}</style><div class="rfPair">${left}${right}</div>`;
+  else {h+=`<div class="chartbox" style="height:300px;margin-top:8px"><canvas id="refCmpC" aria-label="Comparación de lo elegido"></canvas></div>
+    <div class="mdesc" data-keep>Cada barra es un rodaje elegido, ordenados de menos a más (${R.n}: menos = mejor)${ref.adj?`. Barra clara: valor oficial; barra llena: ajustado a ${nf(C.Wr,1)} °C${ref.wr===''?' (el WBGT más bajo de los elegidos)':''}; el orden sigue al ajustado y el tooltip dice si cambió de lugar`:''}. Pasá el mouse o tocá una barra para ver los valores.</div>`;
+    if(ref.adj) h+=selR.map(r=>{const c=refCorr(r,m,C); return c&&c.warn&&c.warn.length&&c.adj==null?`<div class="mdesc" data-keep style="margin:2px 0">${dt(r.a)}: ${c.warn.map(esc).join('; ')}</div>`:''}).join('');
     h+=seriesHtml(C,selR)}
   h+=`<div class="mdesc" data-keep>«Ajustar por WBGT» lleva cada rodaje al WBGT, ritmo y duración de referencia con la regresión de calor de todos tus rodajes de este tipo. Atípico = más de 3 desviaciones robustas (MAD) del ajuste: se marca y no entra en el ajuste, pero no se borra. La pendiente de calor es en sí una medida de tu tolerancia al calor.</div>`;
   // 3) gráfico al final
   h+=`<div class="opts" style="margin-top:18px"><span class="seg" role="group" aria-label="Vista"><button type="button" data-rv="clima" aria-pressed="${ref.v==='clima'}">Contra el clima</button><button type="button" data-rv="tiempo" aria-pressed="${ref.v==='tiempo'}">Evolución en el tiempo</button><button type="button" data-rv="curvas" aria-pressed="${ref.v==='curvas'}">Curvas superpuestas</button></span></div>`;
   h+=`<div class="chartbox" style="height:340px;margin-top:8px"><canvas id="refChart" aria-label="Gráfico de referencia"></canvas></div><div class="mdesc" data-keep id="refDesc"></div>`;
-  B.innerHTML=h; wireRef(B); drawRef(C,m); try{drawRefTL(ref.all?C.rows:C.S)}catch(e){console.error(e)}}
+  B.innerHTML=h; wireRef(B); drawRef(C,m); try{drawRefTL(ref.all?C.rows:C.S)}catch(e){console.error(e)} try{drawRefCmp(C,m,selR)}catch(e){console.error(e)}}
+// comparación de lo elegido en barras verticales: oficial y, con el ajuste, corregido por WBGT
+let refCmpC=null;
+function drawRefCmp(C,m,selR){const cv=document.getElementById('refCmpC'); if(refCmpC){refCmpC.destroy();refCmpC=null} if(!cv||typeof Chart==='undefined'||!selR.length) return;
+  const X=C.M[m], R=RMET[m], key=X.key, val=r=>r[key], cs=ref.adj?new Map(selR.map(r=>[r.id,refCorr(r,m,C)])):null, av=r=>{const c=cs&&cs.get(r.id); return c&&c.adj!=null?c.adj:null};
+  const srt=(arr,f)=>arr.slice().sort((p,q)=>(f(p)==null)-(f(q)==null)||f(p)-f(q)), O=srt(selR,ref.adj?av:val), po=new Map(srt(selR.filter(r=>val(r)!=null),val).map((r,i)=>[r.id,i+1])), pa=ref.adj?new Map(srt(selR.filter(r=>av(r)!=null),av).map((r,i)=>[r.id,i+1])):null;
+  const col=r=>color(ref.sel.indexOf(r.id)), wbc=w=>`${nf(w,1)} °C`;
+  const ds=[{label:'Oficial',data:O.map(val),backgroundColor:O.map(r=>ref.adj?col(r)+'55':col(r)),borderColor:O.map(col),borderWidth:ref.adj?1.5:0,borderRadius:4}];
+  if(ref.adj) ds.push({label:`Ajustado a ${nf(C.Wr,1)} °C`,data:O.map(av),backgroundColor:O.map(col),borderWidth:0,borderRadius:4});
+  const tick=css('--muted'), grid=css('--line'), vs=O.flatMap(r=>[val(r),ref.adj?av(r):null]).filter(v=>v!=null), lo=Math.min(...vs), hi=Math.max(...vs), pad=(hi-lo)*0.25||Math.abs(hi)*0.05||1;
+  refCmpC=new Chart(cv,{type:'bar',data:{labels:O.map(r=>dt(r.a)),datasets:ds},options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},
+    plugins:{legend:{display:!!ref.adj,position:'top',align:'start',labels:{color:css('--ink'),boxWidth:12,boxHeight:10,font:{family:css('--body')}}},
+      tooltip:{callbacks:{title:it=>{const r=O[it[0].dataIndex]; return `${r.a.tipo} ${dt(r.a)}`},
+        label:it=>{const r=O[it.dataIndex]; if(it.datasetIndex===0) return `Oficial: ${val(r)==null?'—':nf(val(r),R.d)} ${R.u}${po.has(r.id)?` · ${po.get(r.id)}.º`:''}`;
+          const c=cs.get(r.id), a=av(r); if(a==null) return 'Ajustado: —'; const d=po.has(r.id)&&pa.has(r.id)?po.get(r.id)-pa.get(r.id):0;
+          return `Ajustado: ${nf(a,R.d)} ${R.u}${c.half!=null?` ± ${nf(c.half,R.d)}`:''} · ${pa.get(r.id)}.º${d>0?` (sube ${d})`:d<0?` (baja ${-d})`:''}`},
+        afterBody:it=>{const r=O[it[0].dataIndex]; return [`WBGT ${wbc(r.W)} · ${fmtP(r.P)}/km · ${nf(r.T,0)} min`,r.sT==null?'':`Estabilización: ${nf(r.sT,0)} min · ${nf(r.sD/1000,2)} km`].filter(Boolean)}}}},
+    scales:{x:{grid:{display:false},ticks:{color:css('--ink'),font:{family:css('--mono')},maxRotation:0}},
+      y:{beginAtZero:false,suggestedMin:lo>=0?Math.max(0,lo-pad):lo-pad,suggestedMax:hi+pad*0.4,title:{display:true,text:`${R.n} (${R.u})`,color:tick},grid:{color:grid},ticks:{color:tick,font:{family:css('--mono')}}}}}})}
 // criterios del gráfico en el tiempo (valores reales de cada rodaje)
 const REFTM={hr:{n:'FC promedio',k:'hr',u:'ppm',d:0,tip:'FC promedio desde la estabilización: más baja es mejor a igual ritmo.'},der:{n:'Deriva',k:'der',u:'%',d:1,tip:'Deriva: cuánto sube la FC de la primera a la segunda mitad; menos es mejor.'},pahr:{n:'Pa:HR',k:'pahr',u:'%',d:1,tip:'Pa:HR: desacople de ritmo y FC entre mitades; bajo 5 % es buena base aeróbica.'},ef:{n:'Eficiencia aeróbica',k:'ef',u:'m/min por ppm',d:3,tip:'Eficiencia aeróbica: metros por minuto por cada latido; más alta es mejor.'}};
 let refTL=null;
