@@ -1369,7 +1369,16 @@ function renderChart(){
   const anaBy=chosen.map(a=>{if(a.tipo==='Técnica') return dynWin(a).map(([p,q])=>[p/60,q/60]); if(isQ(a)) return a.q.laps.filter(l=>l.t==='w').map(l=>[(l.dur>=QW.long?l.a+QW.start:l.a)/60,l.b/60]);
     const s=summarize(a), sg=segTimes(a), t0=sg.filter(g=>g.ki<s.stab).reduce((q,g)=>q+g.dur,0)/60, t1=s.endK!=null?sg.filter(g=>g.kf<=s.endK+1e-6).reduce((q,g)=>q+g.dur,0)/60:a.timeS/60; return [[t0,t1]]}), ana=anaBy.flat();
   // promedio por km (o cada 2 km en rodajes de más de 12 km) del primer rodaje marcado: líneas tenues y el valor de cada eje activo arriba
-  let kmv=null; if(ref&&kmT.length&&document.getElementById('showKm').checked){const lastK=kmT[kmT.length-1].k, tail=ref.distKm-lastK>=0.3, T=[0,...kmT.map(p=>p.t),...(tail?[ref.timeS/60]:[])], KM=[0,...kmT.map(p=>p.k),...(tail?[ref.distKm]:[])], keys=[metric,...(k2?[k2]:[])];
+  let kmv=null; if(ref&&kmT.length&&document.getElementById('showKm').checked){const lastK=kmT[kmT.length-1].k, tail=ref.distKm-lastK>=0.3; let T=[0,...kmT.map(p=>p.t),...(tail?[ref.timeS/60]:[])], KM=[0,...kmT.map(p=>p.k),...(tail?[ref.distKm]:[])]; const keys=[metric,...(k2?[k2]:[])];
+    // calidad: los km se cuentan desde el inicio de cada serie o bloque y se cortan en su final (no se mezclan con el descanso); fuera de las series, un tramo por vuelta
+    if(isQ(ref)&&ref.q.laps&&ref.q.laps.length){const sg=segTimes(ref), pts=[[0,0]]; let tt=0; sg.forEach(g=>{tt+=g.dur; pts.push([tt/60,g.kf])});
+      const kAt=t=>{const j=pts.findIndex(p=>p[0]>=t); if(j<=0) return j===0?0:ref.distKm; const [t0,k0]=pts[j-1],[t1,k1]=pts[j]; return k0+(k1-k0)*(t-t0)/((t1-t0)||1)};
+      const tAt=k=>{const j=pts.findIndex(p=>p[1]>=k); if(j<=0) return j===0?0:ref.timeS/60; const [t0,k0]=pts[j-1],[t1,k1]=pts[j]; return t0+(t1-t0)*(k-k0)/((k1-k0)||1)};
+      const B=[0]; ref.q.laps.forEach(l=>{const t0=l.a/60, t1=l.b/60; if(t0>B[B.length-1]+0.05) B.push(t0);
+        if(l.t==='w'){const k0=kAt(t0), k1=kAt(t1); for(let k=k0+1;k<k1-0.25;k+=1) B.push(tAt(k))}
+        if(t1>B[B.length-1]+0.05) B.push(t1)});
+      if(ref.timeS/60>B[B.length-1]+0.05) B.push(ref.timeS/60);
+      T=B; KM=B.map(kAt); kmv={lines:B.slice(1,-1)}}
     const col=k=>{const d=ds.find(d=>d.$ai===0&&(k===metric?!d.$k:d.$k===k)); const c=d&&typeof d.borderColor==='string'?d.borderColor:css('--ink'); return c};
     const labels=[]; for(let j=1;j<T.length;j++){const t0=T[j-1], t1=T[j], vals=[];
       for(const k of keys){const mm=M[k]; let v=null;
@@ -1377,7 +1386,7 @@ function renderChart(){
         else {const d=ds.find(d=>d.$ai===0&&(k===metric?!d.$k:d.$k===k)); if(d){const P=d.data.filter(p=>p.x>=t0&&p.x<t1&&p.y!=null&&isFinite(p.y)); if(P.length) v=P.reduce((q,p)=>q+p.y,0)/P.length}}
         if(v!=null&&isFinite(v)) vals.push({s:mm.fmt(v),c:col(k)})}
       if(vals.length) labels.push({t0,t1,vals})}
-    kmv={lines:kmT.map(p=>p.t),labels,rows:keys.length}}
+    kmv={lines:kmv&&kmv.lines?kmv.lines:kmT.map(p=>p.t),labels,rows:keys.length}}
   if(chart){chart.data.datasets=ds;chart.options=opts;chart.$stabs=stabs;chart.$dev=!!m.band;chart.$zones=zOn;chart.$laps=null;chart.$ana=ana;chart.$avgs=avgs;chart.$kmv=kmv;chart.$dz=DZ[metric]?metric:null;chart.update()}
   else{chart=new Chart(document.getElementById('chart'),{type:'scatter',data:{datasets:ds},options:opts,plugins:[stabPlugin]});chart.$stabs=stabs;chart.$dev=!!m.band;chart.$zones=zOn;chart.$laps=null;chart.$ana=ana;chart.$avgs=avgs;chart.$kmv=kmv;chart.$dz=DZ[metric]?metric:null;chart.update()}
 }
