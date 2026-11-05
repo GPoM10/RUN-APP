@@ -319,6 +319,7 @@ details.panel>summary::-webkit-details-marker,details.lapd>summary::-webkit-deta
 details.panel>summary::before,details.lapd>summary::before{content:'▸';display:inline-block;width:1em;color:var(--muted);font-size:.8em}
 details.panel[open]>summary::before,details.lapd[open]>summary::before{content:'▾'}.drop.panel{padding:12px 16px}
 .dr{position:relative;flex:1 1 260px;min-width:200px;height:26px}.dr .drt{position:absolute;left:8px;right:8px;top:11px;height:4px;border-radius:2px;background:var(--line)}.dr .drf{position:absolute;top:0;bottom:0;background:var(--accent);border-radius:2px}
+.fwin .drf{cursor:grab;top:-6px;bottom:-6px;border-radius:5px;opacity:.85}.fwin .drf:active{cursor:grabbing}
 .dr input{position:absolute;left:0;top:0;width:100%;height:26px;margin:0;background:none;pointer-events:none;-webkit-appearance:none;appearance:none}
 .dr input::-webkit-slider-runnable-track{background:none;border:0}.dr input::-moz-range-track{background:none;border:0}
 .dr input::-webkit-slider-thumb{-webkit-appearance:none;pointer-events:auto;width:16px;height:16px;border-radius:50%;background:var(--panel);border:2px solid var(--accent);cursor:grab;margin-top:0}
@@ -437,6 +438,7 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
       <div class="notice" id="needReload" style="margin-top:10px" hidden><b>Volvé a cargar la carpeta con «Elegir carpeta» o arrastrándola.</b> Se reemplazan los mismos rodajes y se conservan tus notas, tipos y ritmos programados. Algunos rodajes se guardaron con una versión anterior del comparador y no traen la dinámica de carrera (cadencia, contacto, balance, ratio vertical y longitud de zancada a lo largo del rodaje, pasos, fuerza pico), el tiempo por zona ni, en las sesiones de calidad, las series. El Pa:HR sí se calcula con lo que ya está guardado.</div>
       <div class="chartbox"><div id="trStat" hidden style="position:absolute;top:34px;right:10px;z-index:2;background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-family:var(--mono);font-size:11.5px;line-height:1.45;color:var(--ink);pointer-events:none;text-align:right"></div><canvas id="chart" aria-label="Gráfico comparativo"></canvas><div class="empty" id="chartEmpty" hidden>Marcá de uno a cuatro entrenamientos en la lista para graficarlos.</div></div>
       <div id="trRngBox" class="opts" style="margin-top:6px" hidden><span>Mostrar</span><span class="seg" role="group" aria-label="Rango rápido" id="trQ"></span><div class="dr"><div class="drt"><div class="drf" id="trFill"></div></div><input type="range" id="trA" aria-label="Desde" min="0" value="0"><input type="range" id="trB" aria-label="Hasta" min="0" value="0"></div><span id="trLab" style="font-family:var(--mono);font-size:12.5px;color:var(--ink)"></span></div>
+      <div class="fwin opts" id="fwBox" style="margin-top:6px" hidden><span>Ver</span><div class="dr"><div class="drt"><div class="drf fwf" title="Arrastrá para mover la ventana"></div></div><input type="range" class="fwA" aria-label="Desde" min="0" value="0"><input type="range" class="fwB" aria-label="Hasta" min="0" value="0"></div><span class="fwL" style="font-family:var(--mono);font-size:12.5px;color:var(--ink)"></span></div>
       <div class="mdesc" id="mdesc"></div>
       <div style="margin-top:18px">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2 id="tblTitle">Resumen lado a lado</h2><span style="display:flex;gap:8px;flex-wrap:wrap"><button id="tblFold" type="button" hidden style="font-size:12.5px;padding:4px 10px">▸ Replegar todo</button><button id="snapBtn" class="btn primary" type="button">Resumen</button></span></div>
@@ -453,6 +455,7 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
         <span class="opts" style="margin:0"><span class="seg" role="group" aria-label="Periodo" id="frSeg2"><button data-r="6">6 semanas</button><button data-r="12">12 semanas</button><button data-r="24">24 semanas</button><button data-r="0">Todo</button></span>
         <label><input type="checkbox" id="fProj2"> Proyectar con lo planeado</label></span></div>
       <div class="chartbox pmc"><canvas id="fchart2" aria-label="Fitness, fatiga y forma"></canvas><div class="empty" id="fEmpty2" hidden>Cargá rodajes para ver la curva de forma.</div></div>
+      <div class="fwin opts" id="fwBox2" style="margin-top:6px" hidden><span>Ver</span><div class="dr"><div class="drt"><div class="drf fwf" title="Arrastrá para mover la ventana"></div></div><input type="range" class="fwA" aria-label="Desde" min="0" value="0"><input type="range" class="fwB" aria-label="Hasta" min="0" value="0"></div><span class="fwL" style="font-family:var(--mono);font-size:12.5px;color:var(--ink)"></span></div>
       <div id="fNow2" style="margin-top:6px;font-size:13px;color:var(--ink)"></div>
       <div class="mdesc" id="fDesc2"></div>
     </div>
@@ -1277,7 +1280,7 @@ const stabPlugin={id:'stab',beforeDatasetsDraw(c){
     ctx.fillStyle=css('--panel'); ctx.globalAlpha=.92; ctx.fillRect(cx-w/2-4,y-7,w+8,14); ctx.globalAlpha=1; ctx.fillStyle=st.c; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(lab,cx,y); ctx.restore()})}};
 
 function renderChart(){
-  syncView(); document.getElementById('chart').parentElement.classList.toggle('pmc',view==='forma'); {const lb=document.getElementById('lupaBox'); if(lb) lb.hidden=true} if(!M[metric]||M[metric].hide) metric='hr'; if(!TM[tmetric]) tmetric='der'; if(tmetric==='hr') tmetric='eff'; if(view==='carga') return renderLoad(); if(view==='forma') return renderPmc(); if(view==='tec') return renderTecChart(); if(chart&&chart.config&&chart.config.type!=='scatter'){chart.destroy();chart=null} if(isTrV()) return renderTrend();
+  syncView(); document.getElementById('chart').parentElement.classList.toggle('pmc',view==='forma'); document.getElementById('fwBox').hidden=true; {const lb=document.getElementById('lupaBox'); if(lb) lb.hidden=true} if(!M[metric]||M[metric].hide) metric='hr'; if(!TM[tmetric]) tmetric='der'; if(tmetric==='hr') tmetric='eff'; if(view==='carga') return renderLoad(); if(view==='forma') return renderPmc(); if(view==='tec') return renderTecChart(); if(chart&&chart.config&&chart.config.type!=='scatter'){chart.destroy();chart=null} if(isTrV()) return renderTrend();
   document.querySelectorAll('#metrics button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===metric));
   const m=M[metric]; if(m.bars) return renderIdxBars(m); if(m.custom) return renderPeaks(m); if(chart&&chart.config&&chart.config.type!=='scatter'){chart.destroy();chart=null}
   const chosen=sel.map(id=>acts.find(a=>a.id===id)).filter(Boolean);
@@ -1936,14 +1939,14 @@ document.getElementById('pwNext').onclick=()=>{rvOff++;renderPlanner()};
 // fitness, fatiga y forma dentro del Programador (mismo cálculo y periodo que en el Comparador)
 let fchart2=null;
 function renderPmcPlan(){const cv=document.getElementById('fchart2'); if(!cv) return;
-  document.querySelectorAll('#frSeg2 button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.r===frng));
+  document.querySelectorAll('#frSeg2 button').forEach(b=>b.setAttribute('aria-pressed',!fwin&&+b.dataset.r===frng));
   const pj=document.getElementById('fProj2'); pj.checked=fproj; pj.disabled=fm==='mech'||!allPlans().length;
   const R=pmcSeries(); document.getElementById('fEmpty2').hidden=!!R; cv.hidden=!R;
   document.getElementById('fDesc2').textContent=`La misma curva de Comparador → Fitness, fatiga y forma: CTL (fitness) es el promedio exponencial de tu carga diaria de 42 días, ATL (fatiga) el de 7 días y la forma es TSB ÷ CTL en %, con las franjas de intervals.icu; el ACWR es fatiga ÷ fitness (1,0 = lo habitual, 0,8–1,3 zona segura, más de 1,5 riesgo alto de lesión). A la derecha de hoy, en gris, la proyección con el TRIMP estimado de todo lo planeado (ciclo, entrenos sueltos y plan del coach); los días de descanso cuentan como carga cero. Sirve para revisar antes de ejecutar si la semana que planeaste te deja en la zona de forma que buscás.`;
   {const N=document.getElementById('fNow2'), t=R?(R.S.find(p=>p.d===R.today)||R.S.filter(p=>!p.fut).pop()):null, dec=fm==='mech'?1:0;
     if(t&&t.ctl>0){const nt=t.ctl-t.atl, pc=nt/t.ctl*100, z=fzOf(pc); N.innerHTML=`Hoy: fitness <b>${nf(t.ctl,dec)}</b> · fatiga <b>${nf(t.atl,dec)}</b> · forma para mañana <b style="color:${css(z[3])}">${nf(pc,0)} %</b> · ACWR <b>${nf(t.atl/t.ctl,2)}</b> · ${z[2]}`} else N.innerHTML=''}
-  if(fchart2){fchart2.destroy();fchart2=null} if(!R||typeof Chart==='undefined') return; fchart2=new Chart(cv,pmcConfig(R))}
-document.querySelectorAll('#frSeg2 button').forEach(b=>b.onclick=()=>{frng=+b.dataset.r;save();renderPmcPlan()});
+  if(fchart2){fchart2.destroy();fchart2=null} pmcWin('fwBox2',R,()=>{if(fchart2){fchart2.destroy();fchart2=null} fchart2=new Chart(cv,pmcConfig(R))}); if(!R||typeof Chart==='undefined') return; fchart2=new Chart(cv,pmcConfig(R))}
+document.querySelectorAll('#frSeg2 button').forEach(b=>b.onclick=()=>{frng=+b.dataset.r;fwin=null;save();renderPmcPlan()});
 document.getElementById('fProj2').onchange=e=>{fproj=e.target.checked;save();renderPmcPlan()};
 // planeado vs ejecutado por semana sin ciclo: con los entrenos sueltos y el plan del coach
 function renderPvE(){const E=document.getElementById('pEmpty'), cv=document.getElementById('pchart'), T=document.getElementById('ptab'); applyPlans();
@@ -3485,10 +3488,22 @@ function pmcSeries(mode){
     out.push({d,load:real+pl,real,pl,ctl,atl,tsb,pct,fut,acts:(A.get(d)||[]).sort((x,y)=>x[0].t0Unix-y[0].t0Unix)})}
   return {S:out,today,d0,nodyn,proj:P0.size>0}
 }
-let pmcCache=null;
+let pmcCache=null, fwin=null; // fwin: ventana de fechas elegida con la barra (ms); null = la del selector de semanas
+// barra de fechas debajo del gráfico de forma: dos manijas para los extremos y la franja del medio para moverla entera
+function pmcWin(boxId,R,redraw){const B=document.getElementById(boxId); if(!B) return; B.hidden=!R; if(!R) return;
+  const S=R.S, d0=S[0].d, n=Math.round((S[S.length-1].d-d0)/DAY), A=B.querySelector('.fwA'), Z=B.querySelector('.fwB'), F=B.querySelector('.fwf'), L=B.querySelector('.fwL');
+  const f=new Intl.DateTimeFormat('es-CR',{timeZone:'UTC',day:'2-digit',month:'short',year:'2-digit'});
+  const cur=()=>{if(fwin) return [Math.round((fwin[0]-d0)/DAY),Math.round((fwin[1]-d0)/DAY)]; if(!frng) return [0,n]; const t=Math.round((R.today-d0)/DAY); return [Math.max(0,t-frng*7),Math.min(n,t+frng*7)]};
+  const paint=([a,b])=>{A.value=a; Z.value=b; F.style.left=a/(n||1)*100+'%'; F.style.right=(n-b)/(n||1)*100+'%'; L.textContent=`${f.format(new Date(d0+a*DAY))} → ${f.format(new Date(d0+b*DAY))}`};
+  [A,Z].forEach(x=>{x.min=0; x.max=n; x.step=1}); paint(cur());
+  let raf=0; const set=(a,b)=>{a=Math.max(0,Math.min(n,a)); b=Math.max(0,Math.min(n,b)); if(b-a<7){if(b+7<=n) b=a+7; else a=b-7} fwin=[d0+a*DAY,d0+b*DAY]; paint([a,b]); document.querySelectorAll('#frSeg button,#frSeg2 button').forEach(x=>x.setAttribute('aria-pressed','false')); cancelAnimationFrame(raf); raf=requestAnimationFrame(redraw)};
+  A.oninput=()=>{const b=+Z.value; set(Math.min(+A.value,b-7),b)}; Z.oninput=()=>{const a=+A.value; set(a,Math.max(+Z.value,a+7))};
+  F.onpointerdown=e=>{e.preventDefault(); const W=B.querySelector('.drt').getBoundingClientRect().width||1, x0=e.clientX, [a0,b0]=cur(); F.setPointerCapture(e.pointerId);
+    F.onpointermove=ev=>{let dd=Math.round((ev.clientX-x0)/W*n); if(a0+dd<0) dd=-a0; if(b0+dd>n) dd=n-b0; set(a0+dd,b0+dd)};
+    F.onpointerup=F.onpointercancel=()=>{F.onpointermove=null}}}
 function renderPmc(){
   document.querySelectorAll('#fmSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.f===fm));
-  document.querySelectorAll('#frSeg button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.r===frng));
+  document.querySelectorAll('#frSeg button').forEach(b=>b.setAttribute('aria-pressed',!fwin&&+b.dataset.r===frng));
   const pj=document.getElementById('fProj'); pj.checked=fproj; pj.disabled=fm==='mech'||(!cycle&&!plans.length);
   const R=pmcCache=pmcSeries(), empty=!R;
   document.getElementById('chartEmpty').hidden=!empty; document.getElementById('chart').hidden=empty;
@@ -3502,12 +3517,13 @@ function renderPmc(){
   if(typeof Chart==='undefined'||empty) return;
   if(chart){chart.destroy();chart=null}
   chart=new Chart(document.getElementById('chart'),pmcConfig(R));
+  pmcWin('fwBox',R,()=>{if(view!=='forma') return; if(chart){chart.destroy();chart=null} chart=new Chart(document.getElementById('chart'),pmcConfig(R))});
 }
 // configuración del gráfico de fitness, fatiga y forma (la usan el Comparador y el Programador)
 function pmcConfig(R){
   const unit=fm==='mech'?'TRIMP mecánico (miles)':'TRIMP';
   // la curva se calcula con toda la historia; el selector solo recorta lo que se ve (hacia atrás y la misma cantidad de semanas de proyección)
-  const S=frng?R.S.filter(p=>p.d>=R.today-frng*7*DAY&&p.d<=R.today+frng*7*DAY):R.S, past=S.filter(p=>!p.fut), fut=S.filter(p=>p.fut), last=past[past.length-1];
+  const S=fwin?R.S.filter(p=>p.d>=fwin[0]&&p.d<=fwin[1]):frng?R.S.filter(p=>p.d>=R.today-frng*7*DAY&&p.d<=R.today+frng*7*DAY):R.S, past=S.filter(p=>!p.fut), fut=S.filter(p=>p.fut), last=past[past.length-1];
   const li=S.indexOf(last), C={ctl:css('--s3'),atl:css('--s1'),tsb:css('--s2')};
   const P_=k=>S.map(p=>({x:p.d,y:p.fut?null:p[k]})), F_=k=>S.map((p,i)=>({x:p.d,y:p.fut||i===li?p[k]:null}));
   // el panel de abajo va en ACWR (fatiga ÷ fitness = 1 − forma %): 1,0 = lo habitual, arriba más cargado
@@ -3556,7 +3572,7 @@ function renderPmcTable(){
   W.innerHTML=`<div class="mdesc" style="margin-top:0">Hoy: fitness (CTL) <b>${nf(t.ctl,dec)}</b> · fatiga (ATL) <b>${nf(t.atl,dec)}</b> · forma (TSB) para mañana ${nf(nt,dec)} (${t.ctl>0?nf(nt/t.ctl*100,0):'—'} %${t.ctl>0?` · ACWR ${nf(t.atl/t.ctl,2)}`:''})${t.ctl>0?' · '+fzOf(nt/t.ctl*100)[2]:''}.</div><table><thead><tr><th>Semana al</th><th>Carga semana</th><th>Fitness (CTL)</th><th>Fatiga (ATL)</th><th>Forma (TSB)</th><th>Forma %</th><th title="Fatiga ÷ fitness (carga aguda ÷ crónica): 1,0 = lo habitual; 0,8–1,3 zona segura; > 1,5 riesgo alto de lesión">ACWR</th><th>Rampa CTL</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
 }
 document.querySelectorAll('#fmSeg button').forEach(b=>b.onclick=()=>{fm=b.dataset.f;save();render()});
-document.querySelectorAll('#frSeg button').forEach(b=>b.onclick=()=>{frng=+b.dataset.r;save();renderChart()});
+document.querySelectorAll('#frSeg button').forEach(b=>b.onclick=()=>{frng=+b.dataset.r;fwin=null;save();renderChart()});
 document.getElementById('fProj').onchange=e=>{fproj=e.target.checked;save();render()};
 
 /* ---------- botón Resumen: imagen con la FC y la tabla ---------- */
