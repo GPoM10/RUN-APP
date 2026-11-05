@@ -4077,7 +4077,7 @@ function renderRef(){const B=document.getElementById('refBox'); if(!B) return; c
   let h=`<h2>Referencia: evolución sin el ruido del clima</h2>
   <div class="mdesc" data-keep style="margin-top:0">Se eligen rodajes comparables (mismo tipo, ritmo y duración) y se calcula cómo habría sido el rodaje <b>a un mismo WBGT</b>. La pendiente de calor sale de una regresión (${R.n} ~ WBGT + ritmo + duración) con <b>todos</b> los rodajes de ese tipo; el filtro solo define el rodaje de referencia. Nada se extrapola fuera del WBGT que viviste.</div>
   ${catHtml(CAT)}
-  <div class="opts" style="margin-top:10px"><span class="seg" role="group" aria-label="Métrica">${rmk().map(k=>[k,RMET[k]]).map(([k,r])=>`<button type="button" data-rm="${k}" aria-pressed="${m===k}">${r.n}</button>`).join('')}</span></div>
+  
   <div class="gen" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));margin-top:10px">${inp('w0','WBGT desde (°C)','sin límite')}${inp('w1','WBGT hasta (°C)','sin límite')}${inp('p0','Ritmo desde (m:ss)','6:40')}${inp('p1','Ritmo hasta (m:ss)','7:20')}${inp('d0','Duración total desde (min)','')}${inp('d1','Duración total hasta (min)','')}${inp('wr','WBGT de referencia (°C)','automático')}
     <label>Periodo de referencia desde<input type="date" class="rf" data-k="f0" value="${esc(ref.f0)}"></label><label>hasta<input type="date" class="rf" data-k="f1" value="${esc(ref.f1)}"></label></div>
   <div class="opts"><button type="button" id="rfReset">Limpiar filtros</button><span class="mdesc" style="margin:0" data-keep>Duración = tiempo total del rodaje, desde que arranca, en minutos enteros: 45:59 cuenta como 45. Con un periodo de referencia fijo, la vara de medir no se mueve con el tiempo.</span></div>`;
@@ -4094,7 +4094,7 @@ function renderRef(){const B=document.getElementById('refBox'); if(!B) return; c
   const wbtxt=C.Wr!=null?`${nf(C.Wr,1)} °C ${wbTag(C.Wr)}`:'—';
   h+=`<div style="margin-top:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">`;
   for(const k of rmk()){const x=C.M[k], r=RMET[k], on=k===m;
-    h+=`<div style="border:1px solid ${on?'var(--accent)':'var(--line)'};border-radius:8px;padding:10px 12px"><div class="lbl">${r.n}</div>`+
+    h+=`<div data-rm="${k}" role="button" tabindex="0" aria-pressed="${on}" title="Usar ${r.n} como criterio de la lista, la comparación y el gráfico" style="cursor:pointer;border:${on?2:1}px solid ${on?'var(--accent)':'var(--line)'};border-radius:8px;padding:${on?9:10}px ${on?11:12}px"><div class="lbl">${r.n}${on?' · criterio':''}</div>`+
       (x.n?`<div style="font-family:var(--display);font-size:26px;font-weight:600">${nf(x.mu,r.d)} <span class="mdesc" style="margin:0;font-size:13px">${r.u}${x.half!=null?` ± ${nf(x.half,r.d)}`:''}</span></div>
       <div class="mdesc" style="margin:2px 0" data-keep>${x.n} rodajes${ref.adj?' corregidos a '+nf(C.Wr,1)+' °C':' (valores oficiales)'} · mediana cruda ${nf(x.raw,r.d)} (cuartiles ${nf(x.q1,r.d)}–${nf(x.q3,r.d)})</div>
       ${x.reg&&ref.adj?`<div class="mdesc" style="margin:2px 0" data-keep>Regresión en ese punto: ${nf(x.reg.v,r.d)} ± ${nf(x.reg.c,r.d)}${x.inRange?'':' <b class="w">(WBGT fuera de lo observado)</b>'}</div>`:''}
@@ -4195,7 +4195,7 @@ function wireRef(B){
   const rr=B.querySelector('#rfRun'); if(rr) rr.onchange=()=>{const a=acts.find(x=>String(x.id)===rr.value), I=actInfo(a); if(!I) return; ref={...ref,tipo:I.tipo,code:I.code,wr:'',sel:[a.id]};
     const r=refRows(I.tipo).find(z=>String(z.id)===String(a.id)), P=r?r.P:I.P, D=r?r.T:a.timeS/60; ref.p0=fmtP(P-20); ref.p1=fmtP(P+20); ref.d0=String(Math.round(D*0.85)); ref.d1=String(Math.round(D*1.15)); saveRef(); renderRef()};
   B.querySelectorAll('[data-rspan]').forEach(b=>b.onclick=()=>{const d=+b.dataset.rspan, on=b.getAttribute('aria-pressed')==='true'; ref.f1=''; ref.f0=d&&!on?new Date(Date.now()-6*3600000-d*864e5).toISOString().slice(0,10):''; saveRef(); renderRef()});
-  B.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{ref.m=b.dataset.rm; saveRef(); renderRef()});
+  B.querySelectorAll('[data-rm]').forEach(b=>{b.onclick=()=>{if(ref.m===b.dataset.rm) return; ref.m=b.dataset.rm; saveRef(); renderRef()}; b.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();b.onclick()}}});
   B.querySelectorAll('[data-rtm]').forEach(b=>b.onclick=()=>{ref.tm=b.dataset.rtm; saveRef(); renderRef()});
   B.querySelectorAll('[data-rx]').forEach(b=>b.onclick=()=>refTog(b.dataset.rx));
   {const c=B.querySelector('#rfCmp'); if(c) c.onclick=refToCmp}
