@@ -3970,7 +3970,7 @@ const REFK='comparador.ref', REF0={tipo:'ER',code:'',adj:false,vs:1,w0:'',w1:'',
 let ref=(()=>{try{return {...REF0,...JSON.parse(LS.getItem(REFK)||'{}')}}catch(e){return {...REF0}}})(), refChart=null;
 const saveRef=()=>{try{LS.setItem(REFK,JSON.stringify(ref))}catch(e){}};
 const RMET={hr:{n:'FC promedio estable',u:'ppm',d:1,k:'hr'},hre:{n:'FC al final de la serie',u:'ppm',d:1,k:'hre'},der:{n:'Deriva',u:'pp',d:2,k:'der'},pahr:{n:'Pa:HR',u:'pp',d:2,k:'pahr'}};
-const rmk=()=>ref.tipo==='Q'?['hr','hre','der','pahr']:['hr','der','pahr'], tl=()=>ref.tipo==='Q'?ref.code:ref.tipo;
+const rmk=()=>ref.tipo==='Q'?['hr','hre','der','pahr']:['hr','der','pahr'], tl=()=>ref.tipo==='Q'?(ref.code==='*'?'calidades':ref.code):ref.tipo;
 // datos ligeros de un rodaje para el catálogo (sin calcular nada pesado)
 function actInfo(a){if(!a||a.ej||!a.timeS) return null; let o;
   if(isQ(a)&&a.q&&a.q.code){const W=(a.q.laps||[]).filter(l=>l.t==='w'), du=W.reduce((q,l)=>q+l.dur,0), d=W.reduce((q,l)=>q+l.d,0); if(!(d>0)) return null; o={tipo:'Q',code:a.q.code,D:du/60,P:du/(d/1000)}}
@@ -3986,7 +3986,7 @@ const rMean=xs=>xs.reduce((q,x)=>q+x,0)/(xs.length||1), rQ=(xs,p)=>{const v=xs.s
 const rT=df=>1.96+2.4/df+3/df/df;
 // un renglón por rodaje: WBGT, ritmo y duración analizada (desde la estabilización) y las tres métricas
 function refRows(tipo){const out=[];
-  if(tipo==='Q'){acts.forEach(a=>{if(a.ej||!isQ(a)||!a.q||a.q.code!==ref.code) return; const W=(a.q.laps||[]).filter(l=>l.t==='w'); if(!W.length) return; const w=wbgtOf(a); if(!w||!isFinite(w.w)) return;
+  if(tipo==='Q'){acts.forEach(a=>{if(a.ej||!isQ(a)||!a.q||(ref.code!=='*'&&a.q.code!==ref.code)) return; const W=(a.q.laps||[]).filter(l=>l.t==='w'); if(!W.length) return; const w=wbgtOf(a); if(!w||!isFinite(w.w)) return;
       const du=W.reduce((q,l)=>q+l.dur,0), d=W.reduce((q,l)=>q+l.d,0); if(!(du>0&&d>0)) return;
       const wavg=(xs,f)=>{const t=xs.reduce((q,l)=>q+l.dur,0); return t?xs.reduce((q,l)=>q+f(l)*l.dur,0)/t:null};
       const LD=W.filter(l=>l.der!=null), LP=W.filter(l=>l.pahr!=null), hd=wavg(LD,l=>l.der), hp=wavg(LP,l=>l.pahr);
@@ -4058,12 +4058,15 @@ function refCorr(r,m,C){const x=C.M[m], F=x.F, v=r[x.key]; if(v==null) return nu
 const wbMark=a=>{let m=''; try{const w=wxE(a); if(w&&w.src==='reloj') m+=' <span title="Aire calculado desde el reloj (muñeca) menos la corrección">⌚</span>'; if(a.wx&&a.wx.man&&a.wx.t!=null) m+=' <span title="Temperatura anotada a mano">✎</span>'; if(wxRain(a)) m+=' <span title="Día de lluvia">☂</span>'}catch(e){} return m};
 const airNote=()=>airW==null?`Open-Meteo${wxOff?` con ajuste de ${nf(wxOff,1)} °C`:' sin ajuste'}`:`el reloj (muñeca) menos ${nf(airW,1)} °C`;
 const SPAN=[['Todo',0],['30 días',30],['60 días',60],['90 días',90],['6 meses',182]];
+// todas las sesiones de calidad juntas (cualquier estructura): se suman los grupos de cada código
+function qAll(CAT){const Q=CAT.filter(g=>g.tipo==='Q'); if(Q.length<2) return null; return {key:'Q|*',tipo:'Q',code:'*',lab:'Todas las calidades',n:Q.reduce((q,g)=>q+g.n,0),D:Q.flatMap(g=>g.D),P:Q.flatMap(g=>g.P),W:Q.flatMap(g=>g.W)}}
+const catFind=(CAT,k)=>k==='Q|*'?qAll(CAT):CAT.find(g=>g.key===k);
 function catHtml(CAT){const fp=v=>fmtP(Math.round(v)), esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const runs=acts.map(a=>({a,I:actInfo(a)})).filter(x=>x.I).sort((p,q)=>q.a.t0Unix-p.a.t0Unix).slice(0,250);
-  const cur=ref.tipo==='Q'?'Q|'+ref.code:ref.tipo, g0=CAT.find(g=>g.key===cur), opt=g=>`<option value="${esc(g.key)}"${g.key===cur?' selected':''}>${esc(g.lab)} (${g.n})</option>`, QG=CAT.filter(g=>g.tipo==='Q');
-  return `<div class="opts" style="margin-top:12px"><label><b>Tipo de entrenamiento</b> <select class="tipo" id="rfType" aria-label="Tipo de entrenamiento">${CAT.filter(g=>g.tipo!=='Q').map(opt).join('')}${QG.length?`<optgroup label="Calidad">${QG.map(opt).join('')}</optgroup>`:''}</select></label>
+  const cur=ref.tipo==='Q'?'Q|'+ref.code:ref.tipo, g0=catFind(CAT,cur), opt=g=>`<option value="${esc(g.key)}"${g.key===cur?' selected':''}>${esc(g.lab)} (${g.n})</option>`, QG=CAT.filter(g=>g.tipo==='Q');
+  return `<div class="opts" style="margin-top:12px"><label><b>Tipo de entrenamiento</b> <select class="tipo" id="rfType" aria-label="Tipo de entrenamiento">${CAT.filter(g=>g.tipo!=='Q').map(opt).join('')}${QG.length?`<optgroup label="Calidad">${qAll(CAT)?opt(qAll(CAT)):''}${QG.map(opt).join('')}</optgroup>`:''}</select></label>
     <label>…o partí de un rodaje <select class="tipo" id="rfRun" aria-label="Rodaje"><option value="">elegir rodaje…</option>${runs.map(({a,I})=>`<option value="${esc(a.id)}">${dt(a)} · ${I.tipo==='Q'?esc(I.code):I.tipo} · ${fp(I.P)} · ${nf(I.D,0)} min${I.W!=null?' · '+nf(I.W,1)+' °C':''}</option>`).join('')}</select></label></div>
-  ${g0?`<div class="mdesc" data-keep style="margin-top:0">${g0.n} rodajes · duración típica ${nf(rMed(g0.D),0)} min · ritmo típico ${fp(rMed(g0.P))}/km · WBGT ${g0.W.length?nf(Math.min(...g0.W),1)+'–'+nf(Math.max(...g0.W),1)+' °C':'sin clima'}${g0.tipo==='Q'?' (en calidad: solo el trabajo, sin calentamiento ni recuperaciones)':''}. Los rodajes sin clima no entran en el análisis.</div>`:''}
+  ${g0?`<div class="mdesc" data-keep style="margin-top:0">${g0.n} rodajes · duración típica ${nf(rMed(g0.D),0)} min · ritmo típico ${fp(rMed(g0.P))}/km · WBGT ${g0.W.length?nf(Math.min(...g0.W),1)+'–'+nf(Math.max(...g0.W),1)+' °C':'sin clima'}${g0.tipo==='Q'?' (en calidad: solo el trabajo, sin calentamiento ni recuperaciones)':''}${g0.code==='*'?'. Mezcla sesiones de distinta estructura: usá el ritmo y la duración para quedarte con las comparables':''}. Los rodajes sin clima no entran en el análisis.</div>`:''}
   <div class="mdesc" data-keep style="margin:4px 0">Aire para el WBGT: <b>${airNote()}</b>. Marcas en los rodajes: ⌚ aire desde el reloj · ✎ temperatura anotada · ☂ lluvia. Se cambia en la columna «Temperatura del aire y clima» del Comparador.</div>
   <div class="opts"><span>Modelo de calor (después de estabilizar):</span><label>β a 18 °C <input class="pace rb" data-k="b18" value="${nf(refHeat().b18,2)}" inputmode="decimal" style="width:54px"> ppm/min</label><label>β a 30 °C <input class="pace rb" data-k="b30" value="${nf(+(ref.b30>0?ref.b30:0.28),2)}" inputmode="decimal" style="width:54px"> ppm/min</label><span class="mdesc" style="margin:0" data-keep>β = cuánto sube la FC por minuto con ese WBGT, a ritmo constante. Crece de forma exponencial entre los dos valores. Antes de estabilizar no se corrige nada.</span></div>
   <div class="opts"><span>Fechas a comparar:</span><span class="seg" role="group" aria-label="Ventana">${SPAN.map(([l,d])=>`<button type="button" data-rspan="${d}" aria-pressed="${refSpanOn(d)}">${l}</button>`).join('')}</span></div>`}
@@ -4110,7 +4113,7 @@ function renderRef(){const B=document.getElementById('refBox'); if(!B) return; c
       <div class="mdesc" style="margin:2px 0" data-keep>${(()=>{const p=refHeat(); return `Modelo: β(${nf(C.Wr,1)} °C) = ${nf(heatB(C.Wr,p),2)} ppm/min`})()} · lo que dicen tus rodajes (informativo): ${x.F.ok?`${x.F.bW>=0?'+':'−'}${nf(Math.abs(x.F.bW),k==='hr'||k==='hre'?2:3)} ± ${nf(x.F.ciW,k==='hr'||k==='hre'?2:3)} ${r.u}/°C, ${x.F.n} rodajes`:esc(x.F.why||'sin datos suficientes')}</div>`
       :`<div class="mdesc" data-keep>Ningún rodaje cumple el filtro para esta métrica.</div>`)+'</div>'}
   h+=`</div><div class="mdesc" data-keep style="margin-top:8px">${ref.adj?`Rodaje sintético a WBGT ${wbtxt}, ritmo ${C.Pr?fmtP(C.Pr):'—'}/km, ${C.Dr?nf(C.Dr,0):'—'} min. `:'Valores oficiales, sin corregir por clima. '}Muestra: ${C.S.length} de ${all.length} ${tl()}. El ± es el intervalo de confianza 95 % del promedio de la muestra corregida (no incluye la incertidumbre de la pendiente; esa va en la tarjeta).</div>`;
-  if(C.S.length<3){const g0=CAT.find(g=>g.key===(ref.tipo==='Q'?'Q|'+ref.code:ref.tipo)), nT=g0?g0.n:all.length, nc=C.cnt, lines=[];
+  if(C.S.length<3){const g0=catFind(CAT,ref.tipo==='Q'?'Q|'+ref.code:ref.tipo), nT=g0?g0.n:all.length, nc=C.cnt, lines=[];
     if(nT>all.length) lines.push(`${nT-all.length} de los ${nT} rodajes no se pueden analizar (sin clima o sin 10 min estables).`);
     lines.push(`De los ${all.length} analizables pasan: ritmo ${nc.p}, duración ${nc.d}, WBGT ${nc.w}, fechas ${nc.f}; en todos a la vez, ${C.S.length}.`);
     h+=`<div class="notice" style="margin-top:8px">Con menos de 3 rodajes en el filtro no hay incertidumbre confiable: ampliá el ritmo, la duración o la banda de WBGT. ${lines.join(' ')}</div>`}
