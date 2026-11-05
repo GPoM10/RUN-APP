@@ -4032,8 +4032,8 @@ function refFit(rows,key){const R=rows.filter(r=>r[key]!=null&&isFinite(r[key]))
     good:use.length>=15&&wMax-wMin>=4}}
 function refCalc(){const rows=refRows(ref.tipo), nz=v=>{const x=num(v); return isFinite(x)?x:null}, pz=v=>parseP(v), dz=v=>v?parseDay(v):null;
   const w0=nz(ref.w0), w1=nz(ref.w1), p0=pz(ref.p0), p1=pz(ref.p1), d0=nz(ref.d0), d1=nz(ref.d1), f0=dz(ref.f0), f1=dz(ref.f1);
-  const S=rows.filter(r=>(w0==null||r.W>=w0)&&(w1==null||r.W<=w1)&&(p0==null||r.P>=p0)&&(p1==null||r.P<=p1)&&(d0==null||r.D>=d0)&&(d1==null||r.D<=d1)&&(f0==null||r.day>=f0)&&(f1==null||r.day<=f1));
-  const cnt={w:rows.filter(r=>(w0==null||r.W>=w0)&&(w1==null||r.W<=w1)).length,p:rows.filter(r=>(p0==null||r.P>=p0)&&(p1==null||r.P<=p1)).length,d:rows.filter(r=>(d0==null||r.D>=d0)&&(d1==null||r.D<=d1)).length,f:rows.filter(r=>(f0==null||r.day>=f0)&&(f1==null||r.day<=f1)).length};
+  const S=rows.filter(r=>(w0==null||r.W>=w0)&&(w1==null||r.W<=w1)&&(p0==null||r.P>=p0)&&(p1==null||r.P<=p1)&&(d0==null||r.T>=d0)&&(d1==null||r.T<=d1)&&(f0==null||r.day>=f0)&&(f1==null||r.day<=f1));
+  const cnt={w:rows.filter(r=>(w0==null||r.W>=w0)&&(w1==null||r.W<=w1)).length,p:rows.filter(r=>(p0==null||r.P>=p0)&&(p1==null||r.P<=p1)).length,d:rows.filter(r=>(d0==null||r.T>=d0)&&(d1==null||r.T<=d1)).length,f:rows.filter(r=>(f0==null||r.day>=f0)&&(f1==null||r.day<=f1)).length};
   const selW=(ref.sel||[]).map(id=>rows.find(r=>r.id===id)).filter(Boolean).map(r=>r.W), Wr=nz(ref.wr)??(selW.length?Math.min(...selW):rMed(S.map(r=>r.W))), Pr=rMed(S.map(r=>r.P)), Dr=rMed(S.map(r=>r.D));
   const M={}; for(const m of rmk()){const key=RMET[m].k, F=refFit(rows,key), X=S.filter(r=>r[key]!=null&&!F.flagged.has(r.id));
     const adj=r=>ref.adj&&r[key]!=null?r[key]+heatDelta(r,key,Wr,1):r[key], A=X.map(adj), n=A.length, mu=n?rMean(A):null, sd=n>1?Math.sqrt(A.reduce((q,x)=>q+(x-mu)**2,0)/(n-1)):null;
@@ -4079,9 +4079,9 @@ function renderRef(){const B=document.getElementById('refBox'); if(!B) return; c
   ${catHtml(CAT)}
   <div class="opts" style="margin-top:10px"><span class="seg" role="group" aria-label="Métrica">${rmk().map(k=>[k,RMET[k]]).map(([k,r])=>`<button type="button" data-rm="${k}" aria-pressed="${m===k}">${r.n}</button>`).join('')}</span>
     <span class="seg" role="group" aria-label="Vista"><button type="button" data-rv="clima" aria-pressed="${ref.v==='clima'}">Contra el clima</button><button type="button" data-rv="tiempo" aria-pressed="${ref.v==='tiempo'}">Evolución en el tiempo</button><button type="button" data-rv="curvas" aria-pressed="${ref.v==='curvas'}">Curvas superpuestas</button></span></div>
-  <div class="gen" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));margin-top:10px">${inp('w0','WBGT desde (°C)','sin límite')}${inp('w1','WBGT hasta (°C)','sin límite')}${inp('p0','Ritmo desde (m:ss)','6:40')}${inp('p1','Ritmo hasta (m:ss)','7:20')}${inp('d0','Duración desde (min)','')}${inp('d1','Duración hasta (min)','')}${inp('wr','WBGT de referencia (°C)','automático')}
+  <div class="gen" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));margin-top:10px">${inp('w0','WBGT desde (°C)','sin límite')}${inp('w1','WBGT hasta (°C)','sin límite')}${inp('p0','Ritmo desde (m:ss)','6:40')}${inp('p1','Ritmo hasta (m:ss)','7:20')}${inp('d0','Duración total desde (min)','')}${inp('d1','Duración total hasta (min)','')}${inp('wr','WBGT de referencia (°C)','automático')}
     <label>Periodo de referencia desde<input type="date" class="rf" data-k="f0" value="${esc(ref.f0)}"></label><label>hasta<input type="date" class="rf" data-k="f1" value="${esc(ref.f1)}"></label></div>
-  <div class="opts"><button type="button" id="rfReset">Limpiar filtros</button><span class="mdesc" style="margin:0" data-keep>Duración = minutos desde la estabilización. Con un periodo de referencia fijo, la vara de medir no se mueve con el tiempo.</span></div>`;
+  <div class="opts"><button type="button" id="rfReset">Limpiar filtros</button><span class="mdesc" style="margin:0" data-keep>Duración = tiempo total del rodaje, desde que arranca. Con un periodo de referencia fijo, la vara de medir no se mueve con el tiempo.</span></div>`;
   if(!all.length){B.innerHTML=h+`<div class="notice" style="margin-top:12px">No hay ${tl()} con clima y estabilización detectada. Hace falta WBGT (buscá el clima) y rodajes de 10 min o más desde la estabilización.</div>`; wireRef(B); return}
   // 0) los rodajes en el tiempo para elegir tocando los puntos (hasta 4) y mandarlos al Comparador
   {const TM=REFTM, tm=TM[ref.tm]?ref.tm:'hr';
@@ -4188,12 +4188,12 @@ function drawRef(C,m){const cv=document.getElementById('refChart'); if(refChart)
   ds=ds.filter(d=>!d._vline);
   refChart=new Chart(cv,{type:'scatter',data:{datasets:ds},plugins:[vline],options:{responsive:true,maintainAspectRatio:false,animation:false,
     plugins:{legend:{position:'top',align:'start',labels:{color:css('--ink'),boxWidth:12,boxHeight:6,font:{family:css('--body')},filter:it=>!/ $/.test(it.text)}},
-      tooltip:{callbacks:{title:it=>{const r=it[0].raw&&it[0].raw.r; return r?`${r.a.tipo} ${dt(r.a)} · ${fmtP(r.P)}/km · ${nf(r.D,0)} min · WBGT ${nf(r.W,1)} °C`:''},label:it=>ref.v==='curvas'?`${it.dataset.label.trim()}: ${nf(it.parsed.y,0)} ppm`:`${it.dataset.label.trim()}: ${nf(it.parsed.y,R.d)} ${R.u}`}}},scales}})}
+      tooltip:{callbacks:{title:it=>{const r=it[0].raw&&it[0].raw.r; return r?`${r.a.tipo} ${dt(r.a)} · ${fmtP(r.P)}/km · ${nf(r.T,0)} min · WBGT ${nf(r.W,1)} °C`:''},label:it=>ref.v==='curvas'?`${it.dataset.label.trim()}: ${nf(it.parsed.y,0)} ppm`:`${it.dataset.label.trim()}: ${nf(it.parsed.y,R.d)} ${R.u}`}}},scales}})}
 function wireRef(B){
   B.querySelectorAll('input.rf').forEach(i=>i.onchange=()=>{ref[i.dataset.k]=i.value.trim(); saveRef(); renderRef()});
   const ty=B.querySelector('#rfType'); if(ty) ty.onchange=()=>{const k=ty.value, q=k.startsWith('Q|'); ref={...ref,tipo:q?'Q':k,code:q?k.slice(2):'',p0:'',p1:'',d0:'',d1:'',wr:'',sel:[]}; saveRef(); renderRef()};
   const rr=B.querySelector('#rfRun'); if(rr) rr.onchange=()=>{const a=acts.find(x=>String(x.id)===rr.value), I=actInfo(a); if(!I) return; ref={...ref,tipo:I.tipo,code:I.code,wr:'',sel:[a.id]};
-    const r=refRows(I.tipo).find(z=>String(z.id)===String(a.id)), P=r?r.P:I.P, D=r?r.D:I.D; ref.p0=fmtP(P-20); ref.p1=fmtP(P+20); ref.d0=String(Math.round(D*0.85)); ref.d1=String(Math.round(D*1.15)); saveRef(); renderRef()};
+    const r=refRows(I.tipo).find(z=>String(z.id)===String(a.id)), P=r?r.P:I.P, D=r?r.T:a.timeS/60; ref.p0=fmtP(P-20); ref.p1=fmtP(P+20); ref.d0=String(Math.round(D*0.85)); ref.d1=String(Math.round(D*1.15)); saveRef(); renderRef()};
   B.querySelectorAll('[data-rspan]').forEach(b=>b.onclick=()=>{const d=+b.dataset.rspan, on=b.getAttribute('aria-pressed')==='true'; ref.f1=''; ref.f0=d&&!on?new Date(Date.now()-6*3600000-d*864e5).toISOString().slice(0,10):''; saveRef(); renderRef()});
   B.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{ref.m=b.dataset.rm; saveRef(); renderRef()});
   B.querySelectorAll('[data-rtm]').forEach(b=>b.onclick=()=>{ref.tm=b.dataset.rtm; saveRef(); renderRef()});
