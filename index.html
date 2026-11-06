@@ -2074,7 +2074,7 @@ function p150At(asOf,M){const H=zones.lim[0]-5, from=asOf-28*DAY, pts=[];
   const b=(M||hrModel()).b||-0.19; return mp+(H-mh)/b}
 // umbral a una fecha: el del Test activo (el que fijó tus zonas) o, si es posterior, el último Test anterior; cambia con cada Test nuevo
 // umbral para predecir: el que escribiste a mano manda; si no, el de las zonas ajustadas o el último test. Un umbral más lento que tus rodajes suaves es una lectura errónea y se descarta
-function tpAt(asOf,M){if(tpM) return tpM; const ez=easyPace(), ok=h=>h&&h.tpace&&h.tpace<ez;
+function tpAt(asOf,M){if(tpM&&asOf>=crDay(Math.floor(Date.now()/1000))-6*DAY) return tpM; const ez=easyPace(), ok=h=>h&&h.tpace&&h.tpace<ez;
   const t=ok(thr)&&thr.date<=asOf?thr:thrHist.filter(h=>ok(h)&&h.date<=asOf).sort((x,y)=>y.date-x.date)[0]; const tp0=t?t.tpace:null; if(!tp0) return null;
   return tp0}
 function derAt(asOf){const from=asOf-28*DAY, xs=acts.filter(a=>!a.ej&&(a.tipo==='ER'||a.tipo==='LR')&&a.timeS>=2400&&crDay(a.t0Unix)<=asOf&&crDay(a.t0Unix)>from).map(a=>summarize(a)).filter(s=>s.der!=null&&!s.fallback).map(s=>s.der*100);
@@ -2125,7 +2125,7 @@ function renderGoal(){const B=document.getElementById('goalBox'); if(!B) return;
     proj=`<div class="notice" style="margin-top:10px">Si seguís como en las últimas ${pts.length} semanas, el día de la carrera rondarías <b>${fmtT(lo)} – ${fmtT(hi)}</b> ${hi<=goal.t?'<b class="ok">: la meta queda al alcance</b>':lo>goal.t?'<b class="b">: con esta tendencia no llega; hace falta más estímulo o ajustar la meta</b>':': la meta está dentro del rango'}.</div>`}
   else if(days>0) proj=`<div class="mdesc">La proyección a la fecha aparece cuando la predicción cambie con un Test nuevo (y haya al menos 3 semanas de datos).</div>`;
   h+=`<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><div><div style="font-family:var(--display);font-size:22px;font-weight:600">🏁 ${esc(goal.name)} · ${nf(goal.km,goal.km%1?1:0)} km · meta ${fmtT(goal.t)} <span class="mdesc" style="margin:0">(${fmtP(goal.t/goal.km)}/km)</span></div>
-      <div class="mdesc" style="margin:2px 0 0">${dLong.format(new Date(goal.day))} · ${days>0?`faltan ${days} días (${Math.ceil(days/7)} semanas)`:days===0?'¡es hoy!':'ya pasó'}</div></div><span style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" id="gEdit">Editar meta</button><button type="button" id="gRebase" title="Fija como punto de partida la predicción y el ritmo de hoy">Recalcular punto de partida</button></span></div>
+      <div class="mdesc" style="margin:2px 0 0">${dLong.format(new Date(goal.day))} · ${days>0?`faltan ${days} días (${Math.ceil(days/7)} semanas)`:days===0?'¡es hoy!':'ya pasó'}</div></div><span style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" id="gEdit">Editar meta</button><label style="display:inline-flex;align-items:center;gap:6px;font-size:13px">Partida desde <input type="date" id="gFrom" value="${new Date(Math.min(goal.created?crDay(goal.created/1000):today,today)).toISOString().slice(0,10)}"></label><button type="button" id="gRebase" title="Fija como punto de partida la predicción y el ritmo con los datos hasta esa fecha">Fijar partida</button></span></div>
     <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:12px 0 4px">${batIcon(b.total,true)}<span style="font-family:var(--display);font-size:34px;font-weight:700">${b.total==null?'—':nf(b.total*100,0)+' %'}</span></div>
     <div class="wlist" style="margin-top:8px">${['pred','base','dose','res'].map(k=>`<div style="display:grid;grid-template-columns:150px auto minmax(0,1fr);gap:10px;align-items:center"><b>${C[k].lab}</b><span>${batIcon(C[k].f)} <span class="mdesc" style="margin:0">${C[k].f==null?'—':nf(C[k].f*100,0)+' %'}</span></span><span class="mdesc" data-keep style="margin:0">${C[k].txt}</span></div>`).join('')}</div>
     ${proj}
@@ -2136,7 +2136,8 @@ function renderGoal(){const B=document.getElementById('goalBox'); if(!B) return;
       <b>Estímulo específico (20 %)</b>: minutos por semana sobre ${bandMid()} ppm (subumbral y Z3), promedio de 4 semanas, contra una dosis de ${DOSE_MIN} min.
       <b>Resistencia (20 %)</b>: tu salida más larga de las últimas 4 semanas contra 1,2 veces la distancia de la carrera.</div></details>`;
   B.innerHTML=h; document.getElementById('gEdit').onclick=()=>{goalDraft={}; renderGoal()};
-  document.getElementById('gRebase').onclick=()=>{const tp=tpAt(today,M); goal.base={pred:tp?predT(tp,goal.km):null,p150:p150At(today,M)}; goal.created=Date.now(); save(); renderGoal()}}
+  // partida en la fecha que elijas: la predicción y el ritmo a FC fija con los datos hasta ese día; el semana a semana arranca ahí
+  document.getElementById('gRebase').onclick=()=>{const d=parseDay(document.getElementById('gFrom').value), at=d!=null&&d<=today?d:today, tp=tpAt(at,M); goal.base={pred:tp?predT(tp,goal.km):null,p150:p150At(at,M)}; goal.created=at+6*3600000; save(); renderGoal()}}
 /* ---------- revisión semanal: chequeos antes de ejecutar y lectura para recalibrar ---------- */
 const RV={acwr:[0.8,1.3],lr:1.10,int:0.10,hi:10,lo:-5};
 function wkData(w0,M,easy){const z0=()=>[0,0,0,0], pl={t:0,km:0,trimp:0,zb:z0(),ztr:z0(),zd:z0(),mx:0,n:0}, ex={t:0,km:0,trimp:0,zb:z0(),ztr:z0(),zd:z0(),zn:0,mx:0,n:0};
