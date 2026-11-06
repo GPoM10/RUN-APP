@@ -168,7 +168,10 @@ button:focus-visible,input:focus-visible,select:focus-visible,label.btn:focus-wi
 #status{font-family:var(--mono);font-size:12px;color:var(--muted)}
 .notice{background:var(--soft);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--muted)}
 .notice b{color:var(--ink)}
-.grid{display:grid;grid-template-columns:400px minmax(0,1fr);gap:16px;align-items:start}
+.grid{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}
+#listPanel.col .listhead>.seg,#listPanel.col #codeWrap,#listPanel.col #lfBox,#listPanel.col #list{display:none!important}
+#listPanel #list{max-height:380px}
+.selchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.selchips span{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;border:1px solid var(--line);border-radius:999px;padding:2px 4px 2px 8px}.selchips i{width:9px;height:9px;border-radius:50%;display:inline-block}.selchips button{padding:0 6px;font-size:12px;border:0;background:none;cursor:pointer;color:var(--muted)}
 @media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0}
 .listhead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
@@ -387,7 +390,8 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
   <div class="notice" id="demoNote" hidden><b>Estás viendo rodajes de ejemplo</b> inventados para mostrar cómo funciona. Desaparecen en cuanto cargues tu primer .fit.</div>
 
   <div class="grid">
-    <section class="panel" aria-label="Rodajes" id="listPanel"><h2>Rodajes</h2>
+    <section class="panel" aria-label="Rodajes" id="listPanel"><h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">Rodajes <button type="button" id="lpTog" aria-expanded="false" style="font-family:var(--body);font-size:13px;font-weight:600;padding:4px 10px">Elegir rodajes ▾</button></h2>
+      <div class="selchips" id="selChips"></div>
       <div class="listhead">
         <span style="display:flex;align-items:center;gap:8px"><span class="lbl" id="count">Rodajes</span><button type="button" id="selClr" hidden style="padding:3px 9px;font-size:12px">Desmarcar todo</button><button type="button" id="lfBtn" aria-expanded="false" title="Qué mostrar en cada rodaje" style="padding:3px 8px;font-size:14px;line-height:1">⚙</button></span>
         <div class="seg" role="group" aria-label="Filtrar por tipo" id="filtSeg">
@@ -1148,7 +1152,14 @@ document.getElementById('file').addEventListener('change',ev=>{addFiles(ev.targe
 
 /* ---------- lista ---------- */
 let confirmId=null;
-function renderList(){
+// la lista va plegada arriba del gráfico (el gráfico usa todo el ancho); los elegidos quedan como fichas
+let lpOpen=(()=>{try{return LS.getItem('comparador.lpOpen')==='1'}catch(e){return false}})();
+function syncLP(){const P=document.getElementById('listPanel'), b=document.getElementById('lpTog'); P.classList.toggle('col',!lpOpen); b.setAttribute('aria-expanded',lpOpen); b.textContent=lpOpen?'Listo ▴':'Elegir rodajes ▾';
+  const C=document.getElementById('selChips'), ch=sel.map(id=>acts.find(a=>a.id===id)).filter(Boolean);
+  C.innerHTML=ch.length?ch.map((a,i)=>`<span><i style="background:${color(i)}"></i>${a.tipo} ${dt(a)}<button type="button" data-x="${String(a.id).replace(/"/g,'&quot;')}" aria-label="Quitar">✕</button></span>`).join(''):'<span class="mdesc" style="margin:0;border:0">Ningún rodaje elegido.</span>';
+  C.querySelectorAll('button[data-x]').forEach(b=>b.onclick=()=>{sel=sel.filter(id=>String(id)!==b.dataset.x); save(); render()})}
+document.getElementById('lpTog').onclick=e=>{e.stopPropagation(); lpOpen=!lpOpen; try{LS.setItem('comparador.lpOpen',lpOpen?'1':'0')}catch(e){} syncLP()};
+function renderList(){ try{syncLP()}catch(e){}
   const L=document.getElementById('list'); L.innerHTML='';
   document.querySelectorAll('#filtSeg button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.f===filt));
   const cw=document.getElementById('codeWrap'), cs=document.getElementById('codeSel'); cw.hidden=filt!=='Calidad';
