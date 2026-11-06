@@ -2850,7 +2850,7 @@ let tdV='tb'; const tdCh=new Map();
 // la sesión completa del Test: FC encima, ritmo en gris suave detrás y las partes del test en bandas de color (F1, F2…; descansos en gris)
 // live: en la app (colores del tema, tamaño del recuadro, cuadrito al pasar el mouse); si no, imagen clara para el informe
 function sesCfg(a,live){const F=a.f5, n=F.h.length, sm=(k,w)=>{let q=0,c=0; for(let i=Math.max(0,k-w);i<=Math.min(n-1,k+w);i++){q+=F.h[i];c++} return q/c/10};
-  const hr=[], pc=[]; for(let k=0;k<n;k++){const x=(k+1)*5/60; hr.push({x,y:F.h[k]>0?F.h[k]/10:null});  // FC: cada bloque de 5 s tal cual (sin suavizar) const k0=Math.max(0,k-3), k1=Math.min(n-1,k+3), d=F.m[k1]-(k0>0?F.m[k0-1]:0), v=d>5?(k1-k0+1)*5/(d/1000):null; pc.push({x,y:v==null?null:Math.min(v,780)})}
+  const hr=[], pc=[]; for(let k=0;k<n;k++){const x=(k+1)*5/60; hr.push({x,y:F.h[k]>0?F.h[k]/10:null});  /* FC: cada bloque de 5 s tal cual (sin suavizar) */ const k0=Math.max(0,k-3), k1=Math.min(n-1,k+3), d=F.m[k1]-(k0>0?F.m[k0-1]:0), v=d>5?(k1-k0+1)*5/(d/1000):null; pc.push({x,y:v==null?null:Math.min(v,780)})}
   const L=(a.q&&a.q.laps)||[], CW=['#1E66C2','#2E8B3A']; let wi=0; const bands=L.map(l=>({t0:l.a/60,t1:l.b/60,k:l.t==='w'?'w':isRec(l)?'r':l.blk,lab:l.t==='w'?'F'+(++wi):''}));
   const run=pc.filter(p=>p.y!=null&&p.y<600).map(p=>p.y), fast=run.length?Math.min(...run):300;
   const ink=live?css('--ink'):'#18211F', mut=live?css('--muted'):'#5D6B67', grid=live?css('--line'):'#E3E8E6', red=live?css('--s1'):'#D32F2F', gry=live?'rgba(150,160,157,.45)':'rgba(93,107,103,.35)';
