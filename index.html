@@ -2073,7 +2073,9 @@ function p150At(asOf,M){const H=zones.lim[0]-5, from=asOf-28*DAY, pts=[];
   if(pts.length<2) return null; const W=pts.reduce((q,p)=>q+p[2],0), mp=pts.reduce((q,p)=>q+p[0]*p[2],0)/W, mh=pts.reduce((q,p)=>q+p[1]*p[2],0)/W;
   const b=(M||hrModel()).b||-0.19; return mp+(H-mh)/b}
 // umbral a una fecha: el del Test activo (el que fijó tus zonas) o, si es posterior, el último Test anterior; cambia con cada Test nuevo
-function tpAt(asOf,M){const t=thr&&thr.tpace&&thr.date<=asOf?thr:thrHist.filter(h=>h.tpace&&h.date<=asOf).sort((x,y)=>y.date-x.date)[0]; const tp0=t?t.tpace:(tpM||null); if(!tp0) return null;
+// umbral para predecir: el que escribiste a mano manda; si no, el de las zonas ajustadas o el último test. Un umbral más lento que tus rodajes suaves es una lectura errónea y se descarta
+function tpAt(asOf,M){if(tpM) return tpM; const ez=easyPace(), ok=h=>h&&h.tpace&&h.tpace<ez;
+  const t=ok(thr)&&thr.date<=asOf?thr:thrHist.filter(h=>ok(h)&&h.date<=asOf).sort((x,y)=>y.date-x.date)[0]; const tp0=t?t.tpace:null; if(!tp0) return null;
   return tp0}
 function derAt(asOf){const from=asOf-28*DAY, xs=acts.filter(a=>!a.ej&&(a.tipo==='ER'||a.tipo==='LR')&&a.timeS>=2400&&crDay(a.t0Unix)<=asOf&&crDay(a.t0Unix)>from).map(a=>summarize(a)).filter(s=>s.der!=null&&!s.fallback).map(s=>s.der*100);
   derAt.n=xs.length; return xs.length?xs.reduce((q,x)=>q+x,0)/xs.length:null}
