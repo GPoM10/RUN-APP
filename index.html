@@ -1271,6 +1271,12 @@ const stabPlugin={id:'stab',beforeDatasetsDraw(c){
     ctx.save(); ctx.fillStyle=css('--panel'); ctx.globalAlpha=.75; let cur=ar.left;
     for(const [p,q] of W){if(p>cur&&cur<ar.right) ctx.fillRect(cur,ar.top,Math.min(p,ar.right)-cur,ar.bottom-ar.top); cur=Math.max(cur,q)}
     if(cur<ar.right) ctx.fillRect(cur,ar.top,ar.right-cur,ar.bottom-ar.top); ctx.restore()}
+  // partes de una calidad o test: descansos en gris; series o fases con colores alternos; rótulo arriba de cada una
+  if(c.$qb&&view==='km'){const {ctx,chartArea:ar,scales:{x}}=c, CW=[css('--s2'),css('--s3')]; ctx.save(); let wi=0;
+    c.$qb.forEach(b=>{const p0=Math.max(ar.left,x.getPixelForValue(b.t0)), p1=Math.min(ar.right,x.getPixelForValue(b.t1)); if(p1-p0<1) return;
+      ctx.globalAlpha=b.k==='r'?.2:b.k==='w'?.11:0; ctx.fillStyle=b.k==='r'?css('--muted'):CW[wi%2]; if(ctx.globalAlpha) ctx.fillRect(p0,ar.top,p1-p0,ar.bottom-ar.top);
+      if(b.k==='w'){wi++; if(p1-p0>18){ctx.globalAlpha=.9; ctx.fillStyle=CW[(wi-1)%2]; ctx.font='700 11px '+css('--mono'); ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillText(b.lab,(p0+p1)/2,ar.bottom-4)}}});
+    ctx.restore()}
   (c.$avgs||[]).forEach((A,i)=>{const {ctx,chartArea:ar,scales:{y}}=c; if(!y||A.v==null||!isFinite(A.v)) return; const py=y.getPixelForValue(A.v); if(py<ar.top||py>ar.bottom) return;
     ctx.save(); ctx.strokeStyle=A.c; ctx.globalAlpha=.85; ctx.setLineDash([2,4]); ctx.lineWidth=1.4; ctx.beginPath(); ctx.moveTo(ar.left,py); ctx.lineTo(ar.right,py); ctx.stroke();
     ctx.setLineDash([]); ctx.globalAlpha=1; ctx.font='600 11px '+css('--mono'); ctx.textBaseline='top'; ctx.textAlign='right'; const tx=ar.right-6, ty=ar.bottom-20-(c.$avgs.length-1-i)*15, w=ctx.measureText(A.t).width;
@@ -1307,7 +1313,7 @@ function renderChart(){
   const ds=chosen.map((a,i)=>{const s=summarize(a), sg=segTimes(a), tst=sg.filter(g=>g.ki<s.stab).reduce((q,g)=>q+g.dur,0)/60;
     if(a.tipo==='Técnica'){const [p,q]=dynWin(a)[0]; stabs.push({t:p/60,t1:q/60,c:color(i),row:i,lab:`Tramo de ${Math.round((q-p)/60)} min analizado`})}
     else if(!isQ(a)){const t1=s.endK!=null?sg.filter(g=>g.kf<=s.endK+1e-6).reduce((q,g)=>q+g.dur,0)/60:a.timeS/60; stabs.push({t:tst,t1,km:s.stab,km1:s.endK!=null?s.endK:a.distKm,c:color(i),man:s.man,row:i})}
-    else {const LB=a.q.laps.filter(l=>l.t==='w'&&isLg(l)); LB.forEach((l,k)=>stabs.push({t:(l.a+lSt(l))/60,t1:l.b/60,c:color(i),row:i,lab:LB.length>1?`Bloque ${k+1} analizado`:'Bloque analizado'}))}
+    else {const LB=a.q.laps.filter(l=>l.t==='w'&&isLg(l)); LB.forEach((l,k)=>stabs.push({t:(l.a+lSt(l))/60,t1:l.b/60,c:color(i),row:i,lab:a.q.tph?`F${k+1} analizada`:LB.length>1?`Bloque ${k+1} analizado`:'Bloque analizado'}))}
     let data;
     if(m.qseries&&isQ(a)){tMax=Math.max(tMax,a.timeS/60);
       return {$ai:i,label:`${a.q.code} ${dt(a)}`+(tAir(a)!=null?` · ${nf(tAir(a),0)} °C aire`:'')+sleepTag(a),data:m.qseries(a).filter(p=>p.y!=null),borderColor:color(i),backgroundColor:color(i),pointRadius:3.5,showLine:false}}
@@ -1403,8 +1409,9 @@ function renderChart(){
         if(v!=null&&isFinite(v)) vals.push({s:mm.fmt(v),c:col(k)})}
       if(vals.length) labels.push({t0,t1,vals})}
     kmv={lines:kmv&&kmv.lines?kmv.lines:kmT.map(p=>p.t),labels,rows:keys.length}}
-  if(chart){chart.data.datasets=ds;chart.options=opts;chart.$stabs=stabs;chart.$dev=!!m.band;chart.$zones=zOn;chart.$laps=null;chart.$ana=ana;chart.$avgs=avgs;chart.$kmv=kmv;chart.$dz=DZ[metric]?metric:null;chart.update()}
-  else{chart=new Chart(document.getElementById('chart'),{type:'scatter',data:{datasets:ds},options:opts,plugins:[stabPlugin]});chart.$stabs=stabs;chart.$dev=!!m.band;chart.$zones=zOn;chart.$laps=null;chart.$ana=ana;chart.$avgs=avgs;chart.$kmv=kmv;chart.$dz=DZ[metric]?metric:null;chart.update()}
+  const qb=ref&&isQ(ref)&&ref.q.laps?(()=>{let n=0; const tp=ref.q.tph?'F':ref.tipo==='Test'?'F':'S'; return ref.q.laps.map(l=>({t0:l.a/60,t1:l.b/60,k:l.t==='w'?'w':isRec(l)?'r':l.blk,lab:l.t==='w'?tp+(++n):''}))})():null;
+  if(chart){chart.$qb=qb; chart.data.datasets=ds;chart.options=opts;chart.$stabs=stabs;chart.$dev=!!m.band;chart.$zones=zOn;chart.$laps=null;chart.$ana=ana;chart.$avgs=avgs;chart.$kmv=kmv;chart.$dz=DZ[metric]?metric:null;chart.update()}
+  else{chart=new Chart(document.getElementById('chart'),{type:'scatter',data:{datasets:ds},options:opts,plugins:[stabPlugin]});chart.$stabs=stabs;chart.$dev=!!m.band;chart.$zones=zOn;chart.$laps=null;chart.$ana=ana;chart.$avgs=avgs;chart.$kmv=kmv;chart.$qb=qb;chart.$dz=DZ[metric]?metric:null;chart.update()}
 }
 ['hideStart','showStab','showKm'].forEach(id=>document.getElementById(id).onchange=renderChart);
 document.querySelectorAll('#resSeg button').forEach(b=>b.onclick=()=>{res=b.dataset.r;save();renderChart()});
