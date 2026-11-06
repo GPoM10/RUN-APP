@@ -2855,7 +2855,7 @@ function testReport(id){const t=thrHist.find(h=>h.actId===String(id)), a=acts.fi
         {label:'Ritmo',data:pc,borderColor:'rgba(93,107,103,.35)',backgroundColor:'rgba(93,107,103,.35)',borderWidth:1.5,pointRadius:0,showLine:true,spanGaps:false,yAxisID:'y2',order:2}]},plugins:[bandP],
       options:{responsive:false,animation:false,plugins:{legend:{position:'top',align:'start',labels:{color:'#18211F',boxWidth:12,boxHeight:6}}},
         scales:{x:{type:'linear',min:0,max:Math.ceil(a.timeS/60),title:{display:true,text:'minutos',color:'#5D6B67'},grid:{color:'#E3E8E6'},ticks:{color:'#5D6B67'}},
-          y:{title:{display:true,text:'FC (ppm)',color:'#5D6B67'},grid:{color:'#E3E8E6'},ticks:{color:'#5D6B67'}},
+          y:{min:60,max:Math.max(200,Math.ceil((Math.max(...hr.map(p=>p.y))+5)/10)*10),title:{display:true,text:'FC (ppm)',color:'#5D6B67'},grid:{color:'#E3E8E6'},ticks:{color:'#5D6B67',stepSize:20}},
           y2:{position:'right',reverse:true,min:Math.floor((fast-20)/30)*30,max:780,title:{display:true,text:'ritmo (min/km)',color:'#5D6B67'},grid:{display:false},ticks:{color:'#5D6B67',callback:v=>fmtP(v)}}}}});
     ch.resize(820,320); ch.update(); imgs.ses=ch.toBase64Image('image/png',1); ch.destroy()}catch(e){console.error(e)}
   tmp.remove(); if(prevT==null) delete root.dataset.theme; else root.dataset.theme=prevT;
@@ -2891,7 +2891,7 @@ function drawTD(B,mode,store){const V=mode||tdV, CH=store||tdCh;B.querySelectorA
         {type:'line',label:'Ritmo',data:S.map(s=>s.pace),borderColor:css('--s3'),backgroundColor:css('--s3'),borderDash:[5,4],pointRadius:4,borderWidth:2,yAxisID:'y2',order:0}]},
       options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'top',align:'start',labels:{color:css('--ink'),boxWidth:12,boxHeight:6,font:{family:css('--body')}}},
         tooltip:{callbacks:{label:it=>it.parsed.y==null?null:it.dataset.label==='Ritmo'?`Ritmo ${fmtP(Math.round(it.parsed.y))}/km`:`${it.dataset.label} ${nf(it.parsed.y,0)} ppm`}}},
-        scales:{x:{grid:{display:false},ticks:{color:css('--ink'),font:{family:css('--mono')}}},y:{min:Math.floor((Math.min(...hs)-8)/5)*5,max:Math.ceil((Math.max(...hs)+3)/5)*5,title:{display:true,text:'FC (ppm)',color:tick},grid:{color:grid},ticks:{color:tick,font:{family:css('--mono')}}},
+        scales:{x:{grid:{display:false},ticks:{color:css('--ink'),font:{family:css('--mono')}}},y:{min:60,max:Math.max(200,Math.ceil((Math.max(...hs)+5)/10)*10),title:{display:true,text:'FC (ppm)',color:tick},grid:{color:grid},ticks:{color:tick,font:{family:css('--mono')}}},
           y2:{position:'right',reverse:true,title:{display:true,text:'ritmo (min/km)',color:tick},grid:{display:false},ticks:{color:tick,font:{family:css('--mono')},callback:v=>fmtP(v)}}}}}));
     return}
   const pc=S.map((s,i)=>{if(!bt) return s.riseP; const r=tRise(S,i); return r&&S[i-1].hrEnd?r.dh/S[i-1].hrEnd*100:null}), ab=S.map((s,i)=>{if(!bt) return s.rise; const r=tRise(S,i); return r?r.dh:null});
@@ -2899,8 +2899,8 @@ function drawTD(B,mode,store){const V=mode||tdV, CH=store||tdCh;B.querySelectorA
   CH.set(id,new Chart(cv,{data:{labels:lab,datasets:[{type:'bar',label:'%',data:pc,backgroundColor:pc.map(v=>v==null?'transparent':bt?css('--s2'):v>=5?css('--bad'):v>=3?css('--warn'):css('--ok')),borderRadius:4,yAxisID:'y'},
       {type:'line',label:'ppm',data:ab,borderColor:css('--ink'),backgroundColor:css('--ink'),pointRadius:5,showLine:true,borderWidth:1.5,yAxisID:'y2'}]},
     options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{callbacks:{label:it=>it.parsed.y==null?null:it.dataset.label==='%'?`${nf(it.parsed.y,1)} %`:`${it.parsed.y>=0?'+':''}${nf(it.parsed.y,1)} ppm`}}},
-      scales:{x:{grid:{display:false},ticks:{color:css('--ink'),font:{family:css('--mono')}}},y:{beginAtZero:true,title:{display:true,text:bt?'subida entre bloques (%)':'subida en el bloque (%)',color:tick},grid:{color:grid},ticks:{color:tick,font:{family:css('--mono')}}},
-        y2:{position:'right',beginAtZero:true,title:{display:true,text:'ppm',color:tick},grid:{display:false},ticks:{color:tick,font:{family:css('--mono')}}}}}}))});
+      scales:{x:{grid:{display:false},ticks:{color:css('--ink'),font:{family:css('--mono')}}},y:{beginAtZero:true,suggestedMax:10,title:{display:true,text:bt?'subida entre bloques (%)':'subida en el bloque (%)',color:tick},grid:{color:grid},ticks:{color:tick,font:{family:css('--mono')}}},
+        y2:{position:'right',beginAtZero:true,suggestedMax:15,title:{display:true,text:'ppm',color:tick},grid:{display:false},ticks:{color:tick,font:{family:css('--mono')}}}}}}))});
   B.querySelectorAll('.tdSeg button').forEach(b=>b.onclick=()=>{tdV=b.dataset.v; renderThr()})}
 function renderThr(){const B=document.getElementById('thrBox'); if(!B) return; applyTests(); const tsx=acts.filter(a=>!a.ej&&a.tipo==='Test');
   let h=`<h2>Umbral y zonas</h2>`;
