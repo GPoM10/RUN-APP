@@ -1393,7 +1393,9 @@ function renderChart(){
   // promedio por km (o cada 2 km en rodajes de más de 12 km) del primer rodaje marcado: líneas tenues y el valor de cada eje activo arriba
   let kmv=null; if(ref&&kmT.length&&document.getElementById('showKm').checked){const lastK=kmT[kmT.length-1].k, tail=ref.distKm-lastK>=0.3; let T=[0,...kmT.map(p=>p.t),...(tail?[ref.timeS/60]:[])], KM=[0,...kmT.map(p=>p.k),...(tail?[ref.distKm]:[])]; const keys=[metric,...(k2?[k2]:[])];
     // calidad: los km se cuentan desde el inicio de cada serie o bloque y se cortan en su final (no se mezclan con el descanso); fuera de las series, un tramo por vuelta
-    if(isQ(ref)&&ref.q.laps&&ref.q.laps.length){const sg=segTimes(ref), pts=[[0,0]]; let tt=0; sg.forEach(g=>{tt+=g.dur; pts.push([tt/60,g.kf])});
+    if(isQ(ref)&&ref.q.laps&&ref.q.laps.length){const sg=segTimes(ref), pts=[[0,0]]; let tt=0;
+      // con los bloques de 5 s (tiempo real y distancia acumulada) los km y los ritmos por tramo salen exactos; los tramos de 250 m pierden las paradas
+      if(ref.f5&&ref.f5.m&&ref.f5.m.length) ref.f5.m.forEach((d,k)=>pts.push([(k+1)*5/60,d/1000])); else sg.forEach(g=>{tt+=g.dur; pts.push([tt/60,g.kf])});
       const kAt=t=>{const j=pts.findIndex(p=>p[0]>=t); if(j<=0) return j===0?0:ref.distKm; const [t0,k0]=pts[j-1],[t1,k1]=pts[j]; return k0+(k1-k0)*(t-t0)/((t1-t0)||1)};
       const tAt=k=>{const j=pts.findIndex(p=>p[1]>=k); if(j<=0) return j===0?0:ref.timeS/60; const [t0,k0]=pts[j-1],[t1,k1]=pts[j]; return t0+(t1-t0)*(k-k0)/((k1-k0)||1)};
       const B=[0]; ref.q.laps.forEach(l=>{const t0=l.a/60, t1=l.b/60; if(t0>B[B.length-1]+0.05) B.push(t0);
