@@ -1608,13 +1608,50 @@ function applyPlans(){let n=0,bad=0; cmatch=new Map(); pmatch=new Map(); const b
       a.plan.ok=G.length===a.q.groups.length&&G.every((g,q)=>g.m===a.q.groups[q].m&&g.n===a.q.groups[q].n); if(!a.plan.ok) bad++}
     else if(G.length){a.target=G[G.length-1].p; a.targetManual=true; a.plan.ok=true; if(a.tipo==='Test'&&a.q) try{planAlignQ(a,p.plan)}catch(e){console.error(e)}}})}
   return {n,bad}}
+// fases desde los datos (bloques de 5 s), sin depender de las vueltas del reloj: las paradas de 15 s o más separan tramos;
+// las fases son los tramos seguidos que calzan con lo planeado (distancia o tiempo ±20 %); la última puede quedar corta si va cerca de su ritmo
+function phaseLaps(a,W){const f5=a.f5, H=f5.h, M=f5.m, n=H.length; if(n<60) return null;
+  const dk=k=>k>0?M[k]-M[k-1]:M[0], stop=[]; for(let k=0;k<n;k++) stop.push(dk(k)<4);
+  const S=[]; let k=0; while(k<n){const st=stop[k]; let j=k; while(j<n&&stop[j]===st) j++; S.push({k0:k,k1:j,stop:st}); k=j}
+  // paradas de menos de 15 s se suman al tramo que corre
+  const T=[]; S.forEach(x=>{const sh=x.stop&&x.k1-x.k0<3, p=T[T.length-1]; if((sh||(!x.stop&&p&&!p.stop))&&p){p.k1=x.k1} else T.push({...x, stop:x.stop&&!sh})});
+  const T2=[]; T.forEach(x=>{const p=T2[T2.length-1]; if(p&&p.stop===x.stop){p.k1=x.k1} else T2.push({...x})});
+  const run=T2.filter(x=>!x.stop).map(x=>({...x,d:M[x.k1-1]-(x.k0>0?M[x.k0-1]:0),dur:(x.k1-x.k0)*5})).filter(x=>x.d>=100);
+  const fits=(x,w,last)=>{if(!w.q) return false; const ok=w.q.km!=null?Math.abs(x.d-w.q.km*1000)<=w.q.km*200:Math.abs(x.dur-w.q.s)<=w.q.s*0.2; if(ok) return true;
+    return last&&w.pace&&x.d>=300&&Math.abs(x.dur/(x.d/1000)-w.pace)<=25&&(w.q.km!=null?x.d<w.q.km*1000:x.dur<w.q.s)};
+  let best=null; for(let j=0;j<run.length;j++){let c=0; while(c<W.length&&j+c<run.length&&fits(run[j+c],W[c],false)) c++;
+    if(c<W.length&&j+c<run.length&&fits(run[j+c],W[c],true)) c++; if(c>=2&&(!best||c>best.c)) best={j,c}}
+  if(!best) return null;
+  const ph=new Set(run.slice(best.j,best.j+best.c)), first=run[best.j], last=run[best.j+best.c-1], L=[];
+  const mk=(x,t,blk)=>{const a0=x.k0*5, b0=Math.min(x.k1*5,a.timeS), d=M[x.k1-1]-(x.k0>0?M[x.k0-1]:0); let hs=0,c=0,hm=0,tr=0; for(let i=x.k0;i<x.k1;i++){const h=H[i]/10; if(h>0){hs+=h;c++;hm=Math.max(hm,h);tr+=trimpOf(h,5)}}
+    let he=0,ce=0; for(let i=Math.max(x.k0,x.k1-6);i<x.k1;i++) if(H[i]>0){he+=H[i]/10;ce++}
+    return {a:a0,b:b0,dur:b0-a0,d:Math.round(d),pace:d>1?+((b0-a0)/(d/1000)).toFixed(1):99999,hra:c?+(hs/c).toFixed(1):null,hrm:Math.round(hm),hre:ce?+(he/ce).toFixed(1):null,tr:+tr.toFixed(2),mk:0,t,blk}};
+  T2.forEach(x=>{const r=run.find(z=>z.k0===x.k0);
+    if(r&&ph.has(r)) L.push(mk(x,'w','q'));
+    else if(x.k1<=first.k0) L.push(mk(x,x.stop?'r':'s','cal'));
+    else if(x.k0>=last.k1) L.push(mk(x,x.stop?'r':'s','vc'));
+    else L.push(mk(x,'r','q'))});
+  return L.filter(l=>l.dur>=5)}
+// deriva y Pa:HR de una fase con los bloques de 5 s, desde su min 2; tramos de ~250 m para los gráficos
+function laneDrift(a,l){const H=a.f5.h, M=a.f5.m, i0=Math.ceil((l.a+l.st)/5), i1=Math.floor(l.b/5), B=[]; for(let k=i0;k<i1&&k<H.length;k++) if(H[k]>0) B.push({h:H[k]/10,d:k>0?M[k]-M[k-1]:0,k});
+  if(B.length<12){l.der=null; l.pahr=null; l.ls=[]; return}
+  const hf=Math.floor(B.length/2), A1=B.slice(0,hf), A2=B.slice(hf), mh=x=>x.reduce((q,b)=>q+b.h,0)/x.length, sd=x=>x.reduce((q,b)=>q+b.d,0), h1=mh(A1), h2=mh(A2);
+  l.der=h2/h1-1; l.pahr=sd(A1)>0?1-(sd(A2)/h2)/(sd(A1)/h1):null;
+  const ls=[]; let g={d:0,dur:0,hs:0,k0:B[0].k}; B.forEach(b=>{g.d+=b.d; g.dur+=5; g.hs+=b.h*5; if(g.d>=250){ls.push({tm:+((g.k0*5+g.dur/2)/60).toFixed(2),d:+g.d.toFixed(1),dur:g.dur,hr:+(g.hs/g.dur).toFixed(2)}); g={d:0,dur:0,hs:0,k0:b.k+1}}}); l.ls=ls}
 // test con plan: las vueltas del reloj se emparejan en orden con los pasos del plan (cal · fases · vc); cada fase se analiza entera, sin importar su ritmo o duración
 function planAlignQ(a,txt){const q=a.q; if(!q||!q.laps||!a.f5||!a.f5.h) return; if(q.tph===txt) return;
   const R=[], P=(x,y)=>(+x)*60+(+y);
   for(let t of planExpand(txt).split('+')){t=t.trim(); if(!t) continue; const pm=t.replace(recRE,' ').match(/@\s*(\d{1,2})[:.,](\d{2})/), pace=pm?P(pm[1],pm[2]):null;
     if(/^cal\b/i.test(t)){R.push({r:'cal',pace}); continue} if(/^vc\b/i.test(t)){R.push({r:'vc',pace}); continue} if(/^r\s*\d/i.test(t)) continue;
-    const n=+((t.match(/^(\d+)\s*[x×]/)||[0,1])[1]); for(let i=0;i<n;i++) R.push({r:'w',pace})}
+    const t2=t.replace(recRE,' ').replace(/@\s*\d{1,2}[:.,]\d{2}/,' '), mm=t2.match(new RegExp("(?:(\\d+)\\s*[x×]\\s*)?"+QRE,"i")), qq=mm?qOf(mm[2],mm[3]):null;
+    const n=+((t.match(/^(\d+)\s*[x×]/)||[0,1])[1]); for(let i=0;i<n;i++) R.push({r:'w',pace,q:qq})}
   if(!R.some(x=>x.r==='w')) return;
+  if(!q.wl) q.wl=q.laps.map(l=>({...l}));  // vueltas originales del reloj
+  const SL=phaseLaps(a,R.filter(x=>x.r==='w'));
+  if(SL){q.laps=SL; const W=R.filter(x=>x.r==='w'); let gi=0; q.laps.forEach(l=>{if(l.t==='w'){l.g=gi; l.lg=1; l.st=120; laneDrift(a,l); gi++}});
+    a.qTgt=W.slice(0,gi).map(x=>x.pace); q.groups=q.laps.filter(l=>l.t==='w').map(l=>({m:Math.max(1,Math.round(l.dur/60)),n:1}));
+    q.code='Test '+gi+'×'+(a.plan&&a.plan.code?a.plan.code.split(' + ')[0].replace(/^\d+×/,''):'fase'); q.tph=txt; q.tst=1; return}
+  q.laps=q.wl.map(l=>({...l}));
   const L=q.laps, run=L.filter(l=>l.pace<=600&&l.dur>=40); if(run.length<R.filter(x=>x.r!=='vc').length-1) return;
   // vueltas de más al principio (lo que trotaste antes de arrancar el entreno programado) cuentan como calentamiento
   const off=Math.max(0,run.length-R.length), role=new Map(); run.forEach((l,i)=>role.set(l,i<off?{r:'cal'}:R[i-off]));
