@@ -433,7 +433,7 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
       <div class="opts" id="kmOpts">
         <label><input type="checkbox" id="hideStart"> Ocultar el arranque (antes de estabilizar)</label>
         <label><input type="checkbox" id="showStab" checked> Marcar tramo analizado</label>
-        <label><input type="checkbox" id="showKm" checked> Promedio por km</label>
+        <label><input type="checkbox" id="showKm" checked> Promedio</label><select class="tipo" id="kmMode" aria-label="Promedio por" style="margin-left:-6px"><option value="km">por km</option><option value="lap">por vuelta o fase</option></select>
         <span id="lupaBox" class="opts" style="margin:0;gap:6px" hidden></span>
         <span id="zoneCfg"><label><input type="checkbox" id="zonesOn" checked> <span id="zLab">Zonas de FC</span></label> <span id="zLims">límites Z2 desde <input class="pace zl" id="z1" aria-label="Inicio de la zona 2"> · Z3 desde <input class="pace zl" id="z2" aria-label="Inicio de la zona 3"> ppm</span><span id="zPace" class="mdesc" style="margin:0" hidden></span></span>
         <span class="seg" role="group" aria-label="Resolución" id="resSeg"><button data-r="sm" title="Promedio móvil de 35 s, parecido a la gráfica de la app del reloj">Suave</button><button data-r="t5">5 s</button><button data-r="t15">15 s</button><button data-r="t30">30 s</button><button data-r="t60">60 s</button></span>
@@ -1399,7 +1399,7 @@ function renderChart(){
       const kAt=t=>{const j=pts.findIndex(p=>p[0]>=t); if(j<=0) return j===0?0:ref.distKm; const [t0,k0]=pts[j-1],[t1,k1]=pts[j]; return k0+(k1-k0)*(t-t0)/((t1-t0)||1)};
       const tAt=k=>{const j=pts.findIndex(p=>p[1]>=k); if(j<=0) return j===0?0:ref.timeS/60; const [t0,k0]=pts[j-1],[t1,k1]=pts[j]; return t0+(t1-t0)*(k-k0)/((k1-k0)||1)};
       const B=[0]; ref.q.laps.forEach(l=>{const t0=l.a/60, t1=l.b/60; if(t0>B[B.length-1]+0.05) B.push(t0);
-        if(l.t==='w'){const k0=kAt(t0), k1=kAt(t1); for(let k=k0+1;k<k1-0.25;k+=1) B.push(tAt(k))}
+        if(l.t==='w'&&kmMode!=='lap'){const k0=kAt(t0), k1=kAt(t1); for(let k=k0+1;k<k1-0.25;k+=1) B.push(tAt(k))}
         if(t1>B[B.length-1]+0.05) B.push(t1)});
       if(ref.timeS/60>B[B.length-1]+0.05) B.push(ref.timeS/60);
       T=B; KM=B.map(kAt); kmv={lines:B.slice(1,-1)}}
@@ -1416,6 +1416,9 @@ function renderChart(){
   else{chart=new Chart(document.getElementById('chart'),{type:'scatter',data:{datasets:ds},options:opts,plugins:[stabPlugin]});chart.$stabs=stabs;chart.$dev=!!m.band;chart.$zones=zOn;chart.$laps=null;chart.$ana=ana;chart.$avgs=avgs;chart.$kmv=kmv;chart.$qb=qb;chart.$dz=DZ[metric]?metric:null;chart.update()}
 }
 ['hideStart','showStab','showKm'].forEach(id=>document.getElementById(id).onchange=renderChart);
+// promedio por km o por vuelta (en calidad y test: cada serie, fase, descanso, calentamiento y vuelta a la calma); se recuerda
+var kmMode=(()=>{try{return LS.getItem('comparador.kmMode')||'km'}catch(e){return 'km'}})();
+{const S=document.getElementById('kmMode'); S.value=kmMode; S.onchange=()=>{kmMode=S.value; try{LS.setItem('comparador.kmMode',kmMode)}catch(e){} renderChart()}}
 document.querySelectorAll('#resSeg button').forEach(b=>b.onclick=()=>{res=b.dataset.r;save();renderChart()});
 document.getElementById('y2Sel').onchange=e=>{y2=e.target.value;save();renderChart()};
 function renderIdxBars(m){
