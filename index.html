@@ -2888,7 +2888,11 @@ function testReport(id){const t=thrHist.find(h=>h.actId===String(id)), a=acts.fi
   <div class="mut" style="margin-top:14px">Generado con el Comparador de rodajes el ${dShort.format(new Date())}.</div></div>`;
   const o=document.createElement('div'); o.className='trep-o'; o.innerHTML=h; document.body.appendChild(o);
   o.querySelector('#trClose').onclick=()=>o.remove(); o.querySelector('#trPrint').onclick=()=>window.print(); o.onclick=e=>{if(e.target===o) o.remove()}}
-function drawTD(B,mode,store){const V=mode||tdV, CH=store||tdCh;B.querySelectorAll('canvas.tdC').forEach(cv=>{const id=cv.dataset.id, t=thrHist.find(h=>h.actId===id); if(!t||!t.steps||typeof Chart==='undefined') return;
+// cuadrito de datos anclado a la barra: encima si cabe; si no, dentro de la barra, desde su borde superior
+function regBarTop(){if(typeof Chart==='undefined'||!Chart.Tooltip||Chart.Tooltip.positioners.barTop) return;
+  Chart.Tooltip.positioners.barTop=function(els){if(!els||!els.length) return false; const ok=x=>x.element&&isFinite(x.element.x)&&isFinite(x.element.y), c=els.find(x=>ok(x)&&x.element.width!=null)||els.find(ok); if(!c) return false; const e=c.element, top=e.width!=null&&isFinite(e.base)?Math.min(e.y,e.base):e.y, h=(this&&this.height)||100;
+    return top-h-8>=0?{x:e.x,y:top-4,xAlign:'center',yAlign:'bottom'}:{x:e.x,y:top+6,xAlign:'center',yAlign:'top'}}}
+function drawTD(B,mode,store){const V=mode||tdV, CH=store||tdCh;regBarTop();B.querySelectorAll('canvas.tdC').forEach(cv=>{const id=cv.dataset.id, t=thrHist.find(h=>h.actId===id); if(!t||!t.steps||typeof Chart==='undefined') return;
   if(CH.has(id)){CH.get(id).destroy(); CH.delete(id)} const S=t.steps, bt=V==='bt';
   if(V==='tb'){const tick=css('--muted'), grid=css('--line'), lab=S.map((s,i)=>[`B${i+1}`,fmtP(Math.round(s.pace))]), hs=S.flatMap(s=>[s.hra,s.hrMax,s.hrEnd]).filter(v=>v!=null);
     CH.set(id,new Chart(cv,{data:{labels:lab,datasets:[
@@ -2896,8 +2900,8 @@ function drawTD(B,mode,store){const V=mode||tdV, CH=store||tdCh;B.querySelectorA
         {type:'line',label:'FC máx',data:S.map(s=>s.hrMax),borderColor:css('--s1'),backgroundColor:css('--s1'),pointRadius:4,borderWidth:2,yAxisID:'y',order:1},
         {type:'line',label:'FC fin',data:S.map(s=>s.hrEnd),borderColor:css('--warn'),backgroundColor:css('--warn'),pointRadius:4,borderWidth:2,yAxisID:'y',order:2},
         {type:'line',label:'Ritmo',data:S.map(s=>s.pace),borderColor:css('--s3'),backgroundColor:css('--s3'),borderDash:[5,4],pointRadius:4,borderWidth:2,yAxisID:'y2',order:0}]},
-      options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'top',align:'start',labels:{color:css('--ink'),boxWidth:12,boxHeight:6,font:{family:css('--body')}}},
-        tooltip:{callbacks:{label:it=>it.parsed.y==null?null:it.dataset.label==='Ritmo'?`Ritmo ${fmtP(Math.round(it.parsed.y))}/km`:`${it.dataset.label} ${nf(it.parsed.y,0)} ppm`}}},
+      options:{responsive:true,maintainAspectRatio:false,animation:false,layout:{padding:{top:24}},interaction:{mode:'index',intersect:false},plugins:{legend:{position:'top',align:'start',labels:{color:css('--ink'),boxWidth:12,boxHeight:6,font:{family:css('--body')}}},
+        tooltip:{position:'barTop',caretPadding:4,callbacks:{label:it=>it.parsed.y==null?null:it.dataset.label==='Ritmo'?`Ritmo ${fmtP(Math.round(it.parsed.y))}/km`:`${it.dataset.label} ${nf(it.parsed.y,0)} ppm`}}},
         scales:{x:{grid:{display:false},ticks:{color:css('--ink'),font:{family:css('--mono')}}},y:{min:60,max:Math.max(200,Math.ceil((Math.max(...hs)+5)/10)*10),title:{display:true,text:'FC (ppm)',color:tick},grid:{color:grid},ticks:{color:tick,font:{family:css('--mono')}}},
           y2:{position:'right',reverse:true,title:{display:true,text:'ritmo (min/km)',color:tick},grid:{display:false},ticks:{color:tick,font:{family:css('--mono')},callback:v=>fmtP(v)}}}}}));
     return}
@@ -2905,7 +2909,7 @@ function drawTD(B,mode,store){const V=mode||tdV, CH=store||tdCh;B.querySelectorA
   const tick=css('--muted'), grid=css('--line'), lab=S.map((s,i)=>[`B${i+1}`,fmtP(Math.round(s.pace))]);
   CH.set(id,new Chart(cv,{data:{labels:lab,datasets:[{type:'bar',label:'%',data:pc,backgroundColor:pc.map(v=>v==null?'transparent':bt?css('--s2'):v>=5?css('--bad'):v>=3?css('--warn'):css('--ok')),borderRadius:4,yAxisID:'y'},
       {type:'line',label:'ppm',data:ab,borderColor:css('--ink'),backgroundColor:css('--ink'),pointRadius:5,showLine:true,borderWidth:1.5,yAxisID:'y2'}]},
-    options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{callbacks:{label:it=>it.parsed.y==null?null:it.dataset.label==='%'?`${nf(it.parsed.y,1)} %`:`${it.parsed.y>=0?'+':''}${nf(it.parsed.y,1)} ppm`}}},
+    options:{responsive:true,maintainAspectRatio:false,animation:false,layout:{padding:{top:24}},interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{position:'barTop',caretPadding:4,callbacks:{label:it=>it.parsed.y==null?null:it.dataset.label==='%'?`${nf(it.parsed.y,1)} %`:`${it.parsed.y>=0?'+':''}${nf(it.parsed.y,1)} ppm`}}},
       scales:{x:{grid:{display:false},ticks:{color:css('--ink'),font:{family:css('--mono')}}},y:{beginAtZero:true,suggestedMax:10,title:{display:true,text:bt?'subida entre bloques (%)':'subida en el bloque (%)',color:tick},grid:{color:grid},ticks:{color:tick,font:{family:css('--mono')}}},
         y2:{position:'right',beginAtZero:true,suggestedMax:15,title:{display:true,text:'ppm',color:tick},grid:{display:false},ticks:{color:tick,font:{family:css('--mono')}}}}}}))});
   B.querySelectorAll('.tdSeg button').forEach(b=>b.onclick=()=>{tdV=b.dataset.v; renderThr()})}
