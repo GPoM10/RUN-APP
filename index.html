@@ -649,7 +649,7 @@ function parseFit(buf){
     if(g===20&&r[253]!=null) recs.push({ts:r[253],dist:r[5]!=null?r[5]/100:NaN,hr:r[3]!=null?r[3]:NaN,
       spd:r[73]!=null?r[73]/1000:(r[6]!=null?r[6]/1000:NaN), cad:r[4]?r[4]*2:NaN, gct:r[41]?r[41]/10:NaN, vo:r[39]?r[39]/10:NaN, vr:r[83]?r[83]/100:NaN, sl:r[85]?r[85]/10:NaN, bal:r[84]&&r[84]<10000?r[84]/100:NaN, tc:r[13]!=null?r[13]:NaN});
     else if(g===18&&!gotSession){gotSession=true;temp=r[57]??null; sport=r.sport??null}
-    else if(g===19&&r[2]!=null&&r[7]!=null) laps.push({st:r[2],el:r[7]/1000});
+    else if(g===19&&r[2]!=null&&r[7]!=null) laps.push({st:r[2],el:r[7]/1000,d:r[9]!=null&&r[9]<4e9?r[9]/100:null});
     else if(g===FIT_WX&&r[0]!=null&&r[1]!=null) wxF={t:r[0]/10,rh:r[1]/10,sr:r[2]!=null?r[2]/10:0,ws:r[3]!=null?r[3]/100:0,...(r[4]!=null?{cc:r[4]}:{}),...(r[6]!=null?{pr:r[6]/10}:{}),...(r[7]!=null?{pf:r[7]/100}:{})}; // clima que agregó el comparador
   }
   while(p<end){
@@ -746,8 +746,9 @@ const QW={pace:425,minDur:150,long:840,start:180}; // trabajo: ritmo ≤ 7:05 y 
 function analyzeQ(s){
   const {dist,hr,N}=s, Dy=s.dyn, R=(v,d=0)=>+v.toFixed(d);
   const avgHr=(a,b)=>{a=Math.max(0,a);b=Math.min(N,b);let q=0;for(let k=a;k<b;k++)q+=hr[k];return b>a?q/(b-a):null};
-  const laps=s.laps.map(([a,b])=>[Math.max(0,a),Math.min(N,b)]).filter(([a,b])=>b-a>=5).map(([a,b])=>{
-    const dur=b-a, d=dist[b-1]-dist[a], pace=d>1?dur/(d/1000):99999; let hm=0,tr=0,mk=0;
+  // distancia de la vuelta: la del reloj (total_distance del .fit); si no viene, la de los registros de a a b (antes se perdía el último segundo y el ritmo salía ~1 s/km más lento)
+  const laps=s.laps.map(([a,b,ld])=>[Math.max(0,a),Math.min(N,b),ld]).filter(([a,b])=>b-a>=5).map(([a,b,ld])=>{
+    const dur=b-a, d=ld>0?ld:dist[Math.min(b,N-1)]-dist[a], pace=d>1?dur/(d/1000):99999; let hm=0,tr=0,mk=0;
     for(let k=a;k<b;k++){if(hr[k]>hm)hm=hr[k]; tr+=trimpOf(hr[k],1); if(Dy) mk+=mechLoad(Dy.cad[k],1,fpk(Dy.cad[k],Dy.gct[k]),null)}
     const t=pace>600?'r':(dur>=QW.minDur&&pace<=QW.pace?'w':(dur<120?'l':'s'));
     return {a,b,dur,d:R(d),pace:R(pace,1),hra:R(avgHr(a,b),1),hrm:Math.round(hm),hre:R(avgHr(b-30,b),1),tr:R(tr,2),mk:R(mk,3),t}});
@@ -773,7 +774,7 @@ function analyzeQ(s){
   const groups=[]; laps.forEach(x=>{if(x.t!=='w') return; const m=Math.max(1,Math.round(x.dur/60)), g=groups[groups.length-1];
     if(g&&g.m===m) g.n++; else groups.push({m,n:1}); x.g=groups.length-1});
   const code=groups.map(g=>(g.n>1?g.n+'×':'')+g.m+"'").join(' + ');
-  return {laps,groups:groups.map(g=>({m:g.m,n:g.n})),code};
+  return {laps,groups:groups.map(g=>({m:g.m,n:g.n})),code,dfix:1};
 }
 // Test con laps: el lap fuerte de 15 min o más es el test; lo de antes es calentamiento y lo de después vuelta a la calma (el test de escalones queda como series)
 // bloque largo (deriva y Pa:HR): ≥ 14 min, o cada fase de un test alineado con su plan; se analiza desde el min 3 (o el 2 en las fases)
@@ -781,7 +782,10 @@ const isLg=x=>x.lg!=null?!!x.lg:x.dur>=QW.long, lSt=x=>x.st!=null?x.st:QW.start;
 function fixTestQ(a){const q=a.q; if(q.tst||q.tph||!q.laps||!q.laps.length) return; const W=q.laps.filter(l=>l.t==='w'&&l.dur>=900);
   if(W.length===1){const k=q.laps.indexOf(W[0]); q.laps.forEach((l,i)=>{if(i<k){l.t='s';l.blk='cal';delete l.g} else if(i>k){l.t='s';l.blk='vc';delete l.g} else l.g=0});
     const m=Math.round(W[0].dur/60); q.groups=[{m,n:1}]; q.code=`Test ${m}'`} q.tst=1}
-const isQ=a=>a&&a.q&&(a.tipo==='Calidad'||(a.tipo==='Test'&&(fixTestQ(a),true)));
+// vueltas importadas antes de la corrección: su distancia perdía el último segundo; se le suma a ritmo medio de la vuelta (para exactitud total, volvé a soltar el .fit)
+function qDfix(q){if(!q||q.dfix) return; const fx=L=>(L||[]).forEach(l=>{if(l.dur>1&&l.d>1&&!l.wl){l.d=Math.round(l.d*l.dur/(l.dur-1)); l.pace=+(l.dur/(l.d/1000)).toFixed(1)}});
+  if(q.wl) fx(q.wl); else fx(q.laps); q.dfix=1}
+const isQ=a=>a&&a.q&&(qDfix(a.q),a.tipo==='Calidad'||(a.tipo==='Test'&&(fixTestQ(a),true)));
 const isRec=x=>x.t==='r'||(x.blk==='q'&&x.t!=='w');
 // resumen de una sesión de calidad con los ritmos programados actuales
 function summarizeQ(a){
@@ -1094,7 +1098,7 @@ async function addFiles(files){
   for(const [i,f] of files.entries()){
     setStatus(`Procesando ${i+1} de ${files.length}…`);
     try{const buf=await f.arrayBuffer(); const {recs,temp,laps,names,sport,pos,wxF}=parseFit(buf); if(sport!=null&&sport!==RUN_SPORT){skip.push(f.name); continue} const s=to1Hz(recs); const t0r=s.t0Unix-631065600;
-      s.laps=laps.map(l=>[l.st-t0r,l.st-t0r+Math.round(l.el)]); const r=analyze(s);
+      s.laps=laps.map(l=>[l.st-t0r,l.st-t0r+Math.round(l.el),l.d]); const r=analyze(s);
       const path=f._path||f.webkitRelativePath||''; const dir=path.split('/').slice(0,-1).join('/');
       const id=String(s.t0Unix); const prev=acts.find(a=>a.id===id); const manual=document.getElementById('tipoIn').value;
       const fromDir=tipoDe(dir), auto=!fromDir&&!manual&&!prev; const tipo=fromDir||manual||(prev?prev.tipo:autoTipo(f.name,names,s,r)); if(auto) nAuto++;
@@ -1673,7 +1677,7 @@ function laneDrift(a,l){const H=a.f5.h, M=a.f5.m, i0=Math.ceil((l.a+l.st)/5), i1
   l.der=h2/h1-1; l.pahr=sd(A1)>0?1-(sd(A2)/h2)/(sd(A1)/h1):null;
   const ls=[]; let g={d:0,dur:0,hs:0,k0:B[0].k}; B.forEach(b=>{g.d+=b.d; g.dur+=5; g.hs+=b.h*5; if(g.d>=250){ls.push({tm:+((g.k0*5+g.dur/2)/60).toFixed(2),d:+g.d.toFixed(1),dur:g.dur,hr:+(g.hs/g.dur).toFixed(2)}); g={d:0,dur:0,hs:0,k0:b.k+1}}}); l.ls=ls}
 // test con plan: las vueltas del reloj se emparejan en orden con los pasos del plan (cal · fases · vc); cada fase se analiza entera, sin importar su ritmo o duración
-function planAlignQ(a,txt){const q=a.q; if(!q||!q.laps||!a.f5||!a.f5.h) return; if(q.tph==='v3|'+txt) return;
+function planAlignQ(a,txt){const q=a.q; if(!q||!q.laps||!a.f5||!a.f5.h) return; qDfix(q); if(q.tph==='v4|'+txt) return;
   const R=[], P=(x,y)=>(+x)*60+(+y);
   for(let t of planExpand(txt).split('+')){t=t.trim(); if(!t) continue; const pm=t.replace(recRE,' ').match(/@\s*(\d{1,2})(?:[:.,](\d{2}))?/), pace=pm?P(pm[1],pm[2]||0):null;
     if(/^cal\b|calentamiento/i.test(t)){R.push({r:'cal',pace}); continue} if(/^vc\b|vuelta a la calma|enfriamiento/i.test(t)){R.push({r:'vc',pace}); continue} if(/^r\s*\d/i.test(t)) continue;
@@ -1686,7 +1690,7 @@ function planAlignQ(a,txt){const q=a.q; if(!q||!q.laps||!a.f5||!a.f5.h) return; 
   const SL=phaseLaps(a,R.filter(x=>x.r==='w'));
   if(SL){q.laps=SL; const W=R.filter(x=>x.r==='w'); let gi=0; q.laps.forEach(l=>{if(l.t==='w'){l.g=gi; l.lg=1; l.st=120; laneDrift(a,l); gi++}});
     a.qTgt=W.slice(0,gi).map(x=>x.pace); q.groups=q.laps.filter(l=>l.t==='w').map(l=>({m:Math.max(1,Math.round(l.dur/60)),n:1}));
-    q.code='Test '+gi+'×'+(a.plan&&a.plan.code?a.plan.code.split(' + ')[0].replace(/^\d+×/,''):'fase'); q.tph='v3|'+txt; q.tst=1; return}
+    q.code='Test '+gi+'×'+(a.plan&&a.plan.code?a.plan.code.split(' + ')[0].replace(/^\d+×/,''):'fase'); q.tph='v4|'+txt; q.tst=1; return}
   q.laps=q.wl.map(l=>({...l}));
   const L=q.laps, run=L.filter(l=>l.pace<=600&&l.dur>=40); if(run.length<R.filter(x=>x.r!=='vc').length-1) return;
   // vueltas de más al principio (lo que trotaste antes de arrancar el entreno programado) cuentan como calentamiento
@@ -1703,7 +1707,7 @@ function planAlignQ(a,txt){const q=a.q; if(!q||!q.laps||!a.f5||!a.f5.h) return; 
     const h1=mh(A1), h2=mh(A2); l.der=h2/h1-1; l.pahr=sd(A1)>0?1-(sd(A2)/h2)/(sd(A1)/h1):null;
     const ls=[]; let g={d:0,dur:0,hs:0,k0:B[0].k}; B.forEach(b=>{g.d+=b.d; g.dur+=5; g.hs+=b.h*5; if(g.d>=250){ls.push({tm:+((g.k0*5+g.dur/2)/60).toFixed(2),d:+g.d.toFixed(1),dur:g.dur,hr:+(g.hs/g.dur).toFixed(2)}); g={d:0,dur:0,hs:0,k0:b.k+1}}}); l.ls=ls});
   q.groups=tg.map((p,i)=>{const l=L.find(x=>x.t==='w'&&x.g===i); return {m:Math.max(1,Math.round(l.dur/60)),n:1}});
-  q.code='Test '+tg.length+'×'+(a.plan&&a.plan.code?a.plan.code.split(' + ')[0].replace(/^\d+×/,''):'fase'); a.qTgt=tg; q.tph='v3|'+txt; q.tst=1}
+  q.code='Test '+tg.length+'×'+(a.plan&&a.plan.code?a.plan.code.split(' + ')[0].replace(/^\d+×/,''):'fase'); a.qTgt=tg; q.tph='v4|'+txt; q.tst=1}
 // ritmo suave para estimar los tramos sin ritmo del plan: el del ciclo, o el promedio de tus ER de los últimos 60 días
 function easyPace(){if(cycle&&cycle.gen&&parseP(cycle.gen.erP)) return parseP(cycle.gen.erP); const er=acts.filter(a=>!a.ej&&a.tipo==='ER'&&a.t0Unix*1000>Date.now()-60*DAY);
   return er.length?er.reduce((q,a)=>q+a.timeS,0)/er.reduce((q,a)=>q+a.distKm,0):450}
