@@ -768,7 +768,9 @@ function analyzeQ(s){
   return {laps,groups:groups.map(g=>({m:g.m,n:g.n})),code};
 }
 // Test con laps: el lap fuerte de 15 min o más es el test; lo de antes es calentamiento y lo de después vuelta a la calma (el test de escalones queda como series)
-function fixTestQ(a){const q=a.q; if(q.tst||!q.laps||!q.laps.length) return; const W=q.laps.filter(l=>l.t==='w'&&l.dur>=900);
+// bloque largo (deriva y Pa:HR): ≥ 14 min, o cada fase de un test alineado con su plan; se analiza desde el min 3 (o el 2 en las fases)
+const isLg=x=>x.lg!=null?!!x.lg:x.dur>=QW.long, lSt=x=>x.st!=null?x.st:QW.start;
+function fixTestQ(a){const q=a.q; if(q.tst||q.tph||!q.laps||!q.laps.length) return; const W=q.laps.filter(l=>l.t==='w'&&l.dur>=900);
   if(W.length===1){const k=q.laps.indexOf(W[0]); q.laps.forEach((l,i)=>{if(i<k){l.t='s';l.blk='cal';delete l.g} else if(i>k){l.t='s';l.blk='vc';delete l.g} else l.g=0});
     const m=Math.round(W[0].dur/60); q.groups=[{m,n:1}]; q.code=`Test ${m}'`} q.tst=1}
 const isQ=a=>a&&a.q&&(a.tipo==='Calidad'||(a.tipo==='Test'&&(fixTestQ(a),true)));
@@ -781,10 +783,10 @@ function summarizeQ(a){
   // los descansos (recuperaciones) no se suman a ningún bloque: solo sirven para evaluar la recuperación
   const blk=k=>{const xs=L.filter(x=>x.blk===k&&!isRec(x)); if(!xs.length) return null; const du=xs.reduce((q,x)=>q+x.dur,0), dd=xs.reduce((q,x)=>q+x.d,0);
     return {dur:du,d:dd,pace:dd?du/(dd/1000):null,hra:xs.reduce((q,x)=>q+x.hra*x.dur,0)/du,tr:xs.reduce((q,x)=>q+x.tr,0),mk:xs.reduce((q,x)=>q+x.mk,0)}};
-  const short=W.filter(x=>x.dur<QW.long).map(x=>({...x,tgt:tg[x.g].v,diff:tg[x.g].v?x.pace-tg[x.g].v:null}));
+  const short=W.filter(x=>!isLg(x)).map(x=>({...x,tgt:tg[x.g].v,diff:tg[x.g].v?x.pace-tg[x.g].v:null}));
   const ref=short[1]||short[0];
   short.forEach(x=>x.pk=ref?x.hrm/ref.hrm-1:null);
-  const long=W.filter(x=>x.dur>=QW.long).map(x=>({...x,tgt:tg[x.g].v,diff:tg[x.g].v?x.pace-tg[x.g].v:null}));
+  const long=W.filter(x=>isLg(x)).map(x=>({...x,tgt:tg[x.g].v,diff:tg[x.g].v?x.pace-tg[x.g].v:null}));
   let pd=0,dd=0; W.filter(x=>tg[x.g].v).forEach(x=>(x.sp||[]).forEach(([p,d])=>{const dev=Math.abs(p-tg[x.g].v); pd+=(dev<=5?0:dev<=10?1:2)*d; dd+=d}));
   const avg=(xs,k)=>{const v=xs.map(x=>x[k]).filter(v=>v!=null); return v.length?v.reduce((q,x)=>q+x,0)/v.length:null};
   const RL=L.filter(isRec), rec=RL.length?{n:RL.length,dur:RL.reduce((q,x)=>q+x.dur,0)}:null;
@@ -872,7 +874,7 @@ function mechCurve(){const P=[];
 function mechCurveC(){const k=acts.length+'|'+saveN; if(k!==_mck){_mc=mechCurve();_mck=k} return _mc}
 // deriva mecánica corregida: contacto y cadencia de cada serie corta menos lo esperado a su ritmo real; deriva = última − primera
 function qMech(a){if(!isQ(a)) return null; const MC=mechCurveC();
-  const S=a.q.laps.filter(l=>l.t==='w'&&l.dur<QW.long).map(l=>{const m=lapMech(a,l); return m?{...m,rg:m.gct-MC.gct.f(m.v),rc:m.cad-MC.cad.f(m.v)}:null}), ok=S.filter(Boolean);
+  const S=a.q.laps.filter(l=>l.t==='w'&&!isLg(l)).map(l=>{const m=lapMech(a,l); return m?{...m,rg:m.gct-MC.gct.f(m.v),rc:m.cad-MC.cad.f(m.v)}:null}), ok=S.filter(Boolean);
   if(!ok.length) return null; return {S,dg:ok.length>1?ok[ok.length-1].rg-ok[0].rg:null,dc:ok.length>1?ok[ok.length-1].rc-ok[0].rc:null}}
 // fuerza vertical (kN) y rigidez de pierna (kN/m) de un instante o tramo, con el modelo de Coros; null si camina o falta dato
 function mechAt(cad,gct,vo,vel,kg){if(!(cad>0&&gct>80&&gct<600)||!(vel>=1.85)) return null; const L=0.53*body.cm/100, tc=gct/1000, tf=Math.max(0,60/cad-tc), fr=Math.PI/2*(tf/tc+1), f=(kg||body.kg)*9.81*fr, h=vel*tc/2;
@@ -1294,7 +1296,7 @@ function renderChart(){
   const ds=chosen.map((a,i)=>{const s=summarize(a), sg=segTimes(a), tst=sg.filter(g=>g.ki<s.stab).reduce((q,g)=>q+g.dur,0)/60;
     if(a.tipo==='Técnica'){const [p,q]=dynWin(a)[0]; stabs.push({t:p/60,t1:q/60,c:color(i),row:i,lab:`Tramo de ${Math.round((q-p)/60)} min analizado`})}
     else if(!isQ(a)){const t1=s.endK!=null?sg.filter(g=>g.kf<=s.endK+1e-6).reduce((q,g)=>q+g.dur,0)/60:a.timeS/60; stabs.push({t:tst,t1,km:s.stab,km1:s.endK!=null?s.endK:a.distKm,c:color(i),man:s.man,row:i})}
-    else {const LB=a.q.laps.filter(l=>l.t==='w'&&l.dur>=QW.long); LB.forEach((l,k)=>stabs.push({t:(l.a+QW.start)/60,t1:l.b/60,c:color(i),row:i,lab:LB.length>1?`Bloque ${k+1} analizado`:'Bloque analizado'}))}
+    else {const LB=a.q.laps.filter(l=>l.t==='w'&&isLg(l)); LB.forEach((l,k)=>stabs.push({t:(l.a+lSt(l))/60,t1:l.b/60,c:color(i),row:i,lab:LB.length>1?`Bloque ${k+1} analizado`:'Bloque analizado'}))}
     let data;
     if(m.qseries&&isQ(a)){tMax=Math.max(tMax,a.timeS/60);
       return {$ai:i,label:`${a.q.code} ${dt(a)}`+(tAir(a)!=null?` · ${nf(tAir(a),0)} °C aire`:'')+sleepTag(a),data:m.qseries(a).filter(p=>p.y!=null),borderColor:color(i),backgroundColor:color(i),pointRadius:3.5,showLine:false}}
@@ -1369,7 +1371,7 @@ function renderChart(){
   // promedio de la actividad: línea horizontal con rótulo, en FC y ritmo
   const ap=a=>vc&&chosen.length>1?dt(a)+' ':'', avgs=metric==='hr'?chosen.map((a,i)=>({v:hrN(summarize(a).hrAvg,a),c:colorFor('hr',i),t:ap(a)+'prom. '+nf(hrN(a.hrAvg,a),0)+' ppm'})):metric==='pace'?chosen.map((a,i)=>({v:a.timeS/a.distKm,c:colorFor('pace',i),t:ap(a)+'prom. '+fmtP(a.timeS/a.distKm)+' /km'})):null;
   // tramos analizados (minutos): ER, LR, Test y carrera desde la estabilización (o el tramo elegido); calidad, sus series y bloques (los largos desde el min 3)
-  const anaBy=chosen.map(a=>{if(a.tipo==='Técnica') return dynWin(a).map(([p,q])=>[p/60,q/60]); if(isQ(a)) return a.q.laps.filter(l=>l.t==='w').map(l=>[(l.dur>=QW.long?l.a+QW.start:l.a)/60,l.b/60]);
+  const anaBy=chosen.map(a=>{if(a.tipo==='Técnica') return dynWin(a).map(([p,q])=>[p/60,q/60]); if(isQ(a)) return a.q.laps.filter(l=>l.t==='w').map(l=>[(isLg(l)?l.a+lSt(l):l.a)/60,l.b/60]);
     const s=summarize(a), sg=segTimes(a), t0=sg.filter(g=>g.ki<s.stab).reduce((q,g)=>q+g.dur,0)/60, t1=s.endK!=null?sg.filter(g=>g.kf<=s.endK+1e-6).reduce((q,g)=>q+g.dur,0)/60:a.timeS/60; return [[t0,t1]]}), ana=anaBy.flat();
   // promedio por km (o cada 2 km en rodajes de más de 12 km) del primer rodaje marcado: líneas tenues y el valor de cada eje activo arriba
   let kmv=null; if(ref&&kmT.length&&document.getElementById('showKm').checked){const lastK=kmT[kmT.length-1].k, tail=ref.distKm-lastK>=0.3; let T=[0,...kmT.map(p=>p.t),...(tail?[ref.timeS/60]:[])], KM=[0,...kmT.map(p=>p.k),...(tail?[ref.distKm]:[])]; const keys=[metric,...(k2?[k2]:[])];
@@ -1604,8 +1606,31 @@ function applyPlans(){let n=0,bad=0; cmatch=new Map(); pmatch=new Map(); const b
     a.plan={txt:p.plan,code:G.filter(g=>g.m!=null).map(g=>(g.n>1?g.n+'×':'')+(g.lab||g.m+"'")).join(' + ')};
     if(a.tipo==='Calidad'&&a.q){const used=[]; a.qTgt=a.q.groups.map(g=>{const j=G.findIndex((x,q)=>!used[q]&&x.m===g.m); if(j<0) return null; used[j]=1; return G[j].p});
       a.plan.ok=G.length===a.q.groups.length&&G.every((g,q)=>g.m===a.q.groups[q].m&&g.n===a.q.groups[q].n); if(!a.plan.ok) bad++}
-    else if(G.length){a.target=G[G.length-1].p; a.targetManual=true; a.plan.ok=true}})}
+    else if(G.length){a.target=G[G.length-1].p; a.targetManual=true; a.plan.ok=true; if(a.tipo==='Test'&&a.q) try{planAlignQ(a,p.plan)}catch(e){console.error(e)}}})}
   return {n,bad}}
+// test con plan: las vueltas del reloj se emparejan en orden con los pasos del plan (cal · fases · vc); cada fase se analiza entera, sin importar su ritmo o duración
+function planAlignQ(a,txt){const q=a.q; if(!q||!q.laps||!a.f5||!a.f5.h) return; if(q.tph===txt) return;
+  const R=[], P=(x,y)=>(+x)*60+(+y);
+  for(let t of planExpand(txt).split('+')){t=t.trim(); if(!t) continue; const pm=t.replace(recRE,' ').match(/@\s*(\d{1,2})[:.,](\d{2})/), pace=pm?P(pm[1],pm[2]):null;
+    if(/^cal\b/i.test(t)){R.push({r:'cal',pace}); continue} if(/^vc\b/i.test(t)){R.push({r:'vc',pace}); continue} if(/^r\s*\d/i.test(t)) continue;
+    const n=+((t.match(/^(\d+)\s*[x×]/)||[0,1])[1]); for(let i=0;i<n;i++) R.push({r:'w',pace})}
+  if(!R.some(x=>x.r==='w')) return;
+  const L=q.laps, run=L.filter(l=>l.pace<=600&&l.dur>=40); if(run.length<R.filter(x=>x.r!=='vc').length-1) return;
+  // vueltas de más al principio (lo que trotaste antes de arrancar el entreno programado) cuentan como calentamiento
+  const off=Math.max(0,run.length-R.length), role=new Map(); run.forEach((l,i)=>role.set(l,i<off?{r:'cal'}:R[i-off]));
+  const f5=a.f5, H=f5.h, M=f5.m, tg=[]; let ph=0, seenW=false, lastW=-1; L.forEach((l,i)=>{const r=role.get(l); if(r&&r.r==='w') lastW=i});
+  L.forEach((l,i)=>{const r=role.get(l);
+    if(!r){l.t='r'; l.blk=seenW&&i<lastW?'q':seenW?'vc':'cal'; delete l.g; l.lg=0; return}
+    if(r.r!=='w'){l.t='s'; l.blk=r.r; delete l.g; l.lg=0; return}
+    seenW=true; l.t='w'; l.blk='q'; l.g=ph; l.lg=1; l.st=120; tg.push(r.pace); ph++;
+    // deriva y Pa:HR de la fase con los bloques de 5 s, desde el min 2; tramos de ~250 m para los gráficos
+    const i0=Math.ceil((l.a+l.st)/5), i1=Math.floor(l.b/5); const B=[]; for(let k=i0;k<i1&&k<H.length;k++) if(H[k]>0) B.push({h:H[k]/10,d:k>0?M[k]-M[k-1]:0,k});
+    if(B.length<12){l.der=null; l.pahr=null; l.ls=[]; return}
+    const hf=Math.floor(B.length/2), A1=B.slice(0,hf), A2=B.slice(hf), mh=x=>x.reduce((q,b)=>q+b.h,0)/x.length, sd=x=>x.reduce((q,b)=>q+b.d,0);
+    const h1=mh(A1), h2=mh(A2); l.der=h2/h1-1; l.pahr=sd(A1)>0?1-(sd(A2)/h2)/(sd(A1)/h1):null;
+    const ls=[]; let g={d:0,dur:0,hs:0,k0:B[0].k}; B.forEach(b=>{g.d+=b.d; g.dur+=5; g.hs+=b.h*5; if(g.d>=250){ls.push({tm:+((g.k0*5+g.dur/2)/60).toFixed(2),d:+g.d.toFixed(1),dur:g.dur,hr:+(g.hs/g.dur).toFixed(2)}); g={d:0,dur:0,hs:0,k0:b.k+1}}}); l.ls=ls});
+  q.groups=tg.map((p,i)=>{const l=L.find(x=>x.t==='w'&&x.g===i); return {m:Math.max(1,Math.round(l.dur/60)),n:1}});
+  q.code='Test '+tg.length+'×'+(a.plan&&a.plan.code?a.plan.code.split(' + ')[0].replace(/^\d+×/,''):'fase'); a.qTgt=tg; q.tph=txt; q.tst=1}
 // ritmo suave para estimar los tramos sin ritmo del plan: el del ciclo, o el promedio de tus ER de los últimos 60 días
 function easyPace(){if(cycle&&cycle.gen&&parseP(cycle.gen.erP)) return parseP(cycle.gen.erP); const er=acts.filter(a=>!a.ej&&a.tipo==='ER'&&a.t0Unix*1000>Date.now()-60*DAY);
   return er.length?er.reduce((q,a)=>q+a.timeS,0)/er.reduce((q,a)=>q+a.distKm,0):450}
@@ -1817,7 +1842,7 @@ function linFit(Q){const n=Q.length; if(n<5) return null; const mx=Q.reduce((q,p
 function evDriftModels(Wk,tq,tipo){const real=acts.filter(a=>!a.ej), last=real.length?Math.max(...real.map(a=>a.t0Unix)):0, HT=heatSlope();
   const ok=a=>tipo==='QL'?isQ(a):(a.tipo==='ER'||a.tipo==='LR');
   const collect=from=>{const D=[], H=[]; real.filter(a=>a.t0Unix>from&&ok(a)).forEach(a=>{const s=summarize(a), heat=HT&&tAir(a)!=null?HT.b*(tAir(a)-tq):0;
-    if(isQ(a)) s.Q.long.forEach(L0=>{const du=(L0.dur-QW.start)/60; if(du<10) return; if(L0.der!=null) D.push([L0.pace,(L0.der*100-heat)/(du/10)]); if(L0.pahr!=null) H.push([L0.pace,L0.pahr*100/(du/10)])});
+    if(isQ(a)) s.Q.long.forEach(L0=>{const du=(L0.dur-lSt(L0))/60; if(du<10) return; if(L0.der!=null) D.push([L0.pace,(L0.der*100-heat)/(du/10)]); if(L0.pahr!=null) H.push([L0.pace,L0.pahr*100/(du/10)])});
     else if(s.vel&&!s.fallback){const tst=a.segs.filter(g=>g.ki<s.stab).reduce((q,g)=>q+g.dur,0), du=(a.timeS-tst)/60; if(du<15) return; const p=60000/s.vel;
       if(s.der!=null) D.push([p,(s.der*100-heat)/(du/10)]); if(s.pahr!=null) H.push([p,s.pahr*100/(du/10)])}}); return {D,H}};
   let C=collect(last-Wk*7*86400), scope='win'; if(C.D.length<8){C=collect(-Infinity); scope='all'}
@@ -2751,9 +2776,9 @@ function syncTrimp(force){fcInit(); let n=0; acts.forEach(a=>{if(a.ej) return; c
 function recDrop(a,prev,x){const H=a.f5&&a.f5.h; if(!H||!prev) return null; const av=(t0,t1)=>{let s=0,n=0; for(let i=Math.max(0,Math.floor(t0/5));i<Math.min(H.length,Math.ceil(t1/5));i++){s+=H[i]/10;n++} return n?s/n:null};
   const e=av(prev.b-30,prev.b), m1=x.dur>=75?av(x.a+50,x.a+70):null, fin=av(x.b-15,x.b); if(e==null||fin==null) return null; return {m1:m1!=null?e-m1:null,fin:e-fin}}
 function lapTables(chosen){const Qs=chosen.filter(a=>isQ(a)); if(!Qs.length) return '';
-  return Qs.map(a=>{const L=a.q.laps; let ns=0, nb=0; const wN=L.filter(x=>x.t==='w'&&x.dur<QW.long).length, bN=L.filter(x=>x.t==='w'&&x.dur>=QW.long).length;
+  return Qs.map(a=>{const L=a.q.laps; let ns=0, nb=0; const wN=L.filter(x=>x.t==='w'&&!isLg(x)).length, bN=L.filter(x=>x.t==='w'&&isLg(x)).length;
     const rows=L.map((x,i)=>{const prev=L[i-1], tg=x.t==='w'&&a.qTgt?a.qTgt[x.g]:null;
-      const name=isRec(x)?'Recuperación':x.blk==='cal'?'Calentamiento':x.blk==='vc'?'Vuelta a la calma':x.t==='w'?(a.tipo==='Test'&&bN===1&&wN===0?`Test ${Math.round(x.dur/60)}'`:x.dur>=QW.long?`Bloque${bN>1?' '+(++nb):''}`:`Serie ${++ns}${wN>1?'/'+wN:''}`):'Trote';
+      const name=isRec(x)?'Recuperación':x.blk==='cal'?'Calentamiento':x.blk==='vc'?'Vuelta a la calma':x.t==='w'?(a.q.tph?`Fase ${++ns}`:a.tipo==='Test'&&bN===1&&wN===0?`Test ${Math.round(x.dur/60)}'`:isLg(x)?`Bloque${bN>1?' '+(++nb):''}`:`Serie ${++ns}${wN>1?'/'+wN:''}`):'Trote';
       const rd=isRec(x)?recDrop(a,prev,x):null, sgn=v=>`${v>=0?'−':'+'}${nf(Math.abs(v),0)}`, rec=rd?`<b style="color:var(--ink)">${sgn(rd.fin)} ppm</b>${rd.m1!=null?` <span class="mdesc">(${sgn(rd.m1)} en 1 min)</span>`:''}`:'';
       const pace=x.d>50?`${fmtP(x.pace)}${tg?` <span class="delta">${x.pace-tg>=0?'+':'−'}${Math.abs(Math.round(x.pace-tg))} s</span>`:''}`:'—';
       return `<tr${isRec(x)?' style="color:var(--muted)"':x.t==='w'?' style="font-weight:600"':''}><td>${i+1}</td><td style="text-align:left">${name}</td><td class="num">${fmtT(x.dur)}</td><td class="num">${x.d>50?nf(x.d/1000,2)+' km':'—'}</td><td class="num">${pace}</td><td class="num">${nf(x.hra,0)}</td><td class="num">${x.hrm}</td><td class="num">${isRec(x)?'—':nf(x.tr,1)}</td><td class="num">${rec||''}</td><td class="num">${(()=>{const S=seriesEff(a), q=S&&S.E.find(z=>z.l===x); if(!q||!q.e) return ''; const d=q.e.sc-S.first; return `${nf(q.e.sc,0)}${q.l!==S.E.find(z=>z.e).l?` <span style="font-size:11px;color:var(${d<=-8?'--warn':'--muted'})">${d>=0?'+':'−'}${nf(Math.abs(d),0)}</span>`:''}`})()}</td></tr>`}).join('');
@@ -2772,7 +2797,7 @@ function heatSlope(){const k=acts.length+'|'+saveN; if(k===_htk) return _ht; _ht
 let _dm=null, _dmk='';
 function driftModel(){const k=acts.length+'|'+saveN; if(k===_dmk) return _dm; _dmk=k; const P=[];
   acts.filter(a=>!a.ej).forEach(a=>{const s=summarize(a);
-    if(isQ(a)) s.Q.long.forEach(L0=>{if(L0.der==null) return; const du=(L0.dur-QW.start)/60; if(du>=10) P.push({id:a.id,p:L0.pace,r:L0.der*100/(du/10)})});
+    if(isQ(a)) s.Q.long.forEach(L0=>{if(L0.der==null) return; const du=(L0.dur-lSt(L0))/60; if(du>=10) P.push({id:a.id,p:L0.pace,r:L0.der*100/(du/10)})});
     else if((a.tipo==='ER'||a.tipo==='LR')&&s.der!=null&&!s.fallback&&s.vel){const tst=a.segs.filter(g=>g.ki<s.stab).reduce((q,g)=>q+g.dur,0), du=(a.timeS-tst)/60; if(du>=15) P.push({id:a.id,p:60000/s.vel,r:s.der*100/(du/10)})}});
   return _dm=P}
 function driftExp(a,pace,durMin){const P=driftModel().filter(x=>x.id!==a.id); if(P.length<6) return null; const sp=Math.max(...P.map(x=>x.p))-Math.min(...P.map(x=>x.p)); if(sp<30) return null;
@@ -2780,7 +2805,7 @@ function driftExp(a,pace,durMin){const P=driftModel().filter(x=>x.id!==a.id); if
   return Math.max(0,my+b*(pace-mx))*durMin/10}
 const driftNear=(a,pace)=>driftModel().filter(x=>x.id!==a.id&&Math.abs(x.p-pace)<=10).length;
 function driftNote(a){const F=a.f5; if(!F||!F.h||!F.m) return ''; const s=summarize(a); let w, der, lab;
-  if(isQ(a)){const L0=s.Q.long[0]; if(!L0||L0.der==null) return ''; w=[L0.a+QW.start,L0.b]; der=L0.der*100; lab='del bloque largo'}
+  if(isQ(a)){const L0=s.Q.long[0]; if(!L0||L0.der==null) return ''; w=[L0.a+lSt(L0),L0.b]; der=L0.der*100; lab='del bloque largo'}
   else if(['LR','ER','Test','Competencia'].includes(a.tipo)&&s.der!=null){const tst=a.segs.filter(g=>g.ki<s.stab).reduce((q,g)=>q+g.dur,0); w=[tst,a.timeS]; der=s.der*100; lab=''}
   else return '';
   const i0=Math.ceil(w[0]/5), i1=Math.min(F.h.length,Math.floor(w[1]/5)), mid=Math.floor((i0+i1)/2); if(i1-i0<24) return '';
@@ -2948,7 +2973,7 @@ function renderQTable(chosen,S,W){
   // secciones de series y bloques largos en el orden en que se ejecutaron (según la primera sesión marcada)
   {const st=rows.findIndex(r=>r[1]===0&&(r[0]==='Series cortas'||/^Bloque largo/.test(r[0]))), en=rows.findIndex(r=>r[0]==='Ejecución');
    if(st>=0&&en>st){const secs=[]; for(let i=st;i<en;i++){if(rows[i][1]===0) secs.push({k:rows[i][0]==='Series cortas'?'S':'L'+(parseInt(rows[i][0].replace(/\D/g,''))-1),r:[]}); secs[secs.length-1].r.push(rows[i])}
-     const ord=[]; let li=0; chosen[0].q.laps.filter(x=>x.t==='w').forEach(x=>{const k=x.dur>=QW.long?'L'+(li++):'S'; if(!ord.includes(k)) ord.push(k)});
+     const ord=[]; let li=0; chosen[0].q.laps.filter(x=>x.t==='w').forEach(x=>{const k=isLg(x)?'L'+(li++):'S'; if(!ord.includes(k)) ord.push(k)});
      const pos=k=>{const i=ord.indexOf(k); return i<0?99:i}; secs.sort((a,b)=>pos(a.k)-pos(b.k)); rows.splice(st,en-st,...secs.flatMap(s=>s.r))}}
   regroup(rows,[['Plan y ajustes',['Código','Plan del coach','Ritmo programado por el coach','Zapato','Superficie','Graficar en la tendencia']],['Sesión',['Hora de inicio','Sesión completa','TRIMP sesión','TRIMP mecánico sesión']],['Clima',['Temperatura del aire y clima','WBGT']],['Sueño',['Déficit de sueño','Sueño de la noche previa']]]);
   let h='<table><thead><tr><th></th>'+chosen.map((a,i)=>`<th style="color:${color(i)}">Calidad ${dt(a)}</th>`).join('')+'</tr></thead><tbody>';
@@ -3011,7 +3036,7 @@ function mechWin(a){const F=a.f5, T=tecBlocks(a); if(!T||!F.c||!F.g||!T.keep.len
     n++; fr+=r; Fk+=f/1000; an+=Math.asin(h/Lg)*180/Math.PI; const vo=F.o&&F.o[i]>0?F.o[i]:voS; if(vo){kk+=f/(Lg-Math.sqrt(Lg*Lg-h*h)+0.56*vo/1000)/1000; nk++}}
   if(!n) return null; return {fr:fr/n,F:Fk/n,ang:an/n,k:nk?kk/nk:null,pace:T.keep.length*5/(dd/1000),out:T.out}}
 function dynWin(a){if(a.tipo==='Competencia') return [[0,a.timeS]]; if(a.tipo==='Técnica') return [tecWin(a)];
-  if(isQ(a)){const W=a.q.laps.filter(l=>l.t==='w'), L=W.filter(l=>l.dur>=QW.long); return (L.length?L:W).map(l=>[l.a,l.b])}
+  if(isQ(a)){const W=a.q.laps.filter(l=>l.t==='w'), L=W.filter(l=>isLg(l)); return (L.length?L:W).map(l=>[l.a,l.b])}
   if(a.tipo==='Test'){const t=testThr(a); if(t&&t.from!=null) return [[t.from,t.from+(t.win||20)*60]]}
   if(!a.segs) return [[0,a.timeS]]; const s=summarize(a), tst=a.segs.filter(g=>g.ki<s.stab).reduce((q,g)=>q+g.dur,0); return [[tst,a.timeS]]}
 // dinámica para la tabla: la actividad completa, salvo el test de técnica, que usa solo sus 3 min
@@ -3104,7 +3129,7 @@ function seriesEff(a){if(!isQ(a)||!a.f5||!a.f5.m) return null; if(serCache.has(a
 function natTest(a){if(!a||!a.f5||!a.f5.m||!a.f5.c||!a.f5.g) return null; if(natCache.has(a)) return natCache.get(a); let out=null;
   try{const n=a.f5.m.length;
     if(a.tipo==='Técnica'){const [t0,t1]=dynWin(a)[0], e=effBlocks(a,Math.ceil(t0/5),Math.floor(t1/5)); if(e) out={...e,t0,how:'tramo de evaluación del test'}}
-    else if(isQ(a)){const L=a.q.laps.filter(l=>l.t==='w'&&l.dur>=QW.long);
+    else if(isQ(a)){const L=a.q.laps.filter(l=>l.t==='w'&&isLg(l));
       if(L.length){const l=L.reduce((x,y)=>y.dur>=x.dur?y:x), i1=Math.floor(l.b/5), i0=Math.max(Math.ceil(l.a/5),i1-72), e=effBlocks(a,i0,i1); if(e) out={...e,t0:i0*5,how:'6 min finales del bloque largo'}}
       else{const S=seriesEff(a), ok=S?S.E.filter(z=>z.e):[]; if(ok.length){const w=ok.reduce((q,z)=>q+z.l.dur,0), av=k=>ok.reduce((q,z)=>q+(z.e[k]??0)*z.l.dur,0)/w;
         out={...ok[0].e,sc:av('sc'),p:av('p'),gct:av('gct'),vr:av('vr'),t0:ok[0].l.a,how:`promedio de las ${ok.length} series`}}}}
