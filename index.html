@@ -2730,19 +2730,19 @@ function bestWin(F,W){const n=F.h.length; let best=-1,bi=-1; for(let i=0;i+W<=n;
 const avgH=(F,i0,i1)=>{let s=0,n=0; for(let k=Math.max(0,i0);k<Math.min(F.h.length,i1);k++){s+=F.h[k]/10;n++} return n?s/n:null};
 // bloques del test escalonado: la secuencia más larga de laps de trabajo con distancia parecida (±25 %) y ritmo cada vez más rápido (calentamiento y vuelta a la calma quedan fuera)
 function testSteps(a){const L=(a.q&&a.q.laps)||[], F=a.f5; if(!F) return [];
-  const C=L.filter(l=>l.dur>=150&&l.pace<600&&l.d>300); let best=[];
+  const C=a.q&&a.q.tph?L.filter(l=>l.t==='w'):L.filter(l=>l.dur>=150&&l.pace<600&&l.d>300); let best=[];  // con plan: solo las fases
   for(let i=0;i<C.length;i++){const run=[C[i]]; for(let j=i+1;j<C.length;j++){const c=C[j]; if(c.pace<=run[run.length-1].pace-3&&(Math.abs(c.d-C[i].d)<=0.25*C[i].d||(c.d>=600&&c.d<C[i].d&&!C.slice(j+1).some(x=>Math.abs(x.d-C[i].d)<=0.25*C[i].d&&x.pace<c.pace)))) run.push(c); else break} if(run.length>best.length) best=run}
   const run3=best.length>=3; if(!run3) best=C;
   const out=best.map(l=>{const i0=Math.ceil((l.a+120)/5), i1=Math.floor(l.b/5), mid=Math.floor((i0+i1)/2);
     const h1=avgH(F,i0,mid), h2=avgH(F,mid,i1); return {pace:l.pace,d:l.d,dur:l.dur,hra:l.hra,hrEnd:avgH(F,i1-36,i1),hrFin:avgH(F,i1-6,i1),hrMax:(()=>{let m=0;for(let k=Math.max(0,i0);k<Math.min(F.h.length,i1);k++)if(F.h[k]/10>m)m=F.h[k]/10;return m||null})(),der:h1&&h2?(h2/h1-1)*100:null}}); out.run=run3; return out}
-function detectProto(a){const S=testSteps(a);
+function detectProto(a){if(a.q&&a.q.tph) return 'luis'; const S=testSteps(a);
   if(S.run&&S.length>=3){const up=S.slice(1).filter((s,i)=>s.pace<=S[i].pace-5).length>=S.length-2, sim=S.filter(s=>Math.abs(s.d-S[0].d)<=0.25*S[0].d||Math.abs(s.dur-S[0].dur)<=0.25*S[0].dur).length>=S.length-1; if(up&&sim) return 'luis'}
   const lg=S.reduce((m,s)=>s.dur>(m?m.dur:0)?s:m,null); if(lg&&lg.dur>=27*60&&lg.dur<=34*60) return 'p30';
   // sin laps: es de 30 si el mejor tramo de 30 min va casi tan rápido como el de 20 (±3 %) y claramente más rápido que el resto de la sesión (≥ 5 %)
   const F=a.f5; if(!lg&&F&&F.h&&a.timeS>=40*60){const w30=bestWin(F,360), w20=bestWin(F,240); if(w30&&w20){const v30=w30.d/1800, v20=w20.d/1200, rest=(F.m[F.m.length-1]-w30.d)/Math.max(1,a.timeS-1800);
     if(v30>=v20*0.97&&v30>=rest*1.05) return 'p30'}}
   return 'p20'}
-function testThr(a){const F=a&&a.f5; if(!F||!F.h||!F.m) return null; const c=tCfg(String(a.id)), proto=c.proto==='auto'?detectProto(a):c.proto;
+function testThr(a){const F=a&&a.f5; if(!F||!F.h||!F.m) return null; const c=tCfg(String(a.id)), proto=a.q&&a.q.tph?'luis':c.proto==='auto'?detectProto(a):c.proto;  // un test emparejado con su plan escalonado es siempre del protocolo de fases
   let mx=0; for(const v of F.h) if(v/10>mx) mx=v/10;
   const base={actId:String(a.id),date:crDay(a.t0Unix),proto,auto:c.proto==='auto',hrmax:Math.round(mx)};
   if(proto==='luis'){const S=testSteps(a); if(S.length<2) return {...base,lthr:null,tpace:null,steps:S,pred:null};
