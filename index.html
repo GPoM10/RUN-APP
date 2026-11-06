@@ -1658,6 +1658,13 @@ function phaseLaps(a,W){const f5=a.f5, H=f5.h, M=f5.m, n=H.length; if(n<60) retu
     else if(x.k1<=first.k0) L.push(mk(x,x.stop?'r':'s','cal'));
     else if(x.k0>=last.k1) L.push(mk(x,x.stop?'r':'s','vc'));
     else L.push(mk(x,'r','q'))});
+  // las fases toman el tiempo y la distancia exactos de la vuelta del reloj (lo programado en el reloj es lo ejecutado): los bloques de 5 s redondean los bordes y suman el frenado; si no hay una vuelta que calce (±20 s en cada borde), queda lo detectado
+  const WL=(a.q&&a.q.wl)||[];
+  L.forEach((l,i)=>{if(l.t!=='w') return; const w=WL.find(v=>Math.abs(v.a-l.a)<=20&&Math.abs(v.b-l.b)<=20&&v.d>0); if(!w) return;
+    Object.assign(l,{a:w.a,b:w.b,dur:w.dur,d:w.d,pace:w.pace,hra:w.hra,hrm:w.hrm,hre:w.hre,tr:w.tr,mk:w.mk,wl:1});
+    const p=L[i-1], nx=L[i+1];
+    if(p&&p.t!=='w'){p.b=Math.max(p.a,w.a); p.dur=p.b-p.a; p.pace=p.d>1?+(p.dur/(p.d/1000)).toFixed(1):99999}
+    if(nx&&nx.t!=='w'){nx.a=Math.min(nx.b,w.b); nx.dur=nx.b-nx.a; nx.pace=nx.d>1?+(nx.dur/(nx.d/1000)).toFixed(1):99999}});
   return L.filter(l=>l.dur>=5)}
 // deriva y Pa:HR de una fase con los bloques de 5 s, desde su min 2; tramos de ~250 m para los gráficos
 function laneDrift(a,l){const H=a.f5.h, M=a.f5.m, i0=Math.ceil((l.a+l.st)/5), i1=Math.floor(l.b/5), B=[]; for(let k=i0;k<i1&&k<H.length;k++) if(H[k]>0) B.push({h:H[k]/10,d:k>0?M[k]-M[k-1]:0,k});
@@ -1666,7 +1673,7 @@ function laneDrift(a,l){const H=a.f5.h, M=a.f5.m, i0=Math.ceil((l.a+l.st)/5), i1
   l.der=h2/h1-1; l.pahr=sd(A1)>0?1-(sd(A2)/h2)/(sd(A1)/h1):null;
   const ls=[]; let g={d:0,dur:0,hs:0,k0:B[0].k}; B.forEach(b=>{g.d+=b.d; g.dur+=5; g.hs+=b.h*5; if(g.d>=250){ls.push({tm:+((g.k0*5+g.dur/2)/60).toFixed(2),d:+g.d.toFixed(1),dur:g.dur,hr:+(g.hs/g.dur).toFixed(2)}); g={d:0,dur:0,hs:0,k0:b.k+1}}}); l.ls=ls}
 // test con plan: las vueltas del reloj se emparejan en orden con los pasos del plan (cal · fases · vc); cada fase se analiza entera, sin importar su ritmo o duración
-function planAlignQ(a,txt){const q=a.q; if(!q||!q.laps||!a.f5||!a.f5.h) return; if(q.tph==='v2|'+txt) return;
+function planAlignQ(a,txt){const q=a.q; if(!q||!q.laps||!a.f5||!a.f5.h) return; if(q.tph==='v3|'+txt) return;
   const R=[], P=(x,y)=>(+x)*60+(+y);
   for(let t of planExpand(txt).split('+')){t=t.trim(); if(!t) continue; const pm=t.replace(recRE,' ').match(/@\s*(\d{1,2})(?:[:.,](\d{2}))?/), pace=pm?P(pm[1],pm[2]||0):null;
     if(/^cal\b|calentamiento/i.test(t)){R.push({r:'cal',pace}); continue} if(/^vc\b|vuelta a la calma|enfriamiento/i.test(t)){R.push({r:'vc',pace}); continue} if(/^r\s*\d/i.test(t)) continue;
@@ -1679,7 +1686,7 @@ function planAlignQ(a,txt){const q=a.q; if(!q||!q.laps||!a.f5||!a.f5.h) return; 
   const SL=phaseLaps(a,R.filter(x=>x.r==='w'));
   if(SL){q.laps=SL; const W=R.filter(x=>x.r==='w'); let gi=0; q.laps.forEach(l=>{if(l.t==='w'){l.g=gi; l.lg=1; l.st=120; laneDrift(a,l); gi++}});
     a.qTgt=W.slice(0,gi).map(x=>x.pace); q.groups=q.laps.filter(l=>l.t==='w').map(l=>({m:Math.max(1,Math.round(l.dur/60)),n:1}));
-    q.code='Test '+gi+'×'+(a.plan&&a.plan.code?a.plan.code.split(' + ')[0].replace(/^\d+×/,''):'fase'); q.tph='v2|'+txt; q.tst=1; return}
+    q.code='Test '+gi+'×'+(a.plan&&a.plan.code?a.plan.code.split(' + ')[0].replace(/^\d+×/,''):'fase'); q.tph='v3|'+txt; q.tst=1; return}
   q.laps=q.wl.map(l=>({...l}));
   const L=q.laps, run=L.filter(l=>l.pace<=600&&l.dur>=40); if(run.length<R.filter(x=>x.r!=='vc').length-1) return;
   // vueltas de más al principio (lo que trotaste antes de arrancar el entreno programado) cuentan como calentamiento
@@ -1696,7 +1703,7 @@ function planAlignQ(a,txt){const q=a.q; if(!q||!q.laps||!a.f5||!a.f5.h) return; 
     const h1=mh(A1), h2=mh(A2); l.der=h2/h1-1; l.pahr=sd(A1)>0?1-(sd(A2)/h2)/(sd(A1)/h1):null;
     const ls=[]; let g={d:0,dur:0,hs:0,k0:B[0].k}; B.forEach(b=>{g.d+=b.d; g.dur+=5; g.hs+=b.h*5; if(g.d>=250){ls.push({tm:+((g.k0*5+g.dur/2)/60).toFixed(2),d:+g.d.toFixed(1),dur:g.dur,hr:+(g.hs/g.dur).toFixed(2)}); g={d:0,dur:0,hs:0,k0:b.k+1}}}); l.ls=ls});
   q.groups=tg.map((p,i)=>{const l=L.find(x=>x.t==='w'&&x.g===i); return {m:Math.max(1,Math.round(l.dur/60)),n:1}});
-  q.code='Test '+tg.length+'×'+(a.plan&&a.plan.code?a.plan.code.split(' + ')[0].replace(/^\d+×/,''):'fase'); a.qTgt=tg; q.tph='v2|'+txt; q.tst=1}
+  q.code='Test '+tg.length+'×'+(a.plan&&a.plan.code?a.plan.code.split(' + ')[0].replace(/^\d+×/,''):'fase'); a.qTgt=tg; q.tph='v3|'+txt; q.tst=1}
 // ritmo suave para estimar los tramos sin ritmo del plan: el del ciclo, o el promedio de tus ER de los últimos 60 días
 function easyPace(){if(cycle&&cycle.gen&&parseP(cycle.gen.erP)) return parseP(cycle.gen.erP); const er=acts.filter(a=>!a.ej&&a.tipo==='ER'&&a.t0Unix*1000>Date.now()-60*DAY);
   return er.length?er.reduce((q,a)=>q+a.timeS,0)/er.reduce((q,a)=>q+a.distKm,0):450}
