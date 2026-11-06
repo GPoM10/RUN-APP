@@ -2094,6 +2094,8 @@ function goalHist(M){if(!goal) return []; const nowW=wkOf(crDay(Math.floor(Date.
 function batIcon(f,big){const n=10, k=f==null?0:Math.round(f*n), c=f==null?'var(--line)':f<0.4?'var(--bad)':f<0.7?'var(--warn)':'var(--ok)', h=big?34:14, wd=big?18:7;
   return `<span style="display:inline-flex;align-items:center;vertical-align:middle"><span style="display:inline-flex;align-items:center;gap:2px;padding:${big?4:2}px;border:2px solid var(--ink);border-radius:${big?6:3}px;vertical-align:middle">${Array.from({length:n},(_,i)=>`<span style="width:${wd}px;height:${h}px;border-radius:2px;background:${i<k?c:'var(--soft)'}"></span>`).join('')}</span><span style="display:inline-block;width:${big?5:3}px;height:${big?14:6}px;background:var(--ink);border-radius:0 2px 2px 0"></span></span>`}
 function renderGoal(){const B=document.getElementById('goalBox'); if(!B) return; const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  // el historial de tests guardado puede venir de una versión anterior: se recalcula con las fases actuales antes de predecir
+  try{applyPlans(); applyTests()}catch(e){console.error(e)}
   const today=crDay(Math.floor(Date.now()/1000)), M=hrModel(), editing=goalDraft||!goal;
   let h=`<h2>Meta</h2>`;
   if(editing){const g={name:'San Silvestre',km:10.4,t:59*60,...(goal||{}),...(goalDraft||{})}, dv=g.day?new Date(g.day).toISOString().slice(0,10):'2026-12-31';
