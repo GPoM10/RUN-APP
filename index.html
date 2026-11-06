@@ -2850,14 +2850,14 @@ function testReport(id){const t=thrHist.find(h=>h.actId===String(id)), a=acts.fi
         if(b.k==='r'){ctx.globalAlpha=.18; ctx.fillStyle='#5D6B67'; ctx.fillRect(p0,ar.top,p1-p0,ar.bottom-ar.top)}
         if(b.k==='w'){ctx.globalAlpha=.13; ctx.fillStyle=CW[j%2]; ctx.fillRect(p0,ar.top,p1-p0,ar.bottom-ar.top); ctx.globalAlpha=.95; ctx.fillStyle=CW[j%2]; ctx.font='700 12px '+css('--mono'); ctx.textAlign='center'; ctx.textBaseline='top'; ctx.fillText(b.lab,(p0+p1)/2,ar.top+4); j++}});
       ctx.restore()}};
-    tmp.innerHTML='<div style="height:230px;width:900px;position:relative"><canvas></canvas></div>'; const cv=tmp.querySelector('canvas');
+    tmp.innerHTML='<canvas width="1000" height="250" style="width:1000px;height:250px"></canvas>'; const cv=tmp.querySelector('canvas');
     const ch=new Chart(cv,{type:'scatter',data:{datasets:[{label:'FC',data:hr,borderColor:'#D32F2F',backgroundColor:'#D32F2F',borderWidth:2,pointRadius:0,showLine:true,yAxisID:'y',order:1},
         {label:'Ritmo',data:pc,borderColor:'rgba(93,107,103,.35)',backgroundColor:'rgba(93,107,103,.35)',borderWidth:1.5,pointRadius:0,showLine:true,spanGaps:false,yAxisID:'y2',order:2}]},plugins:[bandP],
-      options:{responsive:false,animation:false,plugins:{legend:{position:'top',align:'start',labels:{color:'#18211F',boxWidth:12,boxHeight:6}}},
+      options:{responsive:false,devicePixelRatio:2,animation:false,plugins:{legend:{position:'top',align:'start',labels:{color:'#18211F',boxWidth:12,boxHeight:6}}},
         scales:{x:{type:'linear',min:0,max:Math.ceil(a.timeS/60),title:{display:true,text:'minutos',color:'#5D6B67'},grid:{color:'#E3E8E6'},ticks:{color:'#5D6B67'}},
           y:{min:80,max:Math.max(190,Math.ceil((Math.max(...hr.map(p=>p.y))+5)/10)*10),title:{display:true,text:'FC (ppm)',color:'#5D6B67'},grid:{color:'#E3E8E6'},ticks:{color:'#5D6B67',stepSize:20}},
           y2:{position:'right',reverse:true,min:Math.floor((fast-20)/30)*30,max:780,title:{display:true,text:'ritmo (min/km)',color:'#5D6B67'},grid:{display:false},ticks:{color:'#5D6B67',callback:v=>fmtP(v)}}}}});
-    ch.resize(900,230); ch.update(); imgs.ses=ch.toBase64Image('image/png',1); ch.destroy()}catch(e){console.error(e)}
+    imgs.ses=ch.toBase64Image('image/png',1); ch.destroy()}catch(e){console.error(e)}
   tmp.remove(); if(prevT==null) delete root.dataset.theme; else root.dataset.theme=prevT;
   const w=wbgtOf(a), ta=tAir(a), plan=a.plan&&a.plan.txt, tg=a.qTgt||[];
   const thrTxt=lv.lthr||lv.tp?`${lv.lthrR?lv.lthrR.join('–'):lv.lthr||'—'} ppm · ${lv.tpR?lv.tpR.map(fp).join('–'):lv.tp?fp(lv.tp):'—'}/km`:'sin elegir todavía';
