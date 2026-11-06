@@ -608,6 +608,9 @@ function extTip({chart,tooltip:t}){const cv=chart.canvas, host=cv.parentNode; if
     x=px>(ar.left+ar.right)/2?ar.left:ar.right-W; x=Math.max(0,Math.min(cv.offsetWidth-W,x));
     y=-H-4; if(oy+y<0) y=cv.offsetHeight+4;
     if(best&&best.n<1e6&&(best.n<=8)){x=best.x;y=best.y}}
+  // gráficos con tooltip.position 'barTop' (bloques del Test): el cuadrito va sobre la barra señalada; si no cabe encima, dentro de ella
+  if(chart.options.plugins&&chart.options.plugins.tooltip&&chart.options.plugins.tooltip.position==='barTop'){const b=act.find(e=>e.width!=null&&isFinite(e.x)&&isFinite(e.y))||act.find(e=>isFinite(e.x)&&isFinite(e.y));
+    if(b){const top=b.width!=null&&isFinite(b.base)?Math.min(b.y,b.base):b.y; x=Math.max(0,Math.min(cv.offsetWidth-W,b.x-W/2)); y=top-H-6>=0?top-H-6:top+6}}
   el.style.transform=`translate(${Math.round(ox+x)}px,${Math.round(oy+y)}px)`}
 if(window.Chart&&Chart.defaults){const D=Chart.defaults; D.plugins.tooltip.enabled=false; D.plugins.tooltip.external=extTip; D.elements.point.hoverRadius=7; D.elements.point.hoverBorderWidth=3}
 
