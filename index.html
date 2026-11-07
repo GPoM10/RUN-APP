@@ -489,7 +489,7 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
         <h2>Planeado vs ejecutado</h2>
         <span class="seg" role="group" aria-label="Agrupar" id="pgSeg"><button data-g="d">Días</button><button data-g="w">Semanas</button></span>
         <span class="opts" id="pwNav" style="margin:0;gap:6px"><button type="button" id="pwPrev" aria-label="Semana anterior">‹</button><b id="pwLab" style="min-width:120px;text-align:center;color:var(--ink);font-size:13px"></b><button type="button" id="pwNext" aria-label="Semana siguiente">›</button></span>
-        <span class="seg" role="group" aria-label="Variable" id="pmSeg"><button data-m="trimp">TRIMP</button><button data-m="km">Km</button><button data-m="t">Tiempo</button></span>
+        <span class="seg" role="group" aria-label="Variable" id="pmSeg"><button data-m="trimp">TRIMP</button><button data-m="km">Km</button><button data-m="t">Tiempo</button><button data-m="zonas" title="TRIMP planeado por semana, repartido por zona de FC">TRIMP por zona</button></span>
       </div>
       <div class="chartbox" style="height:300px"><canvas id="pchart" aria-label="Planeado vs ejecutado por semana"></canvas><div class="empty" id="pEmpty">Planeá entrenos (sueltos, del coach o un ciclo) para comparar lo planeado con lo ejecutado.</div></div>
       <div class="mdesc" id="pDesc"></div>
@@ -1884,7 +1884,7 @@ document.getElementById('planClear').onclick=()=>{plans=[]; acts.forEach(a=>dele
 const SES=[{k:'er1',lab:'ER referencia',tipo:'ER',d:1},{k:'er2',lab:'ER con pimienta',tipo:'ER',d:3},{k:'q',lab:'Calidad',tipo:'Calidad',d:4},{k:'lr',lab:'LR',tipo:'LR',d:5}];
 const DAY=86400000; let pmatch=new Map(), cmatch=new Map(), pchart=null, genSynced=false;
 function cyclePlans(){if(!cycle) return []; const out=[];
-  cycle.weeks.forEach((w,i)=>SES.forEach(S=>{const x=w.s[S.k]; if(x&&x.plan&&x.plan.trim()) out.push({day:x.day!=null?x.day:cycle.start+(i*7+S.d)*DAY,tipo:x.tipo,plan:x.plan,wi:i,sk:S.k})})); return out}
+  cycle.weeks.forEach((w,i)=>SES.forEach(S=>{const x=w.s[S.k]; if(x&&x.plan&&x.plan.trim()) out.push({day:x.day!=null?x.day:cycle.start+(i*7+S.d)*DAY,tipo:x.tipo,plan:x.plan,wi:i,sk:S.k,...(x.name?{name:x.name}:{})})})); return out}
 // el ciclo manda en sus semanas; lo pegado desde la plantilla cubre las demás
 function allPlans(){const cp=cyclePlans(), cw=new Set(cp.map(p=>wkOf(p.day)+'|'+p.tipo)); return cp.concat(plans.filter(p=>p.man||!cw.has(wkOf(p.day)+'|'+p.tipo)))}
 // día de descanso planeado (desde el calendario o Entrenos sueltos)
@@ -1984,14 +1984,29 @@ function renderPlanner(){try{renderGoal()}catch(e){console.error(e)} renderThr()
   if(!cycle){renderPvE();return}
   E.hidden=true; cv.hidden=false; applyPlans();
   const M=hrModel(), easy=parseP(cycle.gen.erP)||450, today=Date.now();
-  const W=cycle.weeks.map((w,i)=>{const w0=cycle.start+i*7*DAY, ses={}, pl={t:0,km:0,trimp:0}, ex={t:0,km:0,trimp:0,n:0};
-    SES.forEach(S=>{const x=w.s[S.k]; const e=x&&x.plan?estPlan(x.plan,M,easy):null; if(e){pl.t+=e.t;pl.km+=e.km;pl.trimp+=e.trimp}
+  const W=cycle.weeks.map((w,i)=>{const w0=cycle.start+i*7*DAY, ses={}, pl={t:0,km:0,trimp:0,zt:[0,0,0,0],zb:[0,0,0,0]}, ex={t:0,km:0,trimp:0,n:0};
+    SES.forEach(S=>{const x=w.s[S.k]; const e=x&&x.plan?estPlan(x.plan,M,easy):null; if(e){pl.t+=e.t;pl.km+=e.km;pl.trimp+=e.trimp; e.ztr.forEach((v,b)=>{pl.zt[b]+=v; pl.zb[b]+=e.zb[b]})}
       const a=acts.find(z=>z.id===cmatch.get(i+'|'+S.k)); ses[S.k]={x,e,a}});
     acts.filter(a=>!a.ej).forEach(a=>{const d=crDay(a.t0Unix); if(d>=w0&&d<w0+7*DAY){ex.t+=a.timeS;ex.km+=a.distKm;ex.trimp+=a.trimp;ex.n++}});
     return {i,w,w0,ses,pl,ex,past:w0<=today}});
-  const val=(o,k)=>k==='t'?o.t/60:o[k], unit={trimp:'TRIMP',km:'km',t:'minutos'}[pm];
+  const ZM=isZ(), pmv=pmK(), val=(o,k)=>k==='t'?o.t/60:o[k==='zonas'?'trimp':k], unit={trimp:'TRIMP',km:'km',t:'minutos',zonas:'TRIMP'}[pm];
   document.getElementById('pDesc').textContent=`Barras claras: lo planeado; oscuras: lo ejecutado (todo lo que cargaste esa semana, de cualquier tipo). Las semanas marcadas con D son de descarga. El TRIMP planeado se estima con la FC que sueles tener a cada ritmo (${M.n?`ajustada con ${M.n} tramos estables de tu historial: ~${Math.round(M.f(450))} ppm a 7:30 y ~${Math.round(M.f(390))} a 6:30`:'sin historial cargado todavía: se usa ~150 ppm a 7:30'}), simulando cómo sube en cada bloque y cómo baja caminando en las recuperaciones.`;
-  if(typeof Chart!=='undefined'){const tick=css('--muted');
+  if(ZM){const tz=[0,0,0,0], tb=[0,0,0,0]; W.forEach(x=>x.pl.zt.forEach((v,b)=>{tz[b]+=v; tb[b]+=x.pl.zb[b]})); const TZ=tz.reduce((a,b)=>a+b,0)||1, TB=tb.reduce((a,b)=>a+b,0)||1;
+    document.getElementById('pDesc').textContent=`TRIMP planeado de cada semana repartido por zona de FC (estimado con tu FC a cada ritmo). Todo el ciclo, por TRIMP: ${BANDS.map((b,k)=>`${b[0]} ${nf(tz[k]/TZ*100,0)} %`).join(' · ')}. Por tiempo: ${BANDS.map((b,k)=>`${b[0]} ${nf(tb[k]/TB*100,0)} %`).join(' · ')}. La línea es lo ejecutado.`}
+  if(pchart&&!!pchart.$z!==ZM){pchart.destroy();pchart=null}
+  if(typeof Chart!=='undefined'&&ZM){const tick=css('--muted');
+    const pctP={id:'zpct',afterDatasetsDraw(c){const {ctx}=c; ctx.save(); ctx.font='600 10px '+css('--mono'); ctx.textAlign='center'; ctx.textBaseline='middle';
+      c.data.datasets.forEach((d,di)=>{if(d.type==='line'||!c.isDatasetVisible(di)) return; c.getDatasetMeta(di).data.forEach((el,k)=>{const v=d.data[k], tot=W[k].pl.trimp; if(!v||!tot) return; const h=Math.abs(el.base-el.y); if(h<13||el.width<22) return;
+        ctx.fillStyle='#fff'; ctx.fillText(nf(v/tot*100,0)+'%',el.x,(el.y+el.base)/2)})}); ctx.restore()}};
+    const data={labels:W.map(x=>`S${x.i+1}${x.w.load?'':' D'}`),datasets:[...BANDS.map((b,k)=>({type:'bar',label:b[0],data:W.map(x=>x.pl.zt[k]),backgroundColor:BCOL[k],borderWidth:0,stack:'p'})),
+      {type:'line',label:'Ejecutado',data:W.map(x=>x.past||x.ex.n?x.ex.trimp:null),borderColor:css('--ink'),backgroundColor:css('--ink'),pointRadius:3,borderWidth:1.5,spanGaps:false}]};
+    const opts={responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{position:'top',align:'start',labels:{color:css('--ink'),boxWidth:12,boxHeight:10,font:{family:css('--body')}}},
+      tooltip:{mode:'index',intersect:false,callbacks:{title:it=>{const x=W[it[0].dataIndex];return `Semana ${x.i+1}${x.w.fase?' · '+x.w.fase:x.w.load?'':' (descarga)'} · ${dfmt.format(new Date(x.w0+6*3600000))}`},
+        label:it=>{if(it.parsed.y==null) return null; const x=W[it.dataIndex]; return it.dataset.type==='line'?`Ejecutado: ${nf(it.parsed.y,0)} TRIMP`:`${it.dataset.label}: ${nf(it.parsed.y,0)} TRIMP (${nf(x.pl.trimp?it.parsed.y/x.pl.trimp*100:0,0)} %) · ${nf(x.pl.zb[it.datasetIndex]/60,0)} min`},
+        footer:it=>{const x=W[it[0].dataIndex];return `Planeado: ${nf(x.pl.trimp,0)} TRIMP · ${fmtT(x.pl.t)}`}}}},
+      scales:{x:{stacked:true,grid:{display:false},ticks:{color:tick,font:{family:css('--mono')},maxRotation:0,autoSkip:true}},y:{stacked:true,beginAtZero:true,title:{display:true,text:'TRIMP planeado',color:tick},grid:{color:css('--line')},ticks:{color:tick,font:{family:css('--mono')}}}}};
+    if(pchart){pchart.data=data;pchart.options=opts;pchart.update()} else{pchart=new Chart(cv,{type:'bar',data,options:opts,plugins:[pctP]}); pchart.$z=true}}
+  else if(typeof Chart!=='undefined'){const tick=css('--muted');
     const data={labels:W.map(x=>`S${x.i+1}${x.w.load?'':' D'}`),datasets:[
       {label:'Planeado',data:W.map(x=>val(x.pl,pm)),backgroundColor:css('--line'),borderWidth:0},
       {label:'Ejecutado',data:W.map(x=>x.past||x.ex.n?val(x.ex,pm):null),backgroundColor:css('--accent'),borderWidth:0}]};
@@ -2021,7 +2036,8 @@ function renderPlanner(){try{renderGoal()}catch(e){console.error(e)} renderThr()
 }
 // planeado vs ejecutado día por día de una semana (Lun a Dom, con los de descanso); usa la misma semana que la Revisión semanal
 let pg=(()=>{try{return LS.getItem('comparador.pg')||'d'}catch(e){return 'd'}})();
-function pDays(){document.querySelectorAll('#pgSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.g===pg)); document.getElementById('pwNav').hidden=pg!=='d';
+const pmK=()=>pm==='zonas'?'trimp':pm, isZ=()=>pm==='zonas';
+function pDays(){const pm=pmK();document.querySelectorAll('#pgSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.g===pg)); document.getElementById('pwNav').hidden=pg!=='d';
   if(pg!=='d'||!pchart||typeof Chart==='undefined') return;
   const M=hrModel(), easy=easyPace(), today=crDay(Math.floor(Date.now()/1000)), w0=wkOf(today)+rvOff*7*DAY, unit={trimp:'TRIMP',km:'km',t:'minutos'}[pm], val=(o,k)=>k==='t'?o.t/60:o[k];
   document.getElementById('pwLab').textContent=`${dShort.format(new Date(w0+6*3600000))} al ${dShort.format(new Date(w0+6*DAY+6*3600000))}`;
@@ -2054,7 +2070,7 @@ function renderPmcPlan(){const cv=document.getElementById('fchart2'); if(!cv) re
 document.querySelectorAll('#frSeg2 button').forEach(b=>b.onclick=()=>{frng=+b.dataset.r;fwin=null;save();renderPmcPlan()});
 document.getElementById('fProj2').onchange=e=>{fproj=e.target.checked;save();renderPmcPlan()};
 // planeado vs ejecutado por semana sin ciclo: con los entrenos sueltos y el plan del coach
-function renderPvE(){const E=document.getElementById('pEmpty'), cv=document.getElementById('pchart'), T=document.getElementById('ptab'); applyPlans();
+function renderPvE(){const pm=pmK();const E=document.getElementById('pEmpty'), cv=document.getElementById('pchart'), T=document.getElementById('ptab'); applyPlans();
   const ps=allPlans(), M=hrModel(), easy=easyPace(), nowW=wkOf(crDay(Math.floor(Date.now()/1000)));
   if(!ps.length){E.hidden=false;cv.hidden=true;T.innerHTML='';document.getElementById('pDesc').textContent='';if(pchart){pchart.destroy();pchart=null}return}
   E.hidden=true; cv.hidden=false;
@@ -3167,7 +3183,7 @@ async function cycleFromXlsx(file){await xlsxLib(); const wb=XLSX.read(await fil
   if(on&&rd!=null){const RR=XLSX.utils.sheet_to_json(cs,{range:9,raw:true,defval:''}), B=[];
     RR.forEach((r,i)=>{const o=Math.round(+r['Orden']), k=String(r['Casilla']||'').trim().toLowerCase(), tipo=TIPOS_OK[String(r['Tipo']||'').trim().toLowerCase()], plan=String(r['Plan']||'').trim(), day=dayOf(r['Fecha']);
       if(!(o>=1&&o<=8)||!K.includes(k)) return; if(!tipo||!plan||day==null||planTrimp(plan)==null){bad.push('Carrera '+(i+11)); return}
-      const x=B[o-1]=B[o-1]||{load:false,fase:String(r['Bloque']||'').trim(),s:{}}; x.s[k]={tipo,plan,day}});
+      const x=B[o-1]=B[o-1]||{load:false,fase:String(r['Bloque']||'').trim(),s:{}}; x.s[k]={tipo,plan,day,...(tipo==='Competencia'&&cs['B4']?{name:String(cs['B4'].v)}:{})}});
     for(let i=0;i<B.length;i++) if(!B[i]) B[i]={load:false,fase:'',s:{}};
     if(B.length){const T=wkOf(rd)-7*DAY, W0=start, wk=x=>Math.round(x/(7*DAY)), at=wk(T-W0);
       const sh=(w,dw)=>{const s2={}; Object.entries(w.s).forEach(([kk,x])=>{s2[kk]={...x,day:x.day+dw*7*DAY}}); return {...w,s:s2}};
@@ -3844,7 +3860,19 @@ function pmcConfig(R){
     scales:{x:{type:'linear',grid:{color:grid},ticks:{color:tick,font:{family:css('--mono')},maxTicksLimit:9,callback:(v,i,T)=>axD(v+6*3600000,T)}},
       y:{stack:'pmc',stackWeight:2,beginAtZero:true,title:{display:true,text:unit,color:tick},grid:{color:grid},ticks:{color:tick,font:{family:css('--mono')}}},
       y2:{position:'left',stack:'pmc',stackWeight:2.4,offset:true,min:Math.floor(y2min*10)/10,max:Math.ceil(y2max*10)/10,title:{display:true,text:'ACWR',color:tick},grid:{color:grid},ticks:{color:tick,font:{family:css('--mono')},stepSize:0.1,callback:v=>nf(v,1)}}}};
-  return {type:'line',data:{datasets:ds},options:opts,plugins:[bands]}}
+  const RC=raceMarks(), flags={id:'rflags',afterDatasetsDraw(c){const {ctx,chartArea:a,scales:{x}}=c; ctx.save();
+    RC.forEach(r=>{const px=x.getPixelForValue(r.d); if(px<a.left-1||px>a.right+1) return; const col=r.past?css('--muted'):css('--bad');
+      ctx.strokeStyle=col; ctx.lineWidth=1.5; ctx.setLineDash([4,3]); ctx.beginPath(); ctx.moveTo(px,a.top+18); ctx.lineTo(px,a.bottom); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle=col; ctx.beginPath(); ctx.moveTo(px,a.top+2); ctx.lineTo(px+11,a.top+6); ctx.lineTo(px,a.top+10); ctx.closePath(); ctx.fill(); ctx.fillRect(px-0.75,a.top+2,1.5,16);
+      ctx.font='600 11px '+css('--body'); ctx.textBaseline='middle'; const t=r.name||'Carrera', w=ctx.measureText(t).width, right=px+14+w<a.right; ctx.textAlign=right?'left':'right'; ctx.fillText(t,right?px+14:px-4,a.top+6)});
+    ctx.restore()}};
+  return {type:'line',data:{datasets:ds},options:opts,plugins:[bands,flags]}}
+// carreras para marcar con bandera: competencias planeadas (ciclo, entrenos sueltos), la carrera objetivo y las competencias ya corridas
+function raceMarks(){const m=new Map(), today=crDay(Math.floor(Date.now()/1000)), add=(d,name)=>{if(d==null) return; const o=m.get(d); if(!o||(!o.name&&name)) m.set(d,{d,name:name||(o&&o.name)||'',past:d<today})};
+  try{allPlans().filter(p=>p.tipo==='Competencia').forEach(p=>add(p.day,p.name||''))}catch(e){}
+  try{if(goal&&goal.day!=null) add(goal.day,goal.name||'Carrera objetivo')}catch(e){}
+  acts.filter(a=>!a.ej&&a.tipo==='Competencia').forEach(a=>add(crDay(a.t0Unix),''));
+  return [...m.values()]}
 function renderPmcTable(){
   document.getElementById('tblTitle').textContent='Fitness, fatiga y forma por semana';
   document.getElementById('tblNote').textContent='Valores al cierre de cada semana (domingo); CTL y ATL incluyen la carga de ese día, TSB y forma son con las que llegaste a ese día. Rampa = cuánto subió la CTL en la semana: más de 5–8 por semana suele ser un salto fuerte de carga (referencia pensada para TSS; con TRIMP tomala como orientación y ajustala a tu experiencia).';
