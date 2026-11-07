@@ -1996,7 +1996,7 @@ function renderPlanner(){try{renderGoal()}catch(e){console.error(e)} renderThr()
   if(pchart&&!!pchart.$z!==ZM){pchart.destroy();pchart=null}
   if(typeof Chart!=='undefined'&&ZM){const tick=css('--muted');
     const pctP={id:'zpct',afterDatasetsDraw(c){const {ctx}=c; ctx.save(); ctx.font='600 10px '+css('--mono'); ctx.textAlign='center'; ctx.textBaseline='middle';
-      c.data.datasets.forEach((d,di)=>{if(d.type==='line'||!c.isDatasetVisible(di)) return; c.getDatasetMeta(di).data.forEach((el,k)=>{const v=d.data[k], tot=W[k].pl.trimp; if(!v||!tot) return; const h=Math.abs(el.base-el.y); if(h<13||el.width<22) return;
+      const WW=c.$W||[]; c.data.datasets.forEach((d,di)=>{if(d.type==='line'||!c.isDatasetVisible(di)) return; c.getDatasetMeta(di).data.forEach((el,k)=>{const v=d.data[k], tot=WW[k]&&WW[k].pl.trimp; if(!v||!tot) return; const h=Math.abs(el.base-el.y); if(h<13||el.width<22) return;
         ctx.fillStyle='#fff'; ctx.fillText(nf(v/tot*100,0)+'%',el.x,(el.y+el.base)/2)})}); ctx.restore()}};
     const data={labels:W.map(x=>`S${x.i+1}${x.w.load?'':' D'}`),datasets:[...BANDS.map((b,k)=>({type:'bar',label:b[0],data:W.map(x=>x.pl.zt[k]),backgroundColor:BCOL[k],borderWidth:0,stack:'p'})),
       {type:'line',label:'Ejecutado',data:W.map(x=>x.past||x.ex.n?x.ex.trimp:null),borderColor:css('--ink'),backgroundColor:css('--ink'),pointRadius:3,borderWidth:1.5,spanGaps:false}]};
@@ -2005,7 +2005,7 @@ function renderPlanner(){try{renderGoal()}catch(e){console.error(e)} renderThr()
         label:it=>{if(it.parsed.y==null) return null; const x=W[it.dataIndex]; return it.dataset.type==='line'?`Ejecutado: ${nf(it.parsed.y,0)} TRIMP`:`${it.dataset.label}: ${nf(it.parsed.y,0)} TRIMP (${nf(x.pl.trimp?it.parsed.y/x.pl.trimp*100:0,0)} %) · ${nf(x.pl.zb[it.datasetIndex]/60,0)} min`},
         footer:it=>{const x=W[it[0].dataIndex];return `Planeado: ${nf(x.pl.trimp,0)} TRIMP · ${fmtT(x.pl.t)}`}}}},
       scales:{x:{stacked:true,grid:{display:false},ticks:{color:tick,font:{family:css('--mono')},maxRotation:0,autoSkip:true}},y:{stacked:true,beginAtZero:true,title:{display:true,text:'TRIMP planeado',color:tick},grid:{color:css('--line')},ticks:{color:tick,font:{family:css('--mono')}}}}};
-    if(pchart){pchart.data=data;pchart.options=opts;pchart.update()} else{pchart=new Chart(cv,{type:'bar',data,options:opts,plugins:[pctP]}); pchart.$z=true}}
+    if(pchart){pchart.$W=W;pchart.data=data;pchart.options=opts;pchart.update()} else{pchart=new Chart(cv,{type:'bar',data,options:opts,plugins:[pctP]}); pchart.$z=true; pchart.$W=W; pchart.update()}}
   else if(typeof Chart!=='undefined'){const tick=css('--muted');
     const data={labels:W.map(x=>`S${x.i+1}${x.w.load?'':' D'}`),datasets:[
       {label:'Planeado',data:W.map(x=>val(x.pl,pm)),backgroundColor:css('--line'),borderWidth:0},
