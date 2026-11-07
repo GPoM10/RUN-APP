@@ -3158,14 +3158,30 @@ async function cycleFromXlsx(file){await xlsxLib(); const wb=XLSX.read(await fil
   const dayOf=v=>typeof v==='number'?Math.round(v-25569)*86400000:v instanceof Date?Date.UTC(v.getFullYear(),v.getMonth(),v.getDate()):parseDay(v);
   R.forEach((r,i)=>{const w=Math.round(+r['Semana']), k=String(r['Casilla']||'').trim().toLowerCase(), tipo=TIPOS_OK[String(r['Tipo']||'').trim().toLowerCase()], plan=String(r['Plan']||'').trim(), day=dayOf(r['Fecha']);
     if(!(w>=1)||!K.includes(k)) return; if(!tipo||!plan||day==null||planTrimp(plan)==null){bad.push(i+2); return}
-    const x=W[w-1]=W[w-1]||{load:true,fase:'',s:{}}; const f=String(r['Fase']||'').trim(); x.fase=f; x.load=!f||/^carga$/i.test(f); x.s[k]={tipo,plan,day}});
+    const x=W[w-1]=W[w-1]||{load:true,fase:'',s:{}}; const f=String(r['Fase']||'').trim(); x.fase=f; x.cyc=String(r['Ciclo']||''); x.load=!f||/^carga$/i.test(f); x.s[k]={tipo,plan,day}});
   if(!W.length) throw new Error('no encontré sesiones válidas en la hoja «Ciclo»'); for(let i=0;i<W.length;i++) if(!W[i]) W[i]={load:true,fase:'',s:{}};
   const d1=Object.values(W[0].s).map(x=>x.day).sort((a,b)=>a-b)[0], er=Object.values(W[0].s).find(x=>x.tipo==='ER'), erP=er&&(er.plan.match(/@\s*(\d{1,2}:\d{2})/)||[])[1];
-  return {cycle:{start:wkOf(d1),gen:{weeks:W.length,erP:erP||null,src:file.name},weeks:W},bad}}
+  let start=wkOf(d1), weeks=W, race=null;
+  // hoja «Carrera» (opcional): taper + recuperación montados sobre el ciclo; el ciclo interrumpido se reinicia desde su semana 1 y el resto se corre hacia adelante
+  const cs=wb.Sheets['Carrera'], on=cs&&cs['B8']&&/^s/i.test(String(cs['B8'].v||'').trim()), rd=cs&&cs['B5']?dayOf(cs['B5'].v):null;
+  if(on&&rd!=null){const RR=XLSX.utils.sheet_to_json(cs,{range:9,raw:true,defval:''}), B=[];
+    RR.forEach((r,i)=>{const o=Math.round(+r['Orden']), k=String(r['Casilla']||'').trim().toLowerCase(), tipo=TIPOS_OK[String(r['Tipo']||'').trim().toLowerCase()], plan=String(r['Plan']||'').trim(), day=dayOf(r['Fecha']);
+      if(!(o>=1&&o<=8)||!K.includes(k)) return; if(!tipo||!plan||day==null||planTrimp(plan)==null){bad.push('Carrera '+(i+11)); return}
+      const x=B[o-1]=B[o-1]||{load:false,fase:String(r['Bloque']||'').trim(),s:{}}; x.s[k]={tipo,plan,day}});
+    for(let i=0;i<B.length;i++) if(!B[i]) B[i]={load:false,fase:'',s:{}};
+    if(B.length){const T=wkOf(rd)-7*DAY, W0=start, wk=x=>Math.round(x/(7*DAY)), at=wk(T-W0);
+      const sh=(w,dw)=>{const s2={}; Object.entries(w.s).forEach(([kk,x])=>{s2[kk]={...x,day:x.day+dw*7*DAY}}); return {...w,s:s2}};
+      let k,j;
+      if(at<=0){k=0; j=0; start=T; weeks=[...B,...W.map(w=>sh(w,B.length+at))]}  // carrera antes o al inicio del ciclo: el ciclo arranca después de la recuperación
+      else{k=Math.min(W.length,at); const ov=W[k]; j=ov&&ov.cyc&&!/^test$/i.test(ov.fase)?W.findIndex(w=>w.cyc===ov.cyc&&!/^test$/i.test(w.fase)):k; if(j<0) j=k;
+        const fill=[...Array(Math.max(0,at-W.length))].map(()=>({load:false,fase:'',s:{}}));
+        weeks=[...W.slice(0,k),...fill,...B,...W.slice(j).map((w,m)=>sh(w,at+B.length+m-(j+m)))]}
+      race={name:String(cs['B4']?cs['B4'].v:''),day:rd,j,k}}}
+  return {cycle:{start,gen:{weeks:weeks.length,erP:erP||null,src:file.name},weeks},bad,race}}
 {const b=document.getElementById('gXls'), f=document.getElementById('gXlsF'), msg=document.getElementById('gMsg'); let pend=null;
   b.onclick=()=>{if(pend){cycle=pend.cycle; pend=null; b.textContent='Cargar Excel'; applyPlans(); save(); msg.textContent=`Ciclo de ${cycle.weeks.length} semanas cargado desde el Excel (desde el ${dfmt.format(new Date(cycle.start+6*3600000))}).`; genSynced=false; document.getElementById('genBox').open=false; renderPlanner(); return} f.value=''; f.click()};
   f.onchange=async()=>{const file=f.files&&f.files[0]; if(!file) return; msg.textContent='Leyendo el Excel…';
-    try{const r=await cycleFromXlsx(file); const n=r.cycle.weeks.reduce((q,w)=>q+Object.keys(w.s).length,0), warn=r.bad.length?` · ${r.bad.length} fila(s) sin plan válido (filas ${r.bad.slice(0,6).join(', ')}${r.bad.length>6?'…':''}): quedaron fuera.`:'';
+    try{const r=await cycleFromXlsx(file); const n=r.cycle.weeks.reduce((q,w)=>q+Object.keys(w.s).length,0), rc=r.race?` Carrera «${r.race.name}» el ${dfmt.format(new Date(r.race.day+6*3600000))}: taper y recuperación montados; el ciclo se reinicia desde su semana ${r.race.j%4+1} después.`:'', warn=rc+(r.bad.length?` · ${r.bad.length} fila(s) sin plan válido (filas ${r.bad.slice(0,6).join(', ')}${r.bad.length>6?'…':''}): quedaron fuera.`:'');
       if(cycle){pend=r; b.textContent='Confirmar: reemplaza el ciclo actual'; msg.textContent=`${r.cycle.weeks.length} semanas y ${n} sesiones leídas.${warn} Tocá «Confirmar» para cargarlas.`}
       else{cycle=r.cycle; applyPlans(); save(); msg.textContent=`Ciclo de ${cycle.weeks.length} semanas y ${n} sesiones cargado desde el Excel.${warn}`; genSynced=false; document.getElementById('genBox').open=false; renderPlanner()}}
     catch(e){msg.textContent='No pude leer el Excel: '+e.message}}}
