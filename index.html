@@ -2804,12 +2804,22 @@ function tSug(S,pred){const R=S.map((s,i)=>tRise(S,i)), v=R.map(r=>r&&r.k);
 // subida dentro del bloque (como lo lee Luis): el primer bloque cuya FC sube claramente más que en los anteriores, desde el min 2 hasta el final
 function tRiseIdx(S){const r=S.map(s=>s.rise); for(let i=1;i<r.length;i++){const prev=r.slice(0,i).filter(x=>x!=null).sort((a,b)=>a-b); if(r[i]==null||!prev.length) continue; const med=prev[Math.floor(prev.length/2)];
     if(r[i]>=3&&r[i]>=2*Math.max(med,1)) return {i,med}} return null}
+// deriva mecánica: cada bloque se compara con lo que proyecta la tendencia de los anteriores (recta de mínimos cuadrados; con uno solo, ese valor).
+// Caer de a poco es deriva esperable; «bajón» = quedar MT.brk puntos o más por debajo de la proyección.
+const MT={brk:5};
+function mTrend(v){const P=v.map((y,i)=>y==null?null:{x:i,y}).filter(Boolean), exp=v.map(()=>null), res=v.map(()=>null), brk=[];
+  const fit=Q=>{const n=Q.length, mx=Q.reduce((q,p)=>q+p.x,0)/n, my=Q.reduce((q,p)=>q+p.y,0)/n, sxx=Q.reduce((q,p)=>q+(p.x-mx)**2,0); const b=sxx?Q.reduce((q,p)=>q+(p.x-mx)*(p.y-my),0)/sxx:0; return {b,f:x=>my+b*(x-mx)}};
+  P.forEach((p,k)=>{if(!k) return; const Q=P.slice(0,k), e=Q.length===1?Q[0].y:fit(Q).f(p.x); exp[p.x]=e; res[p.x]=p.y-e; if(p.y-e<=-MT.brk) brk.push(p.x)});
+  const pre=brk.length?P.filter(p=>p.x<brk[0]):P, slope=pre.length>=2?fit(pre).b:null; return {exp,res,brk,slope}}
+const mtTxt=(T,lab)=>{const sl=T.slope; const g=sl==null?'':`La técnica ${Math.abs(sl)<0.5?'se mantuvo pareja':sl<0?`baja de a poco, ${nf(-sl,1)} pts por ${lab} (deriva mecánica gradual, esperable)`:`sube ${nf(sl,1)} pts por ${lab}`}. `;
+  return g+(T.brk.length?T.brk.map(i=>`<b>Bajón en ${lab==='bloque'?'B':lab==='serie'?'S':'F'}${i+1}</b>: ${nf(-T.res[i],0)} pts bajo lo que proyectaba la tendencia`).join('; ')+'.':`Sin bajones (${lab==="bloque"?"ningún":"ninguna"} ${lab} quedó ${MT.brk} pts o más bajo la tendencia).`)};
+const mtCell=(sc,T,i,prev)=>{const d=prev!=null?sc-prev:null, b=T.brk.includes(i);
+  return `<b>${nf(sc,0)}</b> ${effTag(sc)}${d!=null?` <span style="font-size:11px;color:var(--muted)">${d>=0?'+':'−'}${nf(Math.abs(d),0)}</span>`:''}${b?` <span style="font-size:11px;font-weight:700;color:var(--warn)" title="${nf(-T.res[i],0)} pts bajo lo que proyectaba la tendencia de los bloques anteriores">bajón</span>`:''}`};
 // técnica (eficiencia mecánica) por bloque del test: celda y lectura
-const tecCell=(S,i)=>{const e=S[i].tec; if(!e) return '—'; const f=S.find(x=>x.tec), d=f&&f!==S[i]?e.sc-f.tec.sc:null;
-  return `<b>${nf(e.sc,0)}</b> ${effTag(e.sc)}${d!=null?` <span style="font-size:11px;color:var(${d<=-8?'--warn':'--muted'})">${d>=0?'+':'−'}${nf(Math.abs(d),0)}</span>`:''}`};
-const tecCellTxt=(S,i)=>{const e=S[i].tec; if(!e) return '—'; const b=effBand(e.sc); return nf(e.sc,0)+(b?' · '+b[1]:'')};
-function tecBlkRead(S){const ok=S.map((x,i)=>({x,i})).filter(z=>z.x.tec); if(ok.length<2) return ''; const f=ok[0].x.tec.sc, L=ok[ok.length-1].x.tec.sc, br=ok.find((z,k)=>k>0&&z.x.tec.sc<=f-8);
-  return `eficiencia mecánica ${nf(f,0)} en B${ok[0].i+1} y ${nf(L,0)} en B${ok[ok.length-1].i+1} (${L-f>=0?'+':'−'}${nf(Math.abs(L-f),0)} pts). ${br?`Empieza a caer (8 pts o más bajo el primero) en B${br.i+1}.`:'Se sostuvo en todos los bloques (ninguno cayó 8 pts o más bajo el primero).'} Medido con ${ok[0].x.tec.src}; sin los primeros 10 s de cada bloque.`}
+const tecCell=(S,i)=>{const e=S[i].tec; if(!e) return '—'; const v=S.map(x=>x.tec?x.tec.sc:null), T=mTrend(v), pv=v.slice(0,i).filter(x=>x!=null).pop(); return mtCell(e.sc,T,i,pv)};
+const tecCellTxt=(S,i)=>{const e=S[i].tec; if(!e) return '—'; const b=effBand(e.sc), T=mTrend(S.map(x=>x.tec?x.tec.sc:null)); return nf(e.sc,0)+(b?' · '+b[1]:'')+(T.brk.includes(i)?' · bajón':'')};
+function tecBlkRead(S){const v=S.map(x=>x.tec?x.tec.sc:null); if(v.filter(x=>x!=null).length<2) return ''; const f=S.find(x=>x.tec);
+  return mtTxt(mTrend(v),'bloque')+` Medido con ${f.tec.src}; sin los primeros 10 s de cada bloque.`}
 function tRiseRead(S){const r=S.map(s=>s.rise); if(r.filter(x=>x!=null).length<2) return ''; const q=tRiseIdx(S);
   if(q) return `la FC sube ${nf(r[q.i],0)} ppm dentro del bloque ${q.i+1} (${fmtP(Math.round(S[q.i].pace))}), contra ~${nf(q.med,0)} ppm en los anteriores: ahí cerca está el umbral.`;
   return `la subida dentro de cada bloque es pareja (${r.map(x=>x==null?'—':'+'+nf(x,0)).join(' · ')} ppm): ningún bloque muestra una deriva marcada.`}
@@ -2994,8 +3004,8 @@ function lapTables(chosen){const Qs=chosen.filter(a=>isQ(a)); if(!Qs.length) ret
       const name=isRec(x)?'Recuperación':x.blk==='cal'?'Calentamiento':x.blk==='vc'?'Vuelta a la calma':x.t==='w'?(a.q.tph?`Fase ${++ns}`:a.tipo==='Test'&&bN===1&&wN===0?`Test ${Math.round(x.dur/60)}'`:isLg(x)?`Bloque${bN>1?' '+(++nb):''}`:`Serie ${++ns}${wN>1?'/'+wN:''}`):'Trote';
       const rd=isRec(x)?recDrop(a,prev,x):null, sgn=v=>`${v>=0?'−':'+'}${nf(Math.abs(v),0)}`, rec=rd?`<b style="color:var(--ink)">${sgn(rd.fin)} ppm</b>${rd.m1!=null?` <span class="mdesc">(${sgn(rd.m1)} en 1 min)</span>`:''}`:'';
       const pace=x.d>50?`${fmtP(x.pace)}${tg?` <span class="delta">${x.pace-tg>=0?'+':'−'}${Math.abs(Math.round(x.pace-tg))} s</span>`:''}`:'—';
-      return `<tr${isRec(x)?' style="color:var(--muted)"':x.t==='w'?' style="font-weight:600"':''}><td>${i+1}</td><td style="text-align:left">${name}</td><td class="num">${fmtT(x.dur)}</td><td class="num">${x.d>50?nf(x.d/1000,2)+' km':'—'}</td><td class="num">${pace}</td><td class="num">${nf(x.hra,0)}</td><td class="num">${x.hrm}</td><td class="num">${isRec(x)?'—':nf(x.tr,1)}</td><td class="num">${rec||''}</td><td class="num">${(()=>{const S=seriesEff(a), q=S&&S.E.find(z=>z.l===x); if(!q||!q.e) return ''; const d=q.e.sc-S.first; return `${nf(q.e.sc,0)} ${effTag(q.e.sc)}${q.l!==S.E.find(z=>z.e).l?` <span style="font-size:11px;color:var(${d<=-8?'--warn':'--muted'})">${d>=0?'+':'−'}${nf(Math.abs(d),0)}</span>`:''}`})()}</td></tr>`}).join('');
-    const S=seriesEff(a), sNote=S?`<div class="mdesc" style="margin:6px 0 0"><b style="color:var(--ink)">Técnica a lo largo de ${a.q.tph?'las fases':'las series y bloques'}:</b> eficiencia mecánica ${nf(S.first,0)} en la primera y ${nf(S.last,0)} en la última (${S.drop>=0?'−':'+'}${nf(Math.abs(S.drop),0)} pts). ${S.br?`Empieza a caer (8 pts o más bajo la primera) en la serie ${S.br}.`:'Se sostuvo en todas las series (ninguna cayó 8 pts o más bajo la primera).'} Medido con ${S.E.find(z=>z.e).e.src}; los primeros 10 s de cada serie no cuentan (arranque).</div>`:'';
+      return `<tr${isRec(x)?' style="color:var(--muted)"':x.t==='w'?' style="font-weight:600"':''}><td>${i+1}</td><td style="text-align:left">${name}</td><td class="num">${fmtT(x.dur)}</td><td class="num">${x.d>50?nf(x.d/1000,2)+' km':'—'}</td><td class="num">${pace}</td><td class="num">${nf(x.hra,0)}</td><td class="num">${x.hrm}</td><td class="num">${isRec(x)?'—':nf(x.tr,1)}</td><td class="num">${rec||''}</td><td class="num">${(()=>{const S=seriesEff(a), k=S?S.E.findIndex(z=>z.l===x):-1; if(k<0||!S.E[k].e) return ''; const pv=S.E.slice(0,k).filter(z=>z.e).map(z=>z.e.sc).pop(); return mtCell(S.E[k].e.sc,S.T,k,pv)})()}</td></tr>`}).join('');
+    const S=seriesEff(a), sNote=S?`<div class="mdesc" style="margin:6px 0 0"><b style="color:var(--ink)">Técnica a lo largo de ${a.q.tph?'las fases':'las series y bloques'}:</b> eficiencia mecánica ${nf(S.first,0)} al inicio y ${nf(S.last,0)} al final. ${mtTxt(S.T,a.q.tph?'fase':'serie')} Medido con ${S.E.find(z=>z.e).e.src}; los primeros 10 s de cada tramo no cuentan (arranque).</div>`:'';
     return `<details class="lapd"${uiFold.laps?' open':''}><summary><h2 style="display:inline;font-size:18px">Laps · ${a.tipo} ${dt(a)} · ${a.q.code}</h2> <span class="mdesc">(${L.length} laps)</span></summary><div class="tablewrap"><table><thead><tr><th>#</th><th style="text-align:left">Tramo</th><th>Duración</th><th>Distancia</th><th>Ritmo</th><th>FC media</th><th>FC máx</th><th>TRIMP</th><th>Baja de FC en la recuperación</th><th>Técnica (eficiencia mecánica)</th></tr></thead><tbody>${rows}</tbody></table>${sNote}</div></details>`}).join('')+
     `<div class="mdesc">Los laps van en el orden en que los hiciste. Las recuperaciones (en gris) no se suman a ningún bloque: en ellas se ve cuánto bajó la FC desde el final del lap anterior hasta el final del descanso (y, entre paréntesis, en el primer minuto). Entre paréntesis del ritmo, la diferencia con el ritmo programado del coach.</div>`}
 /* ---------- nota automática: qué contribuyó más a la deriva (ritmo, temperatura o fatiga, y si hubo fatiga mecánica) ---------- */
@@ -3180,7 +3190,7 @@ function renderQTable(chosen,S,W){
       ['FC media · FC máx',(a,s,q)=>{const x=q.long[i]; return x?`${nf(x.hra,0)} · ${x.hrm} ppm`:'—'},(a,s,q)=>q.long[i]?q.long[i].hra:null,0,' ppm'],
       ['Deriva (desde el min 3)',(a,s,q)=>q.long[i]?pc(q.long[i].der):'—',(a,s,q)=>q.long[i]&&q.long[i].der!=null?q.long[i].der*100:null,2,' pp'],
       ['Pa:HR (desde el min 3)',(a,s,q)=>q.long[i]?pc(q.long[i].pahr):'—',(a,s,q)=>q.long[i]&&q.long[i].pahr!=null?q.long[i].pahr*100:null,2,' pp'],
-      ['Técnica (eficiencia mecánica)',(a)=>{const e=lgTec(a,i); if(!e) return '—'; return `<b>${nf(e.sc,0)}</b> ${effTag(e.sc)}${e.d!=null?` <span style="font-size:11px;color:var(${e.d<=-8?'--warn':'--muted'})">${e.d>=0?'+':'−'}${nf(Math.abs(e.d),0)} vs el 1.º</span>`:''}`},(a)=>{const e=lgTec(a,i); return e?e.sc:null},0,'']]),
+      ['Técnica (eficiencia mecánica; vs el anterior)',(a)=>{const e=lgTec(a,i); return e?e.html:'—'},(a)=>{const e=lgTec(a,i); return e?e.sc:null},0,'']]),
     ['Ejecución',0],
     ['Índice de desvío (series con ritmo programado)',(a,s,q)=>q.idx==null?'—':nf(q.idx*100,1)+' %',(a,s,q)=>q.idx==null?null:q.idx*100,1,' pp']
   ];
@@ -3337,12 +3347,12 @@ function effBlocks(a,i0,i1,V,med){const F=a.f5; if(!F||!F.c||!F.g) return null; 
 const serCache=new WeakMap();
 function seriesEff(a){if(!isQ(a)||!a.f5||!a.f5.m) return null; if(serCache.has(a)) return serCache.get(a); let out=null;
   try{const V=blkV(a), W=a.q.laps.filter(l=>l.t==='w'&&l.dur>=45), E=W.map(l=>({l,e:effBlocks(a,Math.ceil((l.a+10)/5),Math.floor(l.b/5),V)}));
-    const ok=E.filter(x=>x.e); if(ok.length>=2){const f=ok[0].e.sc, L=ok[ok.length-1].e.sc, br=ok.findIndex((x,i)=>i>0&&x.e.sc<=f-8);
-      out={E,first:f,last:L,drop:f-L,br:br>0?W.indexOf(ok[br].l)+1:null}}}catch(e){out=null}
+    const ok=E.filter(x=>x.e); if(ok.length>=2){const f=ok[0].e.sc, L=ok[ok.length-1].e.sc, T=mTrend(E.map(x=>x.e?x.e.sc:null));
+      out={E,first:f,last:L,drop:f-L,T,br:T.brk.length?T.brk[0]+1:null}}}catch(e){out=null}
   serCache.set(a,out); return out}
 // técnica del bloque largo i (sin los primeros 10 s) y su diferencia con el primer bloque largo
-function lgTec(a,i){const S=seriesEff(a); if(!S) return null; const L=a.q.laps.filter(l=>l.t==='w'&&isLg(l)), z=S.E.find(x=>x.l===L[i]); if(!z||!z.e) return null;
-  const f=S.E.find(x=>x.e&&isLg(x.l)); return {sc:z.e.sc,d:f&&f!==z?z.e.sc-f.e.sc:null}}
+function lgTec(a,i){const S=seriesEff(a); if(!S) return null; const L=a.q.laps.filter(l=>l.t==='w'&&isLg(l)), k=S.E.findIndex(x=>x.l===L[i]); if(k<0||!S.E[k].e) return null;
+  return {sc:S.E[k].e.sc,html:mtCell(S.E[k].e.sc,S.T,k,S.E.slice(0,k).filter(z=>z.e).map(z=>z.e.sc).pop())}}
 function natTest(a){if(!a||!a.f5||!a.f5.m||!a.f5.c||!a.f5.g) return null; if(natCache.has(a)) return natCache.get(a); let out=null;
   try{const n=a.f5.m.length;
     if(a.tipo==='Técnica'){const [t0,t1]=dynWin(a)[0], e=effBlocks(a,Math.ceil(t0/5),Math.floor(t1/5)); if(e) out={...e,t0,how:'tramo de evaluación del test'}}
