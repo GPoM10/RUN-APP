@@ -516,7 +516,7 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
 8x5'
 2x15'</textarea></label>
       </div>
-      <div class="opts"><button class="btn primary" id="gGo" type="button">Generar ciclo</button><span id="gMsg"></span></div>
+      <div class="opts"><button class="btn primary" id="gGo" type="button">Generar ciclo</button><button class="btn" id="gXls" type="button" title="Carga el ciclo completo desde un Excel con la hoja «Ciclo» (Semana, Fase, Fecha, Tipo, Plan, Casilla)">Cargar Excel</button><input type="file" id="gXlsF" accept=".xlsx,.xls" hidden><span id="gMsg"></span></div>
     </details>
   </section>
 
@@ -1976,7 +1976,7 @@ function genCycle(){const v=id=>document.getElementById(id).value, n=id=>Math.ro
 function syncGenFields(){if(genSynced) return; genSynced=true; const g=cycle&&cycle.gen, set=(id,x)=>{if(x!=null) document.getElementById(id).value=x};
   const sd=cycle?cycle.start:Date.UTC(2027,0,11); document.getElementById('gStart').value=new Date(sd).toISOString().slice(0,10);
   if(g){set('gWeeks',g.weeks);set('gLoad',g.load);set('gErD',g.erD);set('gErP',g.erP);set('gEr2D',g.er2D);set('gEr2P',g.er2P);set('gLrD',g.lrD);set('gLrP',g.lrP);set('gLrInc',g.lrInc);set('gLrMax',g.lrMax);
-    set('gQL',g.qL);set('gQS',g.qS);set('gWu',g.wu);set('gCd',g.cd);set('gRec',g.rec);set('gDl',g.dl);set('gSeq',g.seq.join('\n'))}
+    set('gQL',g.qL);set('gQS',g.qS);set('gWu',g.wu);set('gCd',g.cd);set('gRec',g.rec);set('gDl',g.dl);if(g.seq) set('gSeq',g.seq.join('\n'))}
   document.getElementById('genBox').open=!cycle}
 function renderPlanner(){try{renderGoal()}catch(e){console.error(e)} renderThr(); syncGenFields(); try{renderReview()}catch(e){console.error(e)} const E=document.getElementById('pEmpty'), cv=document.getElementById('pchart'), T=document.getElementById('ptab');
   document.querySelectorAll('#pmSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===pm));
@@ -3151,6 +3151,24 @@ document.getElementById('backCal').onclick=e=>{e.stopPropagation(); fromCal=fals
   requestAnimationFrame(()=>{const t=document.getElementById(backTo==='rev'?'revBox':backTo==='ref'?'rfTL':calSel!=null?'calDet':'calBox'); if(t&&!t.hidden) t.scrollIntoView({behavior:'smooth',block:'start'})})};
 document.querySelectorAll('#pmSeg button').forEach(b=>b.onclick=()=>{pm=b.dataset.m;save();renderPlanner()});
 document.getElementById('gGo').onclick=genCycle;
+/* ---------- ciclo desde Excel: hoja «Ciclo», una fila por sesión (Semana · Fase · Fecha · Tipo · Plan · Casilla er1/er2/q/lr) ---------- */
+function xlsxLib(){if(window.XLSX) return Promise.resolve(); return new Promise((res,rej)=>{const s=document.createElement('script'); s.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'; s.onload=()=>res(); s.onerror=()=>rej(new Error('no pude cargar el lector de Excel (¿sin internet?)')); document.head.appendChild(s)})}
+async function cycleFromXlsx(file){await xlsxLib(); const wb=XLSX.read(await file.arrayBuffer(),{type:'array'}), ws=wb.Sheets['Ciclo']; if(!ws) throw new Error('el Excel no tiene la hoja «Ciclo»');
+  const R=XLSX.utils.sheet_to_json(ws,{raw:true,defval:''}), K=['er1','er2','q','lr'], W=[], bad=[];
+  const dayOf=v=>typeof v==='number'?Math.round(v-25569)*86400000:v instanceof Date?Date.UTC(v.getFullYear(),v.getMonth(),v.getDate()):parseDay(v);
+  R.forEach((r,i)=>{const w=Math.round(+r['Semana']), k=String(r['Casilla']||'').trim().toLowerCase(), tipo=TIPOS_OK[String(r['Tipo']||'').trim().toLowerCase()], plan=String(r['Plan']||'').trim(), day=dayOf(r['Fecha']);
+    if(!(w>=1)||!K.includes(k)) return; if(!tipo||!plan||day==null||planTrimp(plan)==null){bad.push(i+2); return}
+    const x=W[w-1]=W[w-1]||{load:true,fase:'',s:{}}; const f=String(r['Fase']||'').trim(); x.fase=f; x.load=!f||/^carga$/i.test(f); x.s[k]={tipo,plan,day}});
+  if(!W.length) throw new Error('no encontré sesiones válidas en la hoja «Ciclo»'); for(let i=0;i<W.length;i++) if(!W[i]) W[i]={load:true,fase:'',s:{}};
+  const d1=Object.values(W[0].s).map(x=>x.day).sort((a,b)=>a-b)[0], er=Object.values(W[0].s).find(x=>x.tipo==='ER'), erP=er&&(er.plan.match(/@\s*(\d{1,2}:\d{2})/)||[])[1];
+  return {cycle:{start:wkOf(d1),gen:{weeks:W.length,erP:erP||null,src:file.name},weeks:W},bad}}
+{const b=document.getElementById('gXls'), f=document.getElementById('gXlsF'), msg=document.getElementById('gMsg'); let pend=null;
+  b.onclick=()=>{if(pend){cycle=pend.cycle; pend=null; b.textContent='Cargar Excel'; applyPlans(); save(); msg.textContent=`Ciclo de ${cycle.weeks.length} semanas cargado desde el Excel (desde el ${dfmt.format(new Date(cycle.start+6*3600000))}).`; genSynced=false; document.getElementById('genBox').open=false; renderPlanner(); return} f.value=''; f.click()};
+  f.onchange=async()=>{const file=f.files&&f.files[0]; if(!file) return; msg.textContent='Leyendo el Excel…';
+    try{const r=await cycleFromXlsx(file); const n=r.cycle.weeks.reduce((q,w)=>q+Object.keys(w.s).length,0), warn=r.bad.length?` · ${r.bad.length} fila(s) sin plan válido (filas ${r.bad.slice(0,6).join(', ')}${r.bad.length>6?'…':''}): quedaron fuera.`:'';
+      if(cycle){pend=r; b.textContent='Confirmar: reemplaza el ciclo actual'; msg.textContent=`${r.cycle.weeks.length} semanas y ${n} sesiones leídas.${warn} Tocá «Confirmar» para cargarlas.`}
+      else{cycle=r.cycle; applyPlans(); save(); msg.textContent=`Ciclo de ${cycle.weeks.length} semanas y ${n} sesiones cargado desde el Excel.${warn}`; genSynced=false; document.getElementById('genBox').open=false; renderPlanner()}}
+    catch(e){msg.textContent='No pude leer el Excel: '+e.message}}}
 
 /* ---------- tabla de sesiones de calidad ---------- */
 function renderQTable(chosen,S,W){
