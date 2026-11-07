@@ -612,6 +612,15 @@ function extTip({chart,tooltip:t}){const cv=chart.canvas, host=cv.parentNode; if
   if(chart.options.plugins&&chart.options.plugins.tooltip&&chart.options.plugins.tooltip.position==='barTop'){const b=act.find(e=>e.width!=null&&isFinite(e.x)&&isFinite(e.y))||act.find(e=>isFinite(e.x)&&isFinite(e.y));
     if(b){const top=b.width!=null&&isFinite(b.base)?Math.min(b.y,b.base):b.y; x=Math.max(0,Math.min(cv.offsetWidth-W,b.x-W/2)); y=((chart.options.layout||{}).padding||{}).top>=60?2:top-H-6>=0?top-H-6:top+6}}
   el.style.transform=`translate(${Math.round(ox+x)}px,${Math.round(oy+y)}px)`}
+// bandera de carrera sobre la barra de la semana (o del día) en que cae, en los gráficos del Programador (charts con $rw = inicios de cada barra y $rs = su largo)
+if(window.Chart&&Chart.register) Chart.register({id:'raceW',afterDatasetsDraw(c){if(!c.$rw||typeof raceMarks!=='function') return; let R; try{R=raceMarks()}catch(e){return} if(!R.length) return;
+  const {ctx,chartArea:a,scales:{x}}=c; ctx.save();
+  R.forEach(r=>{const i=c.$rw.findIndex(w=>r.d>=w&&r.d<w+c.$rs); if(i<0) return; const px=x.getPixelForValue(i); if(!(px>=a.left-1&&px<=a.right+1)) return;
+    let top=a.bottom; c.data.datasets.forEach((d,di)=>{if(!c.isDatasetVisible(di)) return; const el=c.getDatasetMeta(di).data[i]; if(el&&isFinite(el.y)&&d.data[i]!=null) top=Math.min(top,el.y)});
+    const y=Math.max(2,top-22), col=r.past?getComputedStyle(document.documentElement).getPropertyValue('--muted').trim():getComputedStyle(document.documentElement).getPropertyValue('--bad').trim()||'#d32f2f';
+    ctx.fillStyle=col; ctx.fillRect(px-0.75,y,1.5,18); ctx.beginPath(); ctx.moveTo(px+0.75,y); ctx.lineTo(px+12,y+4.5); ctx.lineTo(px+0.75,y+9); ctx.closePath(); ctx.fill();
+    if(r.name){ctx.font='600 10.5px system-ui,sans-serif'; ctx.textBaseline='middle'; const w=ctx.measureText(r.name).width, right=px+15+w<=a.right; ctx.textAlign=right?'left':'right'; ctx.fillText(r.name,right?px+15:px-4,y+4.5)}});
+  ctx.restore()}});
 if(window.Chart&&Chart.defaults){const D=Chart.defaults; D.plugins.tooltip.enabled=false; D.plugins.tooltip.external=extTip; D.elements.point.hoverRadius=7; D.elements.point.hoverBorderWidth=3}
 
 const P={rest:50,max:190,thr:0.0075,L:250};
@@ -2005,7 +2014,7 @@ function renderPlanner(){try{renderGoal()}catch(e){console.error(e)} renderThr()
         label:it=>{if(it.parsed.y==null) return null; const x=W[it.dataIndex]; return it.dataset.type==='line'?`Ejecutado: ${nf(it.parsed.y,0)} TRIMP`:`${it.dataset.label}: ${nf(it.parsed.y,0)} TRIMP (${nf(x.pl.trimp?it.parsed.y/x.pl.trimp*100:0,0)} %) · ${nf(x.pl.zb[it.datasetIndex]/60,0)} min`},
         footer:it=>{const x=W[it[0].dataIndex];return `Planeado: ${nf(x.pl.trimp,0)} TRIMP · ${fmtT(x.pl.t)}`}}}},
       scales:{x:{stacked:true,grid:{display:false},ticks:{color:tick,font:{family:css('--mono')},maxRotation:0,autoSkip:true}},y:{stacked:true,beginAtZero:true,title:{display:true,text:'TRIMP planeado',color:tick},grid:{color:css('--line')},ticks:{color:tick,font:{family:css('--mono')}}}}};
-    if(pchart){pchart.$W=W;pchart.data=data;pchart.options=opts;pchart.update()} else{pchart=new Chart(cv,{type:'bar',data,options:opts,plugins:[pctP]}); pchart.$z=true; pchart.$W=W; pchart.update()}}
+    opts.layout={padding:{top:24}}; if(pchart){pchart.$W=W;pchart.data=data;pchart.options=opts} else{pchart=new Chart(cv,{type:'bar',data,options:opts,plugins:[pctP]}); pchart.$z=true; pchart.$W=W} pchart.$rw=W.map(x=>x.w0); pchart.$rs=7*DAY; pchart.update()}
   else if(typeof Chart!=='undefined'){const tick=css('--muted');
     const data={labels:W.map(x=>`S${x.i+1}${x.w.load?'':' D'}`),datasets:[
       {label:'Planeado',data:W.map(x=>val(x.pl,pm)),backgroundColor:css('--line'),borderWidth:0},
@@ -2015,7 +2024,7 @@ function renderPlanner(){try{renderGoal()}catch(e){console.error(e)} renderThr()
         label:it=>it.parsed.y==null?null:`${it.dataset.label}: ${nf(it.parsed.y,pm==='km'?1:0)} ${unit}`,
         footer:it=>{const x=W[it[0].dataIndex];return x.ex.n&&val(x.pl,pm)?`Ejecutado ${nf(val(x.ex,pm)/val(x.pl,pm)*100,0)} % de lo planeado`:''}}}},
       scales:{x:{grid:{display:false},ticks:{color:tick,font:{family:css('--mono')},maxRotation:0,autoSkip:true}},y:{beginAtZero:true,title:{display:true,text:unit,color:tick},grid:{color:css('--line')},ticks:{color:tick,font:{family:css('--mono')}}}}};
-    if(pchart){pchart.data=data;pchart.options=opts;pchart.update()} else pchart=new Chart(cv,{type:'bar',data,options:opts})}
+    opts.layout={padding:{top:24}}; if(pchart){pchart.data=data;pchart.options=opts} else pchart=new Chart(cv,{type:'bar',data,options:opts}); pchart.$rw=W.map(x=>x.w0); pchart.$rs=7*DAY; pchart.update()}
   try{pDays()}catch(e){console.error(e)}
   const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const sm=o=>`${fmtT(o.t)} · ${nf(o.km,1)} km · ${nf(o.trimp,0)}`;
@@ -2051,8 +2060,8 @@ function pDays(){const pm=pmK();document.querySelectorAll('#pgSeg button').forEa
   const o=pchart.options; o.plugins.tooltip.callbacks={title:it=>{const x=D[it[0].dataIndex];return dfmt.format(new Date(x.d+6*3600000))},
     label:it=>it.parsed.y==null?null:`${it.dataset.label}: ${nf(it.parsed.y,pm==='km'?1:0)} ${unit}`,
     footer:it=>{const x=D[it[0].dataIndex]; if(!x.np&&!x.ne) return 'Descanso'; const L=[]; if(x.ps.length) L.push('Plan: '+x.ps.join(', ')); if(x.as.length) L.push('Hecho: '+x.as.join(', ')); if(x.np&&x.ne) L.push(`Ejecutado ${nf(val(x.ex,pm)/val(x.pl,pm)*100,0)} % de lo planeado`); return L}};
-  o.scales.x.ticks={color:tick,font:{family:css('--mono'),size:10.5},maxRotation:0,autoSkip:false};
-  pchart.update();
+  o.scales.x.ticks={color:tick,font:{family:css('--mono'),size:10.5},maxRotation:0,autoSkip:false}; o.scales.x.stacked=false; o.scales.y.stacked=false; o.layout={padding:{top:24}};
+  pchart.$rw=D.map(x=>x.d); pchart.$rs=DAY; pchart.update();
   document.getElementById('pDesc').textContent=`Día por día de la semana elegida, de lunes a domingo (la misma que la Revisión semanal). Barras claras: lo planeado; oscuras: lo ejecutado. Los días sin nada salen como «desc.». Tocá «Semanas» para ver la serie de semanas completas.`}
 document.querySelectorAll('#pgSeg button').forEach(b=>b.onclick=()=>{pg=b.dataset.g;try{LS.setItem('comparador.pg',pg)}catch(e){} renderPlanner()});
 document.getElementById('pwPrev').onclick=()=>{rvOff--;renderPlanner()};
@@ -2087,7 +2096,7 @@ function renderPvE(){const pm=pmK();const E=document.getElementById('pEmpty'), c
         label:it=>it.parsed.y==null?null:`${it.dataset.label}: ${nf(it.parsed.y,pm==='km'?1:0)} ${unit}`,
         footer:it=>{const x=W[it[0].dataIndex];return x.ex.n&&val(x.pl,pm)?`Ejecutado ${nf(val(x.ex,pm)/val(x.pl,pm)*100,0)} % de lo planeado`:''}}}},
       scales:{x:{grid:{display:false},ticks:{color:tick,font:{family:css('--mono')},maxRotation:0,autoSkip:true}},y:{beginAtZero:true,title:{display:true,text:unit,color:tick},grid:{color:css('--line')},ticks:{color:tick,font:{family:css('--mono')}}}}};
-    if(pchart){pchart.data=data;pchart.options=opts;pchart.update()} else pchart=new Chart(cv,{type:'bar',data,options:opts})}
+    opts.layout={padding:{top:24}}; if(pchart){pchart.data=data;pchart.options=opts} else pchart=new Chart(cv,{type:'bar',data,options:opts}); pchart.$rw=W.map(x=>x.w0); pchart.$rs=7*DAY; pchart.update()}
   try{pDays()}catch(e){console.error(e)}
   const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])), sm=o=>`${fmtT(o.t)} · ${nf(o.km,1)} km · ${nf(o.trimp,0)}`;
   let h='<table class="ptab"><thead><tr><th>Semana</th><th style="text-align:left">Planeado</th><th>Planeado<br><span class="sub">tiempo · km · TRIMP</span></th><th>Ejecutado</th><th>Ejec./plan</th><th>Revisión</th></tr></thead><tbody>';
