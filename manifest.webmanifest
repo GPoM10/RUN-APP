@@ -1,7 +1,7 @@
 {
- "name": "Comparador de rodajes",
- "short_name": "Rodajes",
- "description": "Compara tus rodajes, bienestar y plan de entrenamiento",
+ "name": "Run-app",
+ "short_name": "Run-app",
+ "description": "Bienestar, plan, análisis y comparación de tus entrenamientos",
  "start_url": "./",
  "scope": "./",
  "display": "standalone",

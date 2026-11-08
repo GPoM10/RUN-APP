@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#141a19">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Rodajes">
+<meta name="apple-mobile-web-app-title" content="Run-app">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
@@ -138,7 +138,7 @@ window.addEventListener('load',function(){setTimeout(function(){if(typeof Chart=
 .bodym polygon,.bodym ellipse{stroke:var(--panel);stroke-width:.5}.bodym .pz{cursor:pointer;fill:color-mix(in srgb,var(--ok) 42%,var(--panel))}.bodym .pb{fill:color-mix(in srgb,var(--ok) 20%,var(--panel))}.bodym .pz:hover{opacity:.75}.pmod{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;max-width:560px;width:calc(100vw - 24px);margin:4vh auto;display:grid;gap:10px}.pbig{display:flex;justify-content:center}.pl{fill:var(--muted);font:11px var(--mono)}
 .pv{font:inherit;font-size:13px;padding:5px 10px;border-radius:6px;border:2px solid;background:var(--panel);color:var(--ink);cursor:pointer}
 </style>
-<title>Comparador de rodajes</title>
+<title>Run-app</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -370,18 +370,46 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
 .xpop{position:fixed;z-index:70;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.25);padding:12px 34px 12px 14px;font-size:13px;line-height:1.5;max-height:min(60vh,520px);overflow:auto}
 .xpop .xpx{position:absolute;top:6px;right:6px;border:0;background:transparent;color:var(--muted);font-size:15px;padding:2px 6px}
 .xpop .xpb{color:var(--ink)}
+
+header button.brand{display:inline-flex;align-items:center;gap:8px;background:none;border:0;padding:0;margin:0;cursor:pointer;font-family:var(--display);font-size:30px;font-weight:700;color:var(--ink);letter-spacing:.01em;box-shadow:none}
+header button.brand svg{width:34px;height:34px;flex:none}
+header button.brand:hover span{color:var(--accent)}
+#home .hero{position:relative;overflow:hidden;padding:28px 4px 36px;min-height:70vh}
+#home .runner{position:absolute;right:-30px;top:10px;height:min(78vh,620px);width:auto;color:var(--ink);opacity:.055;pointer-events:none}
+#home .htop{position:relative;display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin:10px 0 26px}
+#home .logo.big{width:88px;height:88px;flex:none;filter:drop-shadow(0 6px 14px rgba(11,79,71,.25))}
+#home .htitle{font-family:var(--display);font-size:clamp(48px,9vw,76px);line-height:.95;margin:0;letter-spacing:.01em}
+#home .hcred{color:var(--muted);font-size:14px;margin-top:6px}
+#home .hcred b{color:var(--ink);font-weight:600}
+#home .hcard{position:relative;display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;padding:16px;border:1px solid var(--line);border-radius:16px;background:color-mix(in srgb,var(--panel) 82%,transparent);backdrop-filter:blur(2px);max-width:1100px}
+#home .hcard button{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:10px;row-gap:2px;align-items:center;text-align:left;padding:14px 14px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);cursor:pointer;font:inherit;transition:transform .12s,border-color .12s}
+#home .hcard button:hover{border-color:var(--accent);transform:translateY(-1px)}
+#home .hcard .hic{grid-row:1/3;width:30px;height:30px;color:var(--accent)}
+#home .hcard b{font-family:var(--display);font-size:22px;font-weight:600}
+#home .hcard span{color:var(--muted);font-size:12.5px;line-height:1.3}
+@media (max-width:520px){#home .logo.big{width:62px;height:62px} #home .htop{gap:12px;margin-bottom:18px} #home .runner{right:-70px;opacity:.045}}
+body[data-tab=cmp] #selChips,body[data-tab=cmp] #normLbl,body[data-tab=cmp] #normCfg,body[data-tab=cmp] #viewSeg{display:none!important}
+.item .tocmp{padding:1px 7px;font-size:15px;line-height:1.2;color:var(--muted)}
+.item .tocmp[aria-pressed=true]{color:#E8B007}
 </style>
 </head>
 <body>
 
 <div class="wrap">
   <header>
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><span style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h1>Comparador de rodajes</h1><button type="button" id="syncBtn" title="Sincronizar con Google Drive" style="font-size:12.5px;padding:4px 10px;white-space:nowrap">⟳ Sincronizar</button></span>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><span style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><button type="button" id="homeBtn" class="brand" title="Ir a la portada"><svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="lgH" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#14897B"/><stop offset="1" stop-color="#0B4F47"/></linearGradient></defs><rect x="2" y="2" width="60" height="60" rx="16" fill="url(#lgH)"/><path d="M10 38H22L26 28L31 46L36 18L40 38H46" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M46 38H54M50 33L55 38L50 43" fill="none" stroke="#9EE6A8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Run-app</span></button><button type="button" id="syncBtn" title="Sincronizar con Google Drive" style="font-size:12.5px;padding:4px 10px;white-space:nowrap">⟳ Sincronizar</button></span>
       <div class="prof"><label for="profSel">Atleta</label><select id="profSel" aria-label="Perfil"></select><button type="button" id="profNew">+ Nuevo perfil</button><button type="button" id="profEdit">Editar</button><button type="button" id="profDel">Borrar</button><button type="button" id="bkBtn" onclick="try{backupDialog()}catch(e){alert('No se pudo abrir el respaldo: '+e.message)}">Respaldo</button><span id="cloudSt" style="font-size:12px"></span></div>
-      <span class="seg" role="group" aria-label="Pestaña" id="tabSeg"><button data-t="cal" aria-pressed="false">Calendario</button><button data-t="well" aria-pressed="true">Bienestar</button><button data-t="plan" aria-pressed="false">Programador</button><button data-t="ref" aria-pressed="false">Referencia</button><button data-t="cmp" aria-pressed="false">Comparador</button></span><div style="display:flex;justify-content:flex-end;margin-top:6px"><button type="button" id="uiBtn" aria-expanded="false" title="Elegir qué paneles y qué gráficos se ven en esta pestaña" style="font-size:12.5px;padding:4px 10px;margin-right:6px">⚙ Personalizar</button><button type="button" id="foldAll" style="font-size:12.5px;padding:4px 10px">▸ Contraer todo</button></div><div id="uiBox" class="pedit" hidden style="margin-top:8px"></div></div>
-    <p>Cargá los .fit de Coros, marcá hasta cuatro entrenamientos y superponé sus curvas. Usa las mismas definiciones del informe de LR: tramos de 250 m, FC reposo <span id="hRest">50</span>, FC máx <span id="hMax">190</span><span id="hThr"></span>, estabilización al 0,75 %.</p>
+      <span class="seg" role="group" aria-label="Sección" id="tabSeg"><button data-t="well" aria-pressed="false">Bienestar</button><button data-t="plan" aria-pressed="false">Programador</button><button data-t="cal" aria-pressed="false">Calendario</button><button data-t="cmp" aria-pressed="false">Analizador</button><button data-t="ref" aria-pressed="false">Comparador</button></span><div id="uiRow" style="display:flex;justify-content:flex-end;margin-top:6px"><button type="button" id="uiBtn" aria-expanded="false" title="Elegir qué paneles y qué gráficos se ven en esta pestaña" style="font-size:12.5px;padding:4px 10px;margin-right:6px">⚙ Personalizar</button><button type="button" id="foldAll" style="font-size:12.5px;padding:4px 10px">▸ Contraer todo</button></div><div id="uiBox" class="pedit" hidden style="margin-top:8px"></div></div>
+    <p id="hdrDesc">Cargá los .fit de Coros y analizá cada entrenamiento a fondo; con ☆ lo mandás al Comparador. Usa las mismas definiciones del informe de LR: tramos de 250 m, FC reposo <span id="hRest">50</span>, FC máx <span id="hMax">190</span><span id="hThr"></span>, estabilización al 0,75 %.</p>
   </header>
 
+
+  <section id="home" hidden>
+    <div class="hero"><svg class="runner" viewBox="0 0 200 240" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="122" cy="30" r="17" fill="currentColor" stroke="none"/><path d="M112 58L94 118" stroke-width="27"/><path d="M112 64L142 88L164 72" stroke-width="14"/><path d="M108 66L80 88L62 112" stroke-width="14"/><path d="M94 120L136 146L124 192L144 198" stroke-width="17"/><path d="M92 122L76 168L34 180" stroke-width="17"/></g></svg>
+      <div class="htop"><svg class="logo big" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="lgP" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#14897B"/><stop offset="1" stop-color="#0B4F47"/></linearGradient></defs><rect x="2" y="2" width="60" height="60" rx="16" fill="url(#lgP)"/><path d="M10 38H22L26 28L31 46L36 18L40 38H46" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M46 38H54M50 33L55 38L50 43" fill="none" stroke="#9EE6A8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg><div><h1 class="htitle">Run-app</h1><div class="hcred">Desarrollado por <b>Gustavo Porras</b> · Potenciado por <b>Claude</b></div></div></div>
+      <div class="hcard"><button type="button" data-go="well"><svg viewBox="0 0 24 24" class="hic" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></g></svg><b>Bienestar</b><span>Sueño, VFC, sensaciones y molestias</span></button><button type="button" data-go="plan"><svg viewBox="0 0 24 24" class="hic" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M8 10h8M8 14h8M8 18h5"/></g></svg><b>Programador</b><span>Plan, ciclos, umbral, fitness y fatiga</span></button><button type="button" data-go="cal"><svg viewBox="0 0 24 24" class="hic" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></g></svg><b>Calendario</b><span>Lo planeado y lo hecho, día a día</span></button><button type="button" data-go="cmp"><svg viewBox="0 0 24 24" class="hic" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 20.5 20.5M7 12l2-2.5 2 2 3-3.5"/></g></svg><b>Analizador</b><span>Un entrenamiento a fondo</span></button><button type="button" data-go="ref"><svg viewBox="0 0 24 24" class="hic" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16l5-6 4 3 4-7 5 5"/><path d="M3 20l5-3 4 1 4-4 5 2" opacity=".55"/></g></svg><b>Comparador</b><span>Evolución, tendencias y curvas superpuestas</span></button></div>
+    </div>
+  </section>
   <div class="drop panel" id="drop"><h2>Cargar entrenamientos</h2>
     <div class="txt"><b>Arrastrá aquí tus carpetas de .fit</b> (podés soltar varias a la vez). El tipo sale del nombre de la carpeta: LARGO o LR → LR, EASY o ER → ER, CALIDAD → Calidad, COMPETENCIA o CARRERA → Competencia, TEST → Test, TÉCNICA o RUNNING FORM → Técnica. Se procesan en este navegador y quedan guardados aquí para la próxima vez.</div>
     <label class="btn primary" for="dirIn">Elegir carpeta<input id="dirIn" type="file" webkitdirectory multiple hidden></label>
@@ -401,6 +429,9 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
   </details>
   <div class="notice" id="demoNote" hidden><b>Estás viendo rodajes de ejemplo</b> inventados para mostrar cómo funciona. Desaparecen en cuanto cargues tu primer .fit.</div>
 
+  <section id="refTab" hidden>
+    <div class="panel" id="refBox"></div>
+  </section>
   <div class="grid">
     <section class="panel" aria-label="Rodajes" id="listPanel"><h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">Rodajes <button type="button" id="lpTog" aria-expanded="false" style="font-family:var(--body);font-size:13px;font-weight:600;padding:4px 10px">Elegir rodajes ▾</button></h2>
       <div class="selchips" id="selChips"></div>
@@ -415,10 +446,10 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
       <div id="list"></div>
     </section>
 
-    <section class="panel" aria-label="Comparación" id="cmpPanel"><h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">Comparación <button type="button" id="backCal" hidden style="font-family:var(--body);font-size:13px;font-weight:600;padding:4px 10px;margin-left:auto">← Volver al calendario</button></h2>
+    <section class="panel" aria-label="Comparación" id="cmpPanel"><h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span id="cmpTtl">Comparación</span> <button type="button" id="backCal" hidden style="font-family:var(--body);font-size:13px;font-weight:600;padding:4px 10px;margin-left:auto">← Volver al calendario</button></h2>
       <div class="opts" style="margin-top:0;margin-bottom:10px">
         <span class="seg" role="group" aria-label="Vista" id="viewSeg"><button data-v="km" aria-pressed="true">Dentro del rodaje (por km)</button><button data-v="fecha" aria-pressed="false">Tendencia por fecha</button><button data-v="tfecha" aria-pressed="false">Técnica por fecha</button><button data-v="carga" aria-pressed="false">Carga por semana / mes</button><button data-v="forma" aria-pressed="false">Fitness, fatiga y forma</button></span>
-        <label><input type="checkbox" id="normOn"> Llevar la FC al WBGT del primer rodaje marcado</label>
+        <label id="normLbl"><input type="checkbox" id="normOn"> Llevar la FC al WBGT del primer rodaje marcado</label>
         <span id="normCfg" style="display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;flex:1 1 100%"><label>a <select class="tipo" id="nTo" aria-label="Llevar a"><option value="first">el WBGT del primer rodaje marcado</option><option value="std">un WBGT estándar</option></select></label><span id="nStdW" hidden><input class="pace" id="nStd" value="21" aria-label="WBGT estándar"> °C <span class="mdesc" style="margin:0">(por defecto, la mediana de tus rodajes; borrá el valor para volver a ella)</span></span><label>pendiente <select class="tipo" id="nAuto" aria-label="Pendiente de calor"><option value="1">automática (de mis datos)</option><option value="0">fija</option></select></label><span id="nKW" hidden>k = <input class="pace" id="kNorm" value="0,4" aria-label="Factor k"> ppm por °C de WBGT</span><input type="hidden" id="tRef" value="21"><div id="normInfo" class="mdesc" style="flex:1 0 100%;margin:0"></div></span>
       </div>
       <div class="metrics" id="metrics" role="group" aria-label="Variable a graficar"></div>
@@ -451,7 +482,7 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
         <span class="seg" role="group" aria-label="Resolución" id="resSeg"><button data-r="sm" title="Promedio móvil de 35 s, parecido a la gráfica de la app del reloj">Suave</button><button data-r="t5">5 s</button><button data-r="t15">15 s</button><button data-r="t30">30 s</button><button data-r="t60">60 s</button></span>
         <label id="y2Wrap">Segundo eje <select class="tipo" id="y2Sel" aria-label="Variable del segundo eje"><option value="">Ninguno</option><option value="hr">FC</option><option value="pace">Ritmo</option><option value="eff">Eficiencia</option><optgroup label="Dinámica de carrera"><option value="gct">Contacto</option><option value="cad">Cadencia</option><option value="vr">Ratio vertical</option><option value="sl">Longitud de zancada</option><option value="bal">Balance</option><option value="vgrf">Fuerza vertical</option><option value="stiff">Rigidez</option></optgroup></select></label>
       </div>
-      <div class="notice" id="needReload" style="margin-top:10px" hidden><b>Volvé a cargar la carpeta con «Elegir carpeta» o arrastrándola.</b> Se reemplazan los mismos rodajes y se conservan tus notas, tipos y ritmos programados. Algunos rodajes se guardaron con una versión anterior del comparador y no traen la dinámica de carrera (cadencia, contacto, balance, ratio vertical y longitud de zancada a lo largo del rodaje, pasos, fuerza pico), el tiempo por zona ni, en las sesiones de calidad, las series. El Pa:HR sí se calcula con lo que ya está guardado.</div>
+      <div class="notice" id="needReload" style="margin-top:10px" hidden><b>Volvé a cargar la carpeta con «Elegir carpeta» o arrastrándola.</b> Se reemplazan los mismos rodajes y se conservan tus notas, tipos y ritmos programados. Algunos rodajes se guardaron con una versión anterior de la app y no traen la dinámica de carrera (cadencia, contacto, balance, ratio vertical y longitud de zancada a lo largo del rodaje, pasos, fuerza pico), el tiempo por zona ni, en las sesiones de calidad, las series. El Pa:HR sí se calcula con lo que ya está guardado.</div>
       <div class="chartbox"><div id="trStat" hidden style="position:absolute;top:34px;right:10px;z-index:2;background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-family:var(--mono);font-size:11.5px;line-height:1.45;color:var(--ink);pointer-events:none;text-align:right"></div><canvas id="chart" aria-label="Gráfico comparativo"></canvas><div class="empty" id="chartEmpty" hidden>Marcá de uno a cuatro entrenamientos en la lista para graficarlos.</div></div>
       <div id="trRngBox" class="opts" style="margin-top:6px" hidden><span>Mostrar</span><span class="seg" role="group" aria-label="Rango rápido" id="trQ"></span><div class="dr"><div class="drt"><div class="drf" id="trFill"></div></div><input type="range" id="trA" aria-label="Desde" min="0" value="0"><input type="range" id="trB" aria-label="Hasta" min="0" value="0"></div><span id="trLab" style="font-family:var(--mono);font-size:12.5px;color:var(--ink)"></span></div>
       <div class="fwin opts" id="fwBox" style="margin-top:6px" hidden><span>Ver</span><div class="dr"><div class="drt"><div class="drf fwf" title="Arrastrá para mover la ventana"></div></div><input type="range" class="fwA" aria-label="Desde" min="0" value="0"><input type="range" class="fwB" aria-label="Hasta" min="0" value="0"></div><span class="fwL" style="font-family:var(--mono);font-size:12.5px;color:var(--ink)"></span></div>
@@ -534,9 +565,6 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
     <div class="panel" id="goalBox" style="margin-top:16px"></div>
   </section>
 
-  <section id="refTab" hidden>
-    <div class="panel" id="refBox"></div>
-  </section>
 
   <section id="wellness" hidden>
     <div class="wgrid">
@@ -889,6 +917,7 @@ function demo(){
 
 /* ---------- estado ---------- */
 let zones={on:true,lim:[155,173]};
+let selA=[], selC=[], viewC='km';
 let acts=[], sel=[], filt='all', metric='hr', res='sm', view='km', tmetric='der', per='week', selP=[], norm={on:false,tref:21,k:0.4}, lmetric='trimp', fm='trimp', fproj=true, frng=12, thr=null, thrHist=[], fcHist=[], tpM=null, goal=null, testCfg={}, qcode='', plans=[], tab='well', cycle=null, pm='trimp', body={kg:79,cm:172}, y2='', well={days:{}}, tecM='sc', trRng={q:'12'}, wxOff=0, airW=null, surfDef='Asfalto', tsurf='all', showEx=false, flashId=null, myW={vr:25,gct:20,stiff:20,ang:15,bal:10};
 // mecánica estimada con el modelo de Coros (validado con 4 tests de forma): fuerza vertical, ángulo de aterrizaje y rigidez de pierna
 // usa el peso y la estatura que tengas configurados en la app de Coros; solo tramos estables (desde la estabilización) y corriendo
@@ -939,7 +968,7 @@ const tAir=a=>{const w=wxE(a); if(!w||w.t==null) return null; const t=w.t+wxO(w)
 const nVal=a=>{const w=wbgtOf(a); return w?Math.round(w.w*10)/10:null}; // la normalización usa el WBGT, no la temperatura sola
 const nMedW=()=>{const v=acts.filter(a=>!a.ej).map(nVal).filter(x=>x!=null).sort((p,q)=>p-q); return v.length?Math.round(v[v.length>>1]*10)/10:null}; // WBGT estándar por defecto: la mediana de tus rodajes
 const nRef=()=>{if(norm.to==='std'){const sv=isFinite(norm.std)?norm.std:nMedW(); if(sv!=null) return sv} const b=sel.length?acts.find(x=>x.id===sel[0]):null, t=b?nVal(b):null; return t!=null?t:19};
-// pendiente de calor automática: regresión de la FC con todos los rodajes del tipo (misma de la pestaña Referencia); se recalcula al cambiar los datos
+// pendiente de calor automática: regresión de la FC con todos los rodajes del tipo (misma de la pestaña Comparador); se recalcula al cambiar los datos
 let _nfK='', _nfM={};
 function nFit(tipo,key){key=key||'hr'; const k=acts.length+'|'+saveN; if(k!==_nfK){_nfK=k; _nfM={}} const id=tipo+'|'+key; if(!(id in _nfM)){let r=null; try{if(tipo==='ER'||tipo==='LR'){const rows=refRows(tipo); r={F:refFit(rows,key),rows}}}catch(e){r=null} _nfM[id]=r} return _nfM[id]}
 // cuánto se mueve la FC de un rodaje al llevarlo al WBGT elegido, y con qué base
@@ -969,10 +998,10 @@ const SYNC_SECS=['cycle','zones','thr','thrHist','fcHist','tpM','testCfg','goal'
 let secH=null, secT={};
 function stampSecs(o){const H=x=>{const t=JSON.stringify(x)||''; let h=0; for(let i=0;i<t.length;i++) h=(h*31+t.charCodeAt(i))|0; return h}, first=secH==null; if(first) secH={};
   SYNC_SECS.forEach(k=>{const h=H(o[k]); if(secH[k]!==h){ secT[k]=!first&&secH[k]!==undefined?Date.now():(secT[k]||0); secH[k]=h }}); o._h=secH; o._ts=secT; return o}
-function save(){saveN++; syncTrimp(); if(applyTests()){try{syncZones()}catch(e){}} try{LS.setItem(KEY,JSON.stringify(stampSecs({acts:acts.filter(a=>!a.ej).map(slim),zones,sel,metric,filt,res,view,tmetric,norm,per,selP,lmetric,qcode,plans,tab,cycle,pm,body,y2,well,fm,fproj,frng,thr,thrHist,fcHist,tpM,testCfg,fc:{rest:P.rest,max:P.max},goal,myW,surfDef,tsurf,trRng,wxOff,airW,listF,uiHide,normAir:1})))}
+function save(){saveN++; syncTrimp(); if(applyTests()){try{syncZones()}catch(e){}} if(tab==='cmp') selA=sel.slice(0,1); else if(tab==='ref'){selC=sel.slice(0,4); viewC=view} try{LS.setItem(KEY,JSON.stringify(stampSecs({acts:acts.filter(a=>!a.ej).map(slim),zones,sel,selA,selC,viewC,metric,filt,res,view,tmetric,norm,per,selP,lmetric,qcode,plans,tab,cycle,pm,body,y2,well,fm,fproj,frng,thr,thrHist,fcHist,tpM,testCfg,fc:{rest:P.rest,max:P.max},goal,myW,surfDef,tsurf,trRng,wxOff,airW,listF,uiHide,normAir:1})))}
   catch(e){if(!CL.db) try{setStatus('No hay más espacio en el navegador para guardar rodajes. Quitá algunos antiguos de la lista.')}catch(_){}}
   cloudQueue()}
-function loadFrom(o){secH=o._h&&typeof o._h==='object'?{...o._h}:null; secT=o._ts&&typeof o._ts==='object'?{...o._ts}:{}; acts=o.acts||[];sel=o.sel||[];metric=o.metric||'hr';filt=o.filt||'all';res=o.res&&o.res!=='t15'?o.res:'sm'; if(!['sm','t5','t15','t30','t60'].includes(res)) res='sm';view=o.view==='tec'?'tfecha':(o.view||'km');tmetric=o.tmetric||'der';if(o.norm){norm=o.norm; if(!o.normAir){if(norm.tref>=25) norm.tref=21}}if(o.zones&&o.zones.lim&&o.zones.lim.length===2)zones=o.zones;per=o.per||'week';selP=o.selP||[];lmetric=o.lmetric||'trimp';fm=o.fm==='mech'?'mech':'trimp';fproj=o.fproj!==false;frng=[0,6,12,24].includes(o.frng)?o.frng:12;thr=o.thr||null;thrHist=Array.isArray(o.thrHist)?o.thrHist:[];fcHist=Array.isArray(o.fcHist)?o.fcHist:[];tpM=o.tpM||null;testCfg=o.testCfg&&typeof o.testCfg==='object'?o.testCfg:{};qcode=o.qcode||'';plans=o.plans||[];tab=o.tab||'well';cycle=o.cycle||null;pm=o.pm||'trimp';y2=o.y2||'';if(o.well&&o.well.days)well=o.well;if(o.body&&o.body.kg&&o.body.cm)body=o.body;if(o.fc&&o.fc.rest>30&&o.fc.max>o.fc.rest){P.rest=o.fc.rest;P.max=o.fc.max} if(fcHist.length) fcNow(); goal=o.goal&&o.goal.day?o.goal:null; if(o.myW&&typeof o.myW==='object'){myW={...myW,...o.myW}; delete myW.vgrf} surfDef=o.surfDef||'Asfalto'; tsurf=o.tsurf||'all'; if(o.trRng&&typeof o.trRng==='object') trRng=o.trRng; wxOff=+o.wxOff||0; listF={...LF_DEF,...(o.listF&&typeof o.listF==='object'?o.listF:{})}; uiHide=o.uiHide&&typeof o.uiHide==='object'?{p:o.uiHide.p||[],b:o.uiHide.b||[]}:{p:[],b:[]}; try{applyUI()}catch(e){} acts.forEach(a=>{if(a.wx&&a.wx.man){if(a.wx.rain) a.rain=true; if(a.wxS){a.wx=a.wxS; delete a.wxS} else delete a.wx}}); airW=o.airW!=null&&isFinite(+o.airW)?+o.airW:null; acts.forEach(a=>{if(a.surf&&SURF_OLD[a.surf]) a.surf=SURF_OLD[a.surf]})}
+function loadFrom(o){secH=o._h&&typeof o._h==='object'?{...o._h}:null; secT=o._ts&&typeof o._ts==='object'?{...o._ts}:{}; acts=o.acts||[];sel=o.sel||[];selA=Array.isArray(o.selA)?o.selA:sel.slice(0,1);selC=Array.isArray(o.selC)?o.selC:sel.slice(0,4);viewC=o.viewC||(o.view==='tec'?'tfecha':o.view)||'km';metric=o.metric||'hr';filt=o.filt||'all';res=o.res&&o.res!=='t15'?o.res:'sm'; if(!['sm','t5','t15','t30','t60'].includes(res)) res='sm';view=o.view==='tec'?'tfecha':(o.view||'km');tmetric=o.tmetric||'der';if(o.norm){norm=o.norm; if(!o.normAir){if(norm.tref>=25) norm.tref=21}}if(o.zones&&o.zones.lim&&o.zones.lim.length===2)zones=o.zones;per=o.per||'week';selP=o.selP||[];lmetric=o.lmetric||'trimp';fm=o.fm==='mech'?'mech':'trimp';fproj=o.fproj!==false;frng=[0,6,12,24].includes(o.frng)?o.frng:12;thr=o.thr||null;thrHist=Array.isArray(o.thrHist)?o.thrHist:[];fcHist=Array.isArray(o.fcHist)?o.fcHist:[];tpM=o.tpM||null;testCfg=o.testCfg&&typeof o.testCfg==='object'?o.testCfg:{};qcode=o.qcode||'';plans=o.plans||[];tab=o.tab||'well';cycle=o.cycle||null;pm=o.pm||'trimp';y2=o.y2||'';if(o.well&&o.well.days)well=o.well;if(o.body&&o.body.kg&&o.body.cm)body=o.body;if(o.fc&&o.fc.rest>30&&o.fc.max>o.fc.rest){P.rest=o.fc.rest;P.max=o.fc.max} if(fcHist.length) fcNow(); goal=o.goal&&o.goal.day?o.goal:null; if(o.myW&&typeof o.myW==='object'){myW={...myW,...o.myW}; delete myW.vgrf} surfDef=o.surfDef||'Asfalto'; tsurf=o.tsurf||'all'; if(o.trRng&&typeof o.trRng==='object') trRng=o.trRng; wxOff=+o.wxOff||0; listF={...LF_DEF,...(o.listF&&typeof o.listF==='object'?o.listF:{})}; uiHide=o.uiHide&&typeof o.uiHide==='object'?{p:o.uiHide.p||[],b:o.uiHide.b||[]}:{p:[],b:[]}; try{applyUI()}catch(e){} acts.forEach(a=>{if(a.wx&&a.wx.man){if(a.wx.rain) a.rain=true; if(a.wxS){a.wx=a.wxS; delete a.wxS} else delete a.wx}}); airW=o.airW!=null&&isFinite(+o.airW)?+o.airW:null; acts.forEach(a=>{if(a.surf&&SURF_OLD[a.surf]) a.surf=SURF_OLD[a.surf]})}
 function load(){try{const o=JSON.parse(LS.getItem(KEY)||'null'); if(o) loadFrom(o)}catch(e){}
   if(!acts.length){acts=demo();sel=['ej13','ej21']}
   sel=sel.filter(id=>acts.some(a=>a.id===id)); sortSel();}
@@ -1159,7 +1188,7 @@ async function fitWxRun(){const M=document.getElementById('fitWxMsg'), msg=t=>M.
   const L=items.filter(o=>o.a.lat!=null).map(o=>({id:o.a.id,t0Unix:o.a.t0Unix,timeS:o.a.timeS,lat:o.a.lat,lon:o.a.lon})), sin=items.length-L.length;
   if(!L.length){msg('Estos rodajes no traen ubicación (GPS), así que no se puede buscar su clima.');return}
   msg(`Consultando el clima de ${L.length} rodaje(s)…`); wxErr=''; await wxBatch(L);
-  if(wxErr){msg('Dentro de Claude la página no puede consultar el clima. Abrí el comparador como archivo en Chrome, cargá ahí estos mismos .fit (o la misma carpeta) y tocá «Buscar datos de clima»: te devuelve los .fit con el clima incluido. Después cargá esos .fit aquí.');return}
+  if(wxErr){msg('Dentro de Claude la página no puede consultar el clima. Abrí la app como archivo en Chrome, cargá ahí estos mismos .fit (o la misma carpeta) y tocá «Buscar datos de clima»: te devuelve los .fit con el clima incluido. Después cargá esos .fit aquí.');return}
   const got=L.filter(o=>o.wx); if(!got.length){msg('El servicio no devolvió clima para estos rodajes.');return}
   for(const o of got){const a=acts.find(x=>x.id===o.id); if(a){if(a.wx&&a.wx.man) a.wxS=o.wx; else {a.wx=o.wx; delete a.wxS}}} save(); render();
   const files=got.map(o=>{const it=items.find(i=>i.a.id===o.id); return {path:(it.x.path||it.x.name), name:it.x.name, data:fitWithWx(it.x.buf,it.a,o.wx)}});
@@ -1201,8 +1230,8 @@ function renderList(){ try{syncLP()}catch(e){}
     if(qcode&&!codes.includes(qcode)) qcode='';
     cs.innerHTML='<option value="">Todos</option>'+codes.map(c=>`<option${c===qcode?' selected':''}>${c}</option>`).join('')}
   const shown=acts.filter(inPool).sort((a,b)=>b.t0Unix-a.t0Unix);
-  document.getElementById('count').textContent=`${shown.length} rodaje${shown.length===1?'':'s'} · ${sel.length}/4 marcados`;
-  {const hid=sel.filter(id=>!shown.some(a=>a.id===id)).length, sc=document.getElementById('selClr'); sc.hidden=!sel.length; sc.title=hid?`${hid} de los marcados no se ven con el filtro actual`:'Quitar todas las marcas'}
+  const solo=tab==='cmp'; document.getElementById('count').textContent=`${shown.length} rodaje${shown.length===1?'':'s'} · `+(solo?`${selC.length}/4 en el Comparador`:`${sel.length}/4 marcados`);
+  {const hid=sel.filter(id=>!shown.some(a=>a.id===id)).length, sc=document.getElementById('selClr'); sc.hidden=solo||!sel.length; sc.title=hid?`${hid} de los marcados no se ven con el filtro actual`:'Quitar todas las marcas'}
   document.getElementById('demoNote').hidden=!acts.some(a=>a.ej);
   if(!shown.length){L.innerHTML='<div class="mdesc">No hay rodajes de este tipo todavía.</div>';return}
   // marcas como en el calendario: estado de bienestar de ese día y ejecución contra su plan
@@ -1210,19 +1239,20 @@ function renderList(){ try{syncLP()}catch(e){}
   const mark=a=>{const wk=dkey(crDay(a.t0Unix)), wd=well.days[wk], st=wd&&Object.keys(wd).length?wellStatus(wk):null, c=st&&st.v?st.v[0]:'', p=done.get(a.id), x=p?execCalc(a,p.plan,Mh,ep):null;
     return (c?`<span class="${c}" style="font-weight:700" title="Bienestar ese día: ${st.v[1]}">${icw[c]}</span>`:'')+(x&&x.q?`<i class="xd" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${css(XC[x.q[1]])}" title="Ejecución contra el plan: ${x.q[2]}"></i>`:'')};
   for(const a of shown){
-    const si=sel.indexOf(a.id), full=sel.length>=4&&si<0, s=summarize(a);
+    const si=sel.indexOf(a.id), full=!solo&&sel.length>=4&&si<0, s=summarize(a), inC=selC.includes(a.id);
     const el=document.createElement('div'); el.className='item'+(si>=0?' sel':'')+(full?' dis':''); el.dataset.id=a.id; el.tabIndex=0; el.setAttribute('role','checkbox'); el.setAttribute('aria-checked',si>=0);
     el.innerHTML=`<span class="dot" style="${si>=0?`background:${color(si)};border-color:${color(si)}`:''}"></span>
       <span class="t1" style="display:flex;align-items:center;gap:6px">${dt(a)} <span style="font-weight:400;color:var(--muted)">${hm(a)}</span>${listF.well?mark(a):''}${a.ej||!listF.wbgt?'':wbBox(a)}</span>
-      <span style="display:flex;gap:6px;align-items:center">${a.ej?'<span class="chip ej">Ejemplo</span>':''}${a.autoT?'<span class="chip" title="Tipo asignado automáticamente: revisalo" style="background:var(--warn);color:#fff">auto</span>':''}${a.noTr?'<span class="chip" title="No se grafica en la tendencia">sin tend.</span>':''}
+      <span style="display:flex;gap:6px;align-items:center">${solo?`<button type="button" class="tocmp" aria-pressed="${inC}" title="${inC?'Quitar del Comparador':'Enviar al Comparador (hasta 4)'}">${inC?'★':'☆'}</button>`:''}${a.ej?'<span class="chip ej">Ejemplo</span>':''}${a.autoT?'<span class="chip" title="Tipo asignado automáticamente: revisalo" style="background:var(--warn);color:#fff">auto</span>':''}${a.noTr?'<span class="chip" title="No se grafica en la tendencia">sin tend.</span>':''}
         <select class="tipo" aria-label="Tipo"><option${a.tipo==='LR'?' selected':''}>LR</option><option${a.tipo==='ER'?' selected':''}>ER</option><option${a.tipo==='Calidad'?' selected':''}>Calidad</option><option${a.tipo==='Competencia'?' selected':''}>Competencia</option><option${a.tipo==='Test'?' selected':''}>Test</option><option${a.tipo==='Técnica'?' selected':''}>Técnica</option><option${a.tipo==='Otro'?' selected':''}>Otro</option></select>
         ${a.tipo==='Test'&&!a.ej?`<button class="btn primary adjz" type="button" style="padding:3px 8px;font-size:11.5px" title="Calcular el umbral con este Test y programar las zonas del perfil">${thr&&thr.actId===String(a.id)?'✓ Zonas':'Ajustar zonas'}</button>`:''}${a.ej?'':`<select class="tipo rpes" aria-label="Esfuerzo percibido (RPE) de la sesión" title="Esfuerzo percibido de toda la sesión (RPE 1–10)"><option value="">RPE</option>${[1,2,3,4,5,6,7,8,9,10].map(v=>`<option value="${v}"${a.rpe===v?' selected':''}>RPE ${v}</option>`).join('')}</select>`}<button class="del" title="Quitar este rodaje" aria-label="Quitar">×</button></span>
       <span class="t2">${a.ej?'':`<select class="tipo surf" aria-label="Superficie" title="Superficie (sin anotar = ${surfDef}, la de por defecto)"><option value="">${surfDef} ·</option>${SURF.map(x=>`<option${a.surf===x?' selected':''}>${x}</option>`).join('')}</select>`}${listLine(a,s)}${a.tipo==='Calidad'&&!a.q?' · sin series detectadas':''}</span>`;
-    if(confirmId===a.id){const c=document.createElement('div');c.className='confirm';c.innerHTML='<span>¿Quitar este rodaje del comparador?</span><button class="yes">Quitar</button><button class="no">Cancelar</button>';
-      c.querySelector('.yes').onclick=e=>{e.stopPropagation();acts=acts.filter(x=>x.id!==a.id);sel=sel.filter(x=>x!==a.id);confirmId=null;save();render()};
+    if(confirmId===a.id){const c=document.createElement('div');c.className='confirm';c.innerHTML='<span>¿Quitar este rodaje de la app?</span><button class="yes">Quitar</button><button class="no">Cancelar</button>';
+      c.querySelector('.yes').onclick=e=>{e.stopPropagation();acts=acts.filter(x=>x.id!==a.id);sel=sel.filter(x=>x!==a.id);selA=selA.filter(x=>x!==a.id);selC=selC.filter(x=>x!==a.id);confirmId=null;save();render()};
       c.querySelector('.no').onclick=e=>{e.stopPropagation();confirmId=null;renderList()}; el.appendChild(c)}
-    const toggle=()=>{if(si>=0) sel.splice(si,1); else if(!full) sel.push(a.id); sortSel(); save(); render()};
-    el.onclick=e=>{if(e.target.closest('select,.del,.confirm')) return; toggle()};
+    const toggle=()=>{if(solo){if(si>=0) return; sel=[a.id]; save(); render(); return} if(si>=0) sel.splice(si,1); else if(!full) sel.push(a.id); sortSel(); save(); render()};
+    el.onclick=e=>{if(e.target.closest('select,.del,.confirm,.tocmp,.adjz')) return; toggle()};
+    {const tc=el.querySelector('.tocmp'); if(tc) tc.onclick=e=>{e.stopPropagation(); const k=selC.indexOf(a.id); if(k>=0) selC.splice(k,1); else if(selC.length<4) selC.push(a.id); else {try{alertMsg('El Comparador ya tiene 4 rodajes: quitá uno allá o aquí.')}catch(_){} return} save(); renderList()}}
     el.onkeydown=e=>{if((e.key===' '||e.key==='Enter')&&e.target===el){e.preventDefault();toggle()}};
     el.querySelector('select').onchange=e=>{a.tipo=e.target.value; delete a.autoT; save();render()};
     {const rp=el.querySelector('select.rpes'); if(rp) rp.onchange=e=>{const v=+e.target.value; if(v>=1&&v<=10) a.rpe=v; else delete a.rpe; save(); render()}}
@@ -2305,7 +2335,7 @@ function renderReview(){const B=document.getElementById('revBox'); if(!B) return
   const ttl=rvOff===0?'Esta semana':rvOff===-1?'Semana pasada':rvOff===1?'Próxima semana':rvOff<0?`Hace ${-rvOff} semanas`:`Dentro de ${rvOff} semanas`;
   // cuadrito de la semana: lo entrenado cada día (tocalo para verlo en el Comparador) y lo planeado pendiente
   const days=[...Array(7)].map((_,i)=>{const d=fw+i*DAY, as=(A.get(d)||[]).slice().sort((x,y)=>x.t0Unix-y.t0Unix), ps=(P.get(d)||[]).filter(p=>{const id=pmatch.get(p), a=id&&acts.find(x=>x.id===id); return !a});
-    return `<div class="rvd${d===today?' today':''}${d===rvDay?' on':''}" data-d="${d}" role="button" tabindex="0"><div class="rvdn">${['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'][i]} <span>${new Date(d).getUTCDate()}</span></div>${as.map(a=>`<button type="button" class="ci rvgo" data-id="${a.id}" style="border-left-color:${tipoCol(a.tipo)}" title="Ver en el Comparador · ${a.tipo} ${nf(a.distKm,1)} km · ${fmtT(a.timeS)} · TRIMP ${nf(a.trimp,0)}">${tLab(a.tipo)}<span class="x"> ${nf(a.distKm,1)} km</span></button>`).join('')}${ps.map(p=>{const ref=pRef(p); return `<div class="ci pl rvpl${rvSel&&rvSel.ref===ref?' sel':''}" draggable="true" data-ref="${ref}" role="button" tabindex="0" style="border-left-color:${tipoCol(p.tipo)};cursor:pointer" title="Planeado: ${planShow(p.plan).replace(/"/g,'&quot;')} · tocá para mover, copiar o eliminar">${tLab(p.tipo)}</div>`}).join('')}</div>`}).join('');
+    return `<div class="rvd${d===today?' today':''}${d===rvDay?' on':''}" data-d="${d}" role="button" tabindex="0"><div class="rvdn">${['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'][i]} <span>${new Date(d).getUTCDate()}</span></div>${as.map(a=>`<button type="button" class="ci rvgo" data-id="${a.id}" style="border-left-color:${tipoCol(a.tipo)}" title="Ver en el Analizador · ${a.tipo} ${nf(a.distKm,1)} km · ${fmtT(a.timeS)} · TRIMP ${nf(a.trimp,0)}">${tLab(a.tipo)}<span class="x"> ${nf(a.distKm,1)} km</span></button>`).join('')}${ps.map(p=>{const ref=pRef(p); return `<div class="ci pl rvpl${rvSel&&rvSel.ref===ref?' sel':''}" draggable="true" data-ref="${ref}" role="button" tabindex="0" style="border-left-color:${tipoCol(p.tipo)};cursor:pointer" title="Planeado: ${planShow(p.plan).replace(/"/g,'&quot;')} · tocá para mover, copiar o eliminar">${tLab(p.tipo)}</div>`}).join('')}</div>`}).join('');
   // barra de acciones del entreno planeado elegido
   const sp=rvSel&&pGet(rvSel.ref); if(rvSel&&!sp) rvSel=null;
   const bar=sp?`<div class="notice rvact" style="margin:8px 0 0;border-left:4px solid ${tipoCol(sp.tipo)}"><div><b>${sp.tipo}</b> del ${dShort.format(new Date(sp.day+6*3600000))}${sp.tipo==='Descanso'?'':` · <code>${planShow(sp.plan).replace(/</g,'&lt;')}</code>`}</div>
@@ -2712,7 +2742,7 @@ function wLoadCalc(){
 function renderWLoad(){const B=document.getElementById('wLoad'); if(!B) return; const r=wLoadCalc(), c=wlCfg();
   const ac=pct=>pct==null?'—':nf(1-pct/100,2);
   const cfg=`<div class="opts" style="margin-top:12px">Reglas: ACWR máximo para mañana <input class="pace wl" data-k="floor" value="${nf(1-c.floor/100,2)}" aria-label="ACWR máximo para mañana"></div>`;
-  if(!r){B.innerHTML='<h2>Carga máxima sugerida hoy</h2><div class="mdesc">Hacen falta rodajes cargados hasta ayer en el Comparador para calcular tu fitness y fatiga.</div>'+cfg}
+  if(!r){B.innerHTML='<h2>Carga máxima sugerida hoy</h2><div class="mdesc">Hacen falta rodajes cargados hasta ayer en el Analizador para calcular tu fitness y fatiga.</div>'+cfg}
   else{const zn=r.now!=null?fzOf(r.now):null, lv=r.lvl==null?'sin registro de bienestar reciente: no se ajusta':`${['verde','amarillo','rojo'][r.lvl]}: ${nf(r.fac*100,0)} % del techo`+(r.st&&r.st.rest?' (descanso total o activo)':'');
     const mins=v=>r.tpm?` ≈ ${nf(v/r.tpm,0)} min de ER`:'';
     const rs=!!(r.plan&&r.plan.rest);
@@ -2766,7 +2796,7 @@ function weekGrade(w0){const tr=a=>a.trimp||0, sumW=x=>acts.filter(a=>!a.ej&&wkO
   return {r,cur,base,col:g[1],lab:g[2],prev,dv,ar}}
 let fromCal=false;
 let backTo='cal';
-function openInCmp(id,from){if(!acts.some(a=>a.id===id)) return; fromCal=true; backTo=from||'cal'; sel=[id]; view='km'; filt='all'; tab='cmp'; save(); render();
+function openInCmp(id,from){if(!acts.some(a=>a.id===id)) return; fromCal=true; backTo=from||'cal'; goTab('cmp'); sel=[id]; view='km'; filt='all'; save(); render();
   requestAnimationFrame(()=>{const g=document.querySelector('.grid'); if(g) g.scrollIntoView({behavior:'smooth',block:'start'})})}
 function renderCal(){const B=document.getElementById('calBox'), today=crDay(Date.now()/1000);
   if(calM==null){const t=new Date(today); calM=Date.UTC(t.getUTCFullYear(),t.getUTCMonth(),1)}
@@ -2783,7 +2813,7 @@ function renderCal(){const B=document.getElementById('calBox'), today=crDay(Date
       const items=[...ps.filter(p=>{const id=pmatch.get(p), a=id&&acts.find(x=>x.id===id); return !a||crDay(a.t0Unix)!==d}).map(p=>{const e=est(p), id=pmatch.get(p), a=id&&acts.find(x=>x.id===id);
           const miss=!a&&d<today&&p.tipo!=='Descanso'; return `<div class="ci pl" draggable="true" data-ref="${pRef(p)}" data-d="${d}" style="border-left-color:${tipoCol(p.tipo)};cursor:grab${miss?';background:color-mix(in srgb,var(--muted) 30%,var(--panel));border-style:solid;color:var(--ink)':''}" title="${miss?'No se hizo · ':''}Planeado: ${planShow(p.plan).replace(/"/g,'&quot;')} · tocá para editar, mover o copiar; en la compu arrastralo a otro día (con Ctrl lo copiás)">${tLab(p.tipo)}<span class="x"> ${e?`${nf(e.km,1)} km · ${fmtT(e.t).replace(/:\d\d$/,'')}`:''}${a?` → ${dShort.format(new Date(a.t0Unix*1000))}`:''}</span></div>`}),
         ...as.map(a=>{const p=done.get(a.id), x=p?execCalc(a,p.plan,Mh,ep):null, q=x&&x.q?x.q[1]:null;
-          const fill=q&&q!=='n'?`;background:color-mix(in srgb,${css(XC[q])} 38%,var(--panel))`:''; return `<div class="ci" data-id="${a.id}" style="border-left-color:${tipoCol(a.tipo)};cursor:zoom-in${fill}" title="Abrir en el Comparador · ${a.tipo} ${nf(a.distKm,1)} km · ${fmtT(a.timeS)} · TRIMP ${nf(a.trimp,0)}${x?' · ejecución '+x.q[2]:''}">${wbBox(a,true)}${tLab(a.tipo)}<span class="x"> ${nf(a.distKm,1)} km · ${nf(a.trimp,0)}</span></div>`})].join('');
+          const fill=q&&q!=='n'?`;background:color-mix(in srgb,${css(XC[q])} 38%,var(--panel))`:''; return `<div class="ci" data-id="${a.id}" style="border-left-color:${tipoCol(a.tipo)};cursor:zoom-in${fill}" title="Abrir en el Analizador · ${a.tipo} ${nf(a.distKm,1)} km · ${fmtT(a.timeS)} · TRIMP ${nf(a.trimp,0)}${x?' · ejecución '+x.q[2]:''}">${wbBox(a,true)}${tLab(a.tipo)}<span class="x"> ${nf(a.distKm,1)} km · ${nf(a.trimp,0)}</span></div>`})].join('');
       h+=`<div class="cd${d<calM||d>last?' out':''}${d===today?' today':''}${d===calSel?' sel':''}" data-d="${d}" tabindex="0" role="button" aria-label="${dLong.format(new Date(d))}"><div class="n"><span>${new Date(d).getUTCDate()}</span>${c?`<span class="${c}" title="${st.v[1]}">${ic[c]}</span>`:''}</div>${goal&&goal.day===d?`<div class="ci" style="border-left-color:var(--tRace);background:color-mix(in srgb,var(--tRace) 14%,transparent)" title="${goal.name} · ${nf(goal.km,1)} km · meta ${fmtT(goal.t)}">🏁<span class="tl"> ${goal.name.replace(/</g,"&lt;")}</span></div>`:''}${items}</div>`}
     const fe=SM.get(Math.min(w+6*DAY,today)), z=fe&&fe.pct!=null&&w<=today?fzOf(fe.pct):null, mx=Math.max(rT,pT)||1;
     const gr=w+7*DAY<=today?weekGrade(w):null;
@@ -2883,14 +2913,14 @@ function renderCalDet({A,P,done,Mh,ep,est,today}){const D=document.getElementByI
     :`<div class="mdesc">Sin actividad.</div>`)+`</div>`+(EX.length?`<div class="exrow"><div class="exin"><div class="lbl">Ejecución contra el plan <span style="text-transform:none;letter-spacing:0;font-weight:400">· barra gris: planeado; de color: real</span></div>${EX.join('')}</div></div>`:'')+`</div>`;
   const who=(curProf()&&curProf().name)||'atleta';
   h+=`<div class="cmts"><div><div class="lbl">Comentarios IA</div>${AI.length?AI.map(t=>`<p>${t}</p>`).join(''):'<p class="mdesc">Nada que comentar.</p>'}</div>
-    <div><div class="lbl">Comentarios ${esc(who)}</div>${ME.length?ME.map(t=>`<p>${t}</p>`).join(''):'<p class="mdesc">Sin notas. Las de Bienestar y las de cada rodaje (en el Comparador) aparecen aquí.</p>'}</div></div>`;
+    <div><div class="lbl">Comentarios ${esc(who)}</div>${ME.length?ME.map(t=>`<p>${t}</p>`).join(''):'<p class="mdesc">Sin notas. Las de Bienestar y las de cada rodaje (en el Analizador) aparecen aquí.</p>'}</div></div>`;
   D.innerHTML=h;
   D.querySelectorAll('.cdOpen').forEach(b=>b.onclick=()=>openInCmp(b.dataset.id));
-  document.getElementById('cdWell').onclick=()=>{tab='well'; save(); render(); syncWForm(wk); document.getElementById('wD').value=wk; window.scrollTo({top:0,behavior:'smooth'})};
-  document.getElementById('cdRace').onclick=()=>{goalDraft={day:d}; tab='plan'; save(); render(); document.getElementById('goalBox').scrollIntoView({behavior:'smooth',block:'start'})};
+  document.getElementById('cdWell').onclick=()=>{goTab('well'); save(); render(); syncWForm(wk); document.getElementById('wD').value=wk; window.scrollTo({top:0,behavior:'smooth'})};
+  document.getElementById('cdRace').onclick=()=>{goalDraft={day:d}; goTab('plan'); save(); render(); document.getElementById('goalBox').scrollIntoView({behavior:'smooth',block:'start'})};
   document.getElementById('cdRest').onclick=()=>{if(restOn(d)) plans=plans.filter(p=>!(p.day===d&&p.tipo==='Descanso')); else plans.push({day:d,tipo:'Descanso',plan:'Descanso'}); applyPlans(); save(); syncPlanSum(); renderCal()};
   pWire(D,d);
-  document.getElementById('cdPlan').onclick=()=>{tab='plan'; save(); render(); const i=document.getElementById('p1D'); i.value=wk; i.closest('.panel').scrollIntoView({behavior:'smooth',block:'start'})};
+  document.getElementById('cdPlan').onclick=()=>{goTab('plan'); save(); render(); const i=document.getElementById('p1D'); i.value=wk; i.closest('.panel').scrollIntoView({behavior:'smooth',block:'start'})};
 }
 /* ---------- umbral desde el Test: se detecta el protocolo y se interpreta según él ----------
    20 min: el bloque de 20 min (lap del reloj, o el tramo más rápido de 20 min) → umbral = FC media, ritmo umbral = ritmo medio × 1,05
@@ -3071,7 +3101,7 @@ function testReport(id){const t=thrHist.find(h=>h.actId===String(id)), a=acts.fi
     <li><b>FC máxima registrada en el test:</b> ${t.hrmax} ppm.</li></ul>
   <h2>Umbral elegido</h2><div><b style="font-size:16px">${thrTxt}</b></div>
   ${z?`<table style="margin-top:6px;max-width:520px"><thead><tr><th>Zona</th><th>FC</th></tr></thead><tbody><tr><td>Z1 fácil</td><td>&lt; ${z.z2} ppm</td></tr><tr><td>Z2</td><td>${z.z2}–${z.z3-1} ppm</td></tr><tr><td>Z3</td><td>≥ ${z.z3} ppm</td></tr></tbody></table>`:''}
-  <div class="mut" style="margin-top:14px">Generado con el Comparador de rodajes el ${dShort.format(new Date())}.</div></div>`;
+  <div class="mut" style="margin-top:14px">Generado con Run-app el ${dShort.format(new Date())}.</div></div>`;
   const o=document.createElement('div'); o.className='trep-o'; o.innerHTML=h; document.body.appendChild(o);
   o.querySelector('#trClose').onclick=()=>o.remove(); o.querySelector('#trPrint').onclick=()=>window.print(); o.onclick=e=>{if(e.target===o) o.remove()}}
 // cuadrito de datos anclado a la barra: encima si cabe; si no, dentro de la barra, desde su borde superior
@@ -3111,7 +3141,7 @@ function renderThr(){const B=document.getElementById('thrBox'); if(!B) return; a
     <tr><td><b style="color:${ZCOL[1]}">Z2</b></td><td class="num">3 + 4</td><td class="num">${zones.lim[0]}–${zones.lim[1]-1} ppm</td><td class="num">${fp(tpNow()*THR.pace[0])} a ${fp(tpNow()*THR.pace[1])}</td></tr>
     <tr><td><b style="color:${ZCOL[2]}">Z3</b></td><td class="num">5</td><td class="num">≥ ${zones.lim[1]} ppm</td><td class="num">más rápido que ${fp(tpNow()*THR.pace[1])}</td></tr></tbody></table>
     ${zones.lim[0]!==z.z2||zones.lim[1]!==z.z3?`<div class="opts"><span class="mdesc" style="margin:0">Las zonas de FC (${zones.lim[0]} / ${zones.lim[1]}) se cambiaron a mano después del Test.</span><button type="button" id="thrApply">Volver a las del Test (${z.z2} / ${z.z3})</button></div>`:''}`}
-  else h+=`<div class="mdesc" style="margin-top:0">Cargá una actividad de tipo <b>Test</b> (o cambiá una a Test en la lista del Comparador). Se detecta el protocolo —20 minutos, 30 minutos o el escalonado de Luis— y con él se calculan tu umbral y tu ritmo umbral; las zonas (Friel, agrupadas en 3) se programan cuando tocás <b>Ajustar zonas</b>.</div>`;
+  else h+=`<div class="mdesc" style="margin-top:0">Cargá una actividad de tipo <b>Test</b> (o cambiá una a Test en la lista del Analizador). Se detecta el protocolo —20 minutos, 30 minutos o el escalonado de Luis— y con él se calculan tu umbral y tu ritmo umbral; las zonas (Friel, agrupadas en 3) se programan cuando tocás <b>Ajustar zonas</b>.</div>`;
   if(tsx.length){h+=`<h2 style="margin-top:16px;font-size:18px">Tests</h2>`+thrHist.map(testCard).join('');
     const bad=tsx.filter(a=>!thrHist.some(t=>t.actId===String(a.id))); if(bad.length) h+=`<div class="notice" style="margin-top:8px">Sin datos suficientes: ${bad.map(a=>`${dt(a)} (${fmtT(a.timeS)}${a.f5&&a.f5.h?'':', guardada con una versión anterior: volvé a cargar su .fit'})`).join(', ')}.</div>`}
   B.innerHTML=h+fcHistHtml(); fcHistWire(B);
@@ -3292,12 +3322,20 @@ function fitCard(M,pa,pb){if(!M.ok) return `<div class="mdesc" style="margin-top
    ${r('Confiabilidad',`<span class="${lv[0]}" style="font-weight:600">${lv[1]}</span>`)}</tbody></table>
    <div class="mdesc">FC estable = promedio desde el punto de estabilización (ER/LR) o desde el min 3 (bloques largos), ponderada por duración. ${why.length?'Para que la confiabilidad suba: '+why.join('; ')+'. Lo que más ayuda es tener sesiones a ritmos más variados.':''}</div>`}
 document.getElementById('evGo').onclick=evalChange;
-function syncTab(){{const bc=document.getElementById('backCal'); if(bc){bc.hidden=!(fromCal&&tab==='cmp'); bc.textContent=backTo==='rev'?'← Volver a la revisión semanal':backTo==='ref'?'← Volver a Referencia':'← Volver al calendario'}}document.querySelectorAll('#tabSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===tab));
-  document.querySelector('.grid').hidden=tab!=='cmp'; document.getElementById('planner').hidden=tab!=='plan'; document.getElementById('planBox').hidden=tab!=='cmp';
-  document.getElementById('wellness').hidden=tab!=='well'; document.getElementById('calendar').hidden=tab!=='cal'; document.getElementById('refTab').hidden=tab!=='ref'; document.getElementById('drop').hidden=tab!=='cmp'}
-document.querySelectorAll('#tabSeg button').forEach(b=>b.onclick=()=>{fromCal=false;tab=b.dataset.t;save();render()});
+function goTab(t){if(t===tab) return; if(tab==='cmp') selA=sel.slice(0,1); else if(tab==='ref'){selC=sel.slice(0,4); viewC=view}
+  tab=t; if(t==='cmp'){sel=selA.filter(id=>acts.some(a=>a.id===id)).slice(0,1); view='km'; if(!sel.length){const a=acts.slice().sort((x,y)=>y.t0Unix-x.t0Unix)[0]; if(a) sel=[a.id]}}
+  else if(t==='ref'){sel=selC.filter(id=>acts.some(a=>a.id===id)).slice(0,4); view=viewC||'km'}}
+function syncTab(){const T=tab; {const bc=document.getElementById('backCal'); if(bc){bc.hidden=!(fromCal&&T==='cmp'); bc.textContent=backTo==='rev'?'← Volver a la revisión semanal':backTo==='ref'?'← Volver al Comparador':'← Volver al calendario'}}
+  document.body.dataset.tab=T; document.querySelectorAll('#tabSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===T));
+  const H=(id,h)=>{const e=document.getElementById(id); if(e) e.hidden=h};
+  document.querySelector('.grid').hidden=!(T==='cmp'||T==='ref'); H('planner',T!=='plan'); H('planBox',T!=='cmp'); H('wellness',T!=='well'); H('calendar',T!=='cal'); H('refTab',T!=='ref'); H('drop',T!=='cmp');
+  H('home',T!=='home'); H('tabSeg',T==='home'); H('uiRow',T==='home'); H('homeBtn',T==='home'); H('hdrDesc',T!=='cmp'); if(T==='home') H('uiBox',true);
+  {const t=document.getElementById('cmpTtl'); if(t) t.textContent=T==='cmp'?'Análisis':'Curvas y tendencias'} try{xqScan()}catch(e){}}
+document.querySelectorAll('#tabSeg button').forEach(b=>b.onclick=()=>{fromCal=false;goTab(b.dataset.t);save();render();window.scrollTo({top:0})});
+document.querySelectorAll('#home [data-go]').forEach(b=>b.onclick=()=>{fromCal=false;goTab(b.dataset.go);save();render();window.scrollTo({top:0})});
+document.getElementById('homeBtn').onclick=()=>{fromCal=false;goTab('home');save();render();window.scrollTo({top:0})};
 // volver al calendario en el mes y el día desde donde se abrió el rodaje
-document.getElementById('backCal').onclick=e=>{e.stopPropagation(); fromCal=false; tab=backTo==='rev'?'plan':backTo==='ref'?'ref':'cal'; save(); render();
+document.getElementById('backCal').onclick=e=>{e.stopPropagation(); fromCal=false; goTab(backTo==='rev'?'plan':backTo==='ref'?'ref':'cal'); save(); render();
   requestAnimationFrame(()=>{const t=document.getElementById(backTo==='rev'?'revBox':backTo==='ref'?'rfTL':calSel!=null?'calDet':'calBox'); if(t&&!t.hidden) t.scrollIntoView({behavior:'smooth',block:'start'})})};
 document.querySelectorAll('#pmSeg button').forEach(b=>b.onclick=()=>{pm=b.dataset.m;save();renderPlanner()});
 document.getElementById('gGo').onclick=genCycle;
@@ -3612,7 +3650,7 @@ function renderTecTable(){
     ['Temperatura',(r,i)=>cell(r,i,x=>x.a.temp,1,null,0,' °C')],
     ['Zapato',r=>`<input class="tshoe" list="shoeList" data-id="${r.a.id}" value="${tEsc(r.a.shoe||'')}" placeholder="—" aria-label="Zapato" style="${inp}">`],
     ['Superficie',r=>`<select class="tsurf" data-id="${r.a.id}" aria-label="Superficie" style="${inp}"><option value="">—</option>${SURF.map(x=>`<option${r.a.surf===x?' selected':''}>${x}</option>`).join('')}</select>`]];
-  const head=`<tr><th style="text-align:left"></th>${R.map(r=>`<th><button type="button" class="tgo" data-id="${r.a.id}" title="Ver este test en el comparador" style="font:inherit;font-weight:600;padding:2px 8px">${dt(r.a)}</button></th>`).join('')}</tr>`;
+  const head=`<tr><th style="text-align:left"></th>${R.map(r=>`<th><button type="button" class="tgo" data-id="${r.a.id}" title="Ver este test en el Analizador" style="font:inherit;font-weight:600;padding:2px 8px">${dt(r.a)}</button></th>`).join('')}</tr>`;
   const body=rows.map(([l,f])=>l==='h'?`<tr><td colspan="${R.length+1}" style="text-align:left;font-weight:700;padding-top:12px">${f}</td></tr>`:`<tr><td style="text-align:left">${l}</td>${R.map((r,i)=>`<td>${f(r,i)}</td>`).join('')}</tr>`).join('');
   const sw=MY_K().reduce((q,[k])=>q+(+myW[k]||0),0);
   const wEd=`<details style="margin:0 0 12px"><summary style="cursor:pointer;font-weight:600">Escala y pesos de la eficiencia mecánica</summary><div class="mdesc" style="margin:6px 0">Cada métrica vale de 0 a 100 en tu escala propia (a 5:53 /km): contacto 290 → 215 ms, ángulo 26,6° → 16,6°, ratio vertical 12,5 % → 7,5 %, rigidez 9,1 → 17,1 kN/m a 79 kg, diferencia izq./der. 3 % → 0,3 %. Se corren con el ritmo y el peso. El 100 es una meta de muy buen nivel, así que el puntaje se lee: 65 o más excelente, 55–65 muy buena, 45–55 buena, 35–45 regular, menos de 35 en desarrollo. El peso dice cuánto cuenta en tu puntaje; se normalizan solos, no tienen que sumar 100.</div><div style="display:flex;flex-wrap:wrap;gap:8px 14px">${MY_K().map(([k,n])=>`<label style="font-size:13px">${n} <input class="myw" data-k="${k}" value="${+myW[k]||0}" inputmode="numeric" style="width:44px;${inp};text-align:right"> <span class="mdesc" style="margin:0">${sw?nf((+myW[k]||0)/sw*100,0):0} %</span></label>`).join('')}<button type="button" id="mywReset" style="font-size:12px;padding:3px 9px">Valores sugeridos</button></div></details>`;
@@ -3627,7 +3665,7 @@ function renderTecTable(){
   if(typeof chosen!=='undefined'&&chosen.some(a=>a.lat!=null&&!a.wx)&&!wxErr&&!wxBusy) setTimeout(()=>wxBatch(chosen),0);
   W.querySelectorAll('input.myw').forEach(e=>e.onchange=()=>{const v=num(e.value); myW[e.dataset.k]=isFinite(v)&&v>=0?Math.min(100,Math.round(v)):0; save(); render(); const d=document.querySelector('#tbl details'); if(d) d.open=true});
   {const b=document.getElementById('mywReset'); if(b) b.onclick=()=>{myW={vr:25,gct:20,stiff:20,ang:15,bal:10}; save(); render(); const d=document.querySelector('#tbl details'); if(d) d.open=true}}
-  W.querySelectorAll('button.tgo').forEach(b=>b.onclick=()=>{sel=[b.dataset.id]; view='km'; save(); render(); document.getElementById('cmpPanel').scrollIntoView({behavior:'smooth',block:'start'})});
+  W.querySelectorAll('button.tgo').forEach(b=>b.onclick=()=>{const a=acts.find(x=>String(x.id)===b.dataset.id); if(a) openInCmp(a.id,'ref')});
 }
 // lectura práctica: qué cambió contra el test anterior, con qué contexto, y en qué conviene enfocarse
 function tecRead(R){
@@ -3652,7 +3690,7 @@ function tecRead(R){
   if(R.length>=4){const F=[['forma (TSB %)',R.map(r=>r.tsb)],['fitness (CTL)',R.map(r=>r.ctl)],['carga de 4 semanas',R.map(r=>r.tr)],['parte de calidad',R.map(r=>r.qs)],['temperatura',R.map(r=>r.a.temp)]], out=[];
     for(const [y,Y] of [['La eficiencia mecánica',R.map(r=>r.my)],['Skill',R.map(r=>r.rf.sk)],['Strength',R.map(r=>r.rf.st)]]) for(const [f,X] of F){const c=corr(X,Y); if(c&&Math.abs(c.r)>=0.6) out.push(`${y} ${c.r>0?'sube':'baja'} cuando sube ${f} (r = ${nf(c.r,2)}, ${c.n} tests)`)}
     li.push(out.length?'Relaciones en tu historial: '+out.join('; ')+'. Con pocos tests tomalo como pista, no como regla.':'Todavía no aparece ninguna relación clara entre los puntajes y la forma, la carga o la temperatura.')}
-  else li.push(`Con ${R.length} test${R.length>1?'s':''} todavía no se pueden buscar relaciones; a partir de 4 el comparador indica qué factores acompañan a las subidas y bajadas.`);
+  else li.push(`Con ${R.length} test${R.length>1?'s':''} todavía no se pueden buscar relaciones; a partir de 4 la app indica qué factores acompañan a las subidas y bajadas.`);
   return `<div class="notice" style="margin:0 0 12px;color:var(--ink)"><ul style="margin:0;padding-left:18px">${li.map(x=>`<li style="margin:3px 0">${x}</li>`).join('')}</ul></div>`}
 
 /* ---------- zonas de dinámica de carrera según Coros (más bajo = mejor) ---------- */
@@ -4165,8 +4203,8 @@ function syncZones(){zones.lim.forEach((v,i)=>{const el=document.getElementById(
 document.getElementById('zonesOn').onchange=e=>{zones.on=e.target.checked;save();renderChart()};
 document.querySelectorAll('.zl').forEach((el,i)=>el.onchange=()=>{const v=Math.round(num(el.value)); const lo=i?zones.lim[i-1]:P.rest, hi=i<zones.lim.length-1?zones.lim[i+1]:P.max;
   if(isFinite(v)&&v>lo&&v<hi) zones.lim[i]=v; syncZones(); save(); renderChart()});
-function render(){syncTab(); if(tab==='cal'){renderCal();return} if(tab==='plan'){renderPlanner();return} if(tab==='well'){renderWell();return} if(tab==='ref'){if(typeof REFREADY!=='undefined'&&REFREADY) renderRef(); return} renderList();renderChart();if(view==='carga')renderPeriodTable();else if(view==='forma')renderPmcTable();else if(view==='tec')renderTecTable();else renderTable()}
-load(); if(syncTrimp()) save(); if(applyTests()) save(); if(plans.length||cycle) applyPlans(); syncZones(); syncPlanSum(); p1Fill();
+function render(){syncTab(); if(tab==='home') return; if(tab==='cal'){renderCal();return} if(tab==='plan'){renderPlanner();return} if(tab==='well'){renderWell();return} if(tab==='ref'){ref.sel=sel.slice(); if(typeof REFREADY!=='undefined'&&REFREADY) renderRef()} renderList();renderChart();if(view==='carga')renderPeriodTable();else if(view==='forma')renderPmcTable();else if(view==='tec')renderTecTable();else renderTable()}
+load(); if(tab==='cmp') selA=sel.slice(0,1); else if(tab==='ref') selC=sel.slice(0,4); tab='home'; if(syncTrimp()) save(); if(applyTests()) save(); if(plans.length||cycle) applyPlans(); syncZones(); syncPlanSum(); p1Fill();
 /* ---------- perfiles: cada atleta guarda sus rodajes, zonas, FC, peso y plan por separado ---------- */
 const curProf=()=>profs.list.find(x=>x.id===profs.cur);
 function syncProf(){const s=document.getElementById('profSel'); s.innerHTML='';
@@ -4283,7 +4321,7 @@ async function cloudInit(){const db=await window.claude?.use?.('db').catch(()=>n
 function backupDialog(){const w=document.createElement('div'); w.className='snapWrap'; w.setAttribute('role','dialog'); w.setAttribute('aria-label','Respaldo');
   w.innerHTML=`<div class="snapBox" style="max-width:560px"><h2>Respaldo</h2><div class="mdesc" style="margin:0">Descargá un archivo con todo lo de este perfil (rodajes, bienestar, planes y configuración) o cargá uno anterior. Al cargar, se suman los rodajes y días de bienestar que falten; lo que ya tenés no se borra.</div>
     <div class="snapBar"><button class="btn primary" type="button" data-d>Descargar respaldo</button><label class="btn">Cargar respaldo<input type="file" accept=".json,application/json" hidden data-f></label><button class="btn" type="button" data-x>Cerrar</button></div><div class="mdesc" data-m></div>
-    <h2 style="margin-top:10px">Clima de los rodajes</h2><div class="mdesc" style="margin:0">Dentro de Claude la página no puede consultar el clima. El camino corto: <b>1)</b> aquí, <b>Lista de rodajes sin clima</b>; <b>2)</b> en el comparador abierto como archivo en Chrome, <b>Completar clima desde la lista</b> (consulta y te descarga el archivo de clima); <b>3)</b> aquí, <b>Importar clima</b>. Lo que anotaste a mano se respeta.</div>
+    <h2 style="margin-top:10px">Clima de los rodajes</h2><div class="mdesc" style="margin:0">Dentro de Claude la página no puede consultar el clima. El camino corto: <b>1)</b> aquí, <b>Lista de rodajes sin clima</b>; <b>2)</b> en la app abierta como archivo en Chrome, <b>Completar clima desde la lista</b> (consulta y te descarga el archivo de clima); <b>3)</b> aquí, <b>Importar clima</b>. Lo que anotaste a mano se respeta.</div>
     <div class="snapBar"><button class="btn primary" type="button" data-wxp>1 · Lista de rodajes sin clima</button><label class="btn primary">2 · Completar clima desde la lista<input type="file" accept=".json,application/json" hidden data-wxl></label><label class="btn primary">3 · Importar clima<input type="file" accept=".json,application/json" hidden data-wxi></label></div>
     <details style="margin-top:4px"><summary class="mdesc" style="cursor:pointer;margin:0">Otras opciones</summary><div class="snapBar" style="margin-top:6px"><button class="btn" type="button" data-wxa>Buscar clima de todos (con los rodajes cargados aquí)</button><button class="btn" type="button" data-wxe>Exportar clima</button></div></details><div class="mdesc" data-wm>${(()=>{const R=acts.filter(a=>!a.ej), w=R.filter(a=>a.wx&&!a.wx.man).length, l=R.filter(a=>a.lat!=null).length; return `${R.length} rodajes · ${l} con ubicación · ${w} con clima consultado`})()}</div></div>`;
   document.body.appendChild(w); const m=t=>w.querySelector('[data-m]').textContent=t, close=()=>w.remove();
@@ -4333,15 +4371,15 @@ function backupDialog(){const w=document.createElement('div'); w.className='snap
   w.querySelector('[data-wxp]').onclick=async()=>{const R=acts.filter(a=>{if(a.ej) return false; const S=wxSv(a); return !S||S.cc==null}), L=R.filter(a=>a.lat!=null), sin=R.length-L.length;
     if(!L.length){wm(R.length?`Los ${R.length} rodajes sin clima no tienen ubicación (volvé a cargar sus .fit).`:'Todos tus rodajes ya tienen clima completo (con nubosidad).');return}
     try{await dlJson(`Rodajes_sin_clima_${todayKey()}.json`,{app:'comparador-clima-pendientes',v:1,fecha:new Date().toISOString(),items:L.map(a=>({id:a.id,t0Unix:a.t0Unix,timeS:a.timeS,lat:a.lat,lon:a.lon}))});
-      wm(`Lista de ${L.length} rodaje(s) sin clima o sin nubosidad descargada`+(sin?` (${sin} más no tienen ubicación y quedan fuera)`:'')+'. Ahora abrí el comparador como archivo en Chrome y usá el paso 2.')}catch(e){wm(e&&e.code==='declined'?'No se guardó.':'No se pudo descargar.')}};
+      wm(`Lista de ${L.length} rodaje(s) sin clima o sin nubosidad descargada`+(sin?` (${sin} más no tienen ubicación y quedan fuera)`:'')+'. Ahora abrí la app como archivo en Chrome y usá el paso 2.')}catch(e){wm(e&&e.code==='declined'?'No se guardó.':'No se pudo descargar.')}};
   w.querySelector('[data-wxl]').onchange=async ev=>{const f=ev.target.files[0]; if(!f) return; try{const o=JSON.parse(await f.text()); if(o.app!=='comparador-clima-pendientes'||!Array.isArray(o.items)) throw 0;
       const L=o.items.filter(x=>x&&x.id!=null&&x.lat!=null).map(x=>({...x})); wxErr=''; wm(`Consultando el clima de ${L.length} rodaje(s)…`); const n=await wxBatch(L);
-      if(wxErr){wm(`No se pudo consultar: ${wxErr}. Este paso hay que hacerlo con el comparador abierto como archivo en Chrome, no dentro de Claude.`); return}
+      if(wxErr){wm(`No se pudo consultar: ${wxErr}. Este paso hay que hacerlo con la app abierta como archivo en Chrome, no dentro de Claude.`); return}
       const W={}; L.forEach(x=>{if(x.wx) W[x.id]=x.wx}); await dlJson(`Clima_${todayKey()}.json`,{app:'comparador-clima',v:1,fecha:new Date().toISOString(),wx:W});
       wm(`Listo: clima de ${n} de ${L.length} rodaje(s). Se descargó Clima_${todayKey()}.json: importalo en el comparador de Claude con el paso 3.`)}
     catch(e){wm('Ese archivo no es una lista de rodajes sin clima.')} ev.target.value=''};
   w.querySelector('[data-wxa]').onclick=async()=>{const L=acts.filter(a=>!a.ej&&a.lat!=null&&!a.wx); if(!L.length){wm('No hay rodajes con ubicación y sin clima.');return}
-    wxErr=''; wm(`Consultando el clima de ${L.length} rodaje(s)…`); const n=await wxBatch(L); wm(wxErr?`No se pudo consultar: ${wxErr}. Dentro de Claude esto no funciona: abrí el comparador como archivo en Chrome.`:`Listo: clima de ${n} rodaje(s). Ahora tocá «Exportar clima».`)};
+    wxErr=''; wm(`Consultando el clima de ${L.length} rodaje(s)…`); const n=await wxBatch(L); wm(wxErr?`No se pudo consultar: ${wxErr}. Dentro de Claude esto no funciona: abrí la app como archivo en Chrome.`:`Listo: clima de ${n} rodaje(s). Ahora tocá «Exportar clima».`)};
   w.querySelector('[data-wxe]').onclick=async()=>{const W={}; acts.filter(a=>!a.ej&&a.wx&&!a.wx.man).forEach(a=>W[a.id]=a.wx); const n=Object.keys(W).length; if(!n){wm('Ningún rodaje tiene clima consultado todavía.');return}
     const data=JSON.stringify({app:'comparador-clima',v:1,fecha:new Date().toISOString(),wx:W}), name=`Clima_${todayKey()}.json`, dl=await window.claude?.use?.('downloads').catch(()=>null);
     try{if(dl) await dl.save({filename:name,data:new Blob([data],{type:'application/json'})}); else{const u=URL.createObjectURL(new Blob([data],{type:'application/json'})), a=document.createElement('a'); a.href=u; a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(u),5000)} wm(`Clima de ${n} rodaje(s) exportado.`)}catch(e){wm('No se pudo descargar.')}};
@@ -4423,7 +4461,7 @@ function xqPlace(el,b){let host=null; const pv=el.previousElementSibling;
   if(pv&&/^H[23]$/.test(pv.tagName)) host=pv; else if(pv&&pv.children&&pv.children.length<=4){const h=pv.querySelector(':scope > h2'); if(h) host=h}
   if(host&&!host.querySelector(':scope > .xq')) host.appendChild(b); else el.before(b)}
 function xqScan(){document.querySelectorAll('.mdesc, header > p, footer').forEach(el=>{
-  if(el.dataset.xq){const b=el._xqb; if(b){if(!b.isConnected) xqPlace(el,b); b.hidden=!el.textContent.trim()} return}
+  if(el.dataset.xq){const b=el._xqb; if(b){if(!b.isConnected) xqPlace(el,b); b.hidden=!el.textContent.trim()||!!el.closest('[hidden]')} return}
   if(el.dataset.keep!=null||XQ_ID.has(el.id)||el.closest(XQ_SKIP)) return;
   if(el.textContent.trim().length<110) return;
   el.dataset.xq=1; el.classList.add('xqh');
@@ -4551,7 +4589,7 @@ function renderRef(){const B=document.getElementById('refBox'); if(!B) return; c
   const C=refCalc(), m=ref.m, X=C.M[m], R=RMET[m], F=X.F, selR=ref.sel.map(id=>C.rows.find(r=>r.id===id)).filter(Boolean);
   const inp=(k,l,ph,w)=>`<label>${l}<input class="pace rf" data-k="${k}" value="${esc(ref[k])}" placeholder="${ph||''}" inputmode="decimal" style="width:${w||90}px"></label>`;
   const fm1=(v,d)=>v==null?'—':nf(v,d??R.d);
-  let h=`<h2>Referencia: evolución sin el ruido del clima</h2>
+  let h=`<h2>Comparador: evolución sin el ruido del clima</h2>
   <div class="mdesc" data-keep style="margin-top:0">Se eligen rodajes comparables (mismo tipo, ritmo y duración) y se calcula cómo habría sido el rodaje <b>a un mismo WBGT</b>. La pendiente de calor sale de una regresión (${R.n} ~ WBGT + ritmo + duración) con <b>todos</b> los rodajes de ese tipo; el filtro solo define el rodaje de referencia. Nada se extrapola fuera del WBGT que viviste.</div>
   ${catHtml(CAT)}
   
@@ -4565,8 +4603,8 @@ function renderRef(){const B=document.getElementById('refBox'); if(!B) return; c
     <div class="opts" style="margin-top:0"><span class="seg" role="group" aria-label="Criterio del gráfico">${Object.entries(TM).map(([k,t])=>`<button type="button" data-rtm="${k}" aria-pressed="${k===tm}">${t.n}</button>`).join('')}</span><label><input type="checkbox" id="rfAll"${ref.all?' checked':''}> ver todos los ${tl()}, no solo los del filtro</label></div>
     <div class="chartbox" style="height:300px;margin-top:8px"><canvas id="refTL" aria-label="Rodajes en el tiempo"></canvas></div>
     <div class="opts" style="margin-top:6px">${selR.length?selR.map(r=>`<span style="display:inline-flex;align-items:center;gap:4px;font-size:13px"><span style="width:10px;height:10px;border-radius:50%;background:${color(ref.sel.indexOf(r.id))}"></span>${dt(r.a)} <button type="button" data-rx="${esc(r.id)}" aria-label="Quitar" style="padding:0 6px;font-size:12px">✕</button></span>`).join(''):'<span class="mdesc" style="margin:0" data-keep>Tocá hasta 4 puntos para elegirlos.</span>'}
-      <button type="button" class="btn primary" id="rfCmp"${selR.length?'':' disabled'}>Comparar en el Comparador →</button></div>
-    <div class="mdesc" data-keep>Cada punto es un ${tl()} ${ref.all?'':'del filtro '}en su fecha, con su valor real (sin corregir por clima). ${TM[tm].tip} Tocá un punto para elegirlo o quitarlo (el tooltip muestra ritmo, duración y WBGT); «Comparar» abre los elegidos en el Comparador, con un botón para volver aquí.</div></div>`}
+      <button type="button" class="btn primary" id="rfCmp"${selR.length?'':' disabled'}>Ver curvas superpuestas ↓</button></div>
+    <div class="mdesc" data-keep>Cada punto es un ${tl()} ${ref.all?'':'del filtro '}en su fecha, con su valor real (sin corregir por clima). ${TM[tm].tip} Tocá un punto para elegirlo o quitarlo (el tooltip muestra ritmo, duración y WBGT); Los elegidos son los mismos de «Curvas y tendencias», más abajo: ahí se superponen sus gráficos de dentro del rodaje (hasta 4).</div></div>`}
   // tarjeta del rodaje sintético
   const wbtxt=C.Wr!=null?`${nf(C.Wr,1)} °C ${wbTag(C.Wr)}`:'—';
   h+=`<div style="margin-top:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">`;
@@ -4616,7 +4654,8 @@ function drawRefCmp(C,m,selR){const cv=document.getElementById('refCmpC'); if(re
 // criterios del gráfico en el tiempo (valores reales de cada rodaje)
 const REFTM={hr:{n:'FC promedio',k:'hr',u:'ppm',d:0,tip:'FC promedio desde la estabilización: más baja es mejor a igual ritmo.'},der:{n:'Deriva',k:'der',u:'%',d:1,tip:'Deriva: cuánto sube la FC de la primera a la segunda mitad; menos es mejor.'},pahr:{n:'Pa:HR',k:'pahr',u:'%',d:1,tip:'Pa:HR: desacople de ritmo y FC entre mitades; bajo 5 % es buena base aeróbica.'},ef:{n:'Eficiencia aeróbica',k:'ef',u:'m/min por ppm',d:3,tip:'Eficiencia aeróbica: metros por minuto por cada latido; más alta es mejor.'}};
 let refTL=null;
-function refTog(id){id=String(id); const k=ref.sel.map(String).indexOf(id); if(k>=0) ref.sel.splice(k,1); else if(ref.sel.length<4){const r=refRows(ref.tipo).find(z=>String(z.id)===id); if(r) ref.sel.push(r.id)} else {try{alertMsg('Máximo 4 rodajes: quitá uno para elegir otro.')}catch(e){}} saveRef(); renderRef()}
+function refSync(){sel=ref.sel.map(id=>(acts.find(a=>String(a.id)===String(id))||{}).id).filter(x=>x!=null).slice(0,4); saveRef(); save(); render()}
+function refTog(id){id=String(id); const k=ref.sel.map(String).indexOf(id); if(k>=0) ref.sel.splice(k,1); else if(ref.sel.length<4){const r=refRows(ref.tipo).find(z=>String(z.id)===id); if(r) ref.sel.push(r.id)} else {try{alertMsg('Máximo 4 rodajes: quitá uno para elegir otro.')}catch(e){}} refSync()}
 function drawRefTL(rows){const cv=document.getElementById('refTL'); if(refTL){refTL.destroy();refTL=null} if(!cv||typeof Chart==='undefined') return;
   const T=REFTM[ref.tm]||REFTM.hr, key=T.k, tick=css('--muted'), grid=css('--line'), pts=rows.filter(r=>r[key]!=null&&isFinite(r[key])).map(r=>({x:r.t*1000,y:r[key],r}));
   const sel=ref.sel.map(String), ds=[{label:tl(),data:pts,borderColor:css('--line'),backgroundColor:css('--muted')+'aa',pointRadius:5,pointHoverRadius:7,pointHitRadius:12,borderWidth:1,showLine:true,order:2}];
@@ -4629,9 +4668,7 @@ function drawRefTL(rows){const cv=document.getElementById('refTL'); if(refTL){re
     scales:{x:{type:'linear',grid:{color:grid},ticks:{color:tick,font:{family:css('--mono')},maxTicksLimit:7,callback:(v,i,X)=>axD(v,X)}},
       y:{title:{display:true,text:`${T.n} (${T.u})`,color:tick},grid:{color:grid},ticks:{color:tick,font:{family:css('--mono')}}}}}})}
 // abrir los elegidos de Referencia en el Comparador (con botón para volver)
-function refToCmp(){const ids=ref.sel.filter(id=>acts.some(a=>String(a.id)===String(id))).map(id=>acts.find(a=>String(a.id)===String(id)).id); if(!ids.length) return;
-  fromCal=true; backTo='ref'; sel=ids.slice(0,4); view='km'; filt='all'; tab='cmp'; save(); render();
-  requestAnimationFrame(()=>{const g=document.getElementById('cmpPanel')||document.querySelector('.grid'); if(g) g.scrollIntoView({behavior:'smooth',block:'start'})})}
+function refToCmp(){view='km'; save(); render(); requestAnimationFrame(()=>{const g=document.getElementById('cmpPanel'); if(g) g.scrollIntoView({behavior:'smooth',block:'start'})})}
 const r0W=sel=>sel.length?Math.min(...sel.map(r=>r.W)):18;
 function drawRef(C,m){const cv=document.getElementById('refChart'); if(refChart){refChart.destroy();refChart=null} if(!cv||typeof Chart==='undefined'||(ref.v!=='curvas'&&!C.S.length)) {const d=document.getElementById('refDesc'); if(d) d.textContent=C.S.length?'':'Sin rodajes en el filtro para graficar.'; return}
   const x=C.M[m], R=RMET[m], F=x.F, key=x.key, tick=css('--muted'), grid=css('--line'), acc=css('--accent'), selR=ref.sel.map(id=>C.rows.find(r=>r.id===id)).filter(Boolean);
@@ -4674,9 +4711,9 @@ function drawRef(C,m){const cv=document.getElementById('refChart'); if(refChart)
       tooltip:{callbacks:{title:it=>{const r=it[0].raw&&it[0].raw.r; return r?`${r.a.tipo} ${dt(r.a)} · ${fmtP(r.P)}/km · ${nf(r.T,0)} min · WBGT ${nf(r.W,1)} °C`:''},label:it=>ref.v==='curvas'?`${it.dataset.label.trim()}: ${nf(it.parsed.y,0)} ppm`:`${it.dataset.label.trim()}: ${nf(it.parsed.y,R.d)} ${R.u}`}}},scales}})}
 function wireRef(B){
   B.querySelectorAll('input.rf').forEach(i=>i.onchange=()=>{ref[i.dataset.k]=i.value.trim(); saveRef(); renderRef()});
-  const ty=B.querySelector('#rfType'); if(ty) ty.onchange=()=>{const k=ty.value, q=k.startsWith('Q|'); ref={...ref,tipo:q?'Q':k,code:q?k.slice(2):'',p0:'',p1:'',d0:'',d1:'',wr:'',sel:[]}; saveRef(); renderRef()};
+  const ty=B.querySelector('#rfType'); if(ty) ty.onchange=()=>{const k=ty.value, q=k.startsWith('Q|'); ref={...ref,tipo:q?'Q':k,code:q?k.slice(2):'',p0:'',p1:'',d0:'',d1:'',wr:''}; saveRef(); renderRef()};
   const rr=B.querySelector('#rfRun'); if(rr) rr.onchange=()=>{const a=acts.find(x=>String(x.id)===rr.value), I=actInfo(a); if(!I) return; ref={...ref,tipo:I.tipo,code:I.code,wr:'',sel:[a.id]};
-    const r=refRows(I.tipo).find(z=>String(z.id)===String(a.id)), P=r?r.P:I.P, D=r?r.T:a.timeS/60; ref.p0=fmtP(P-20); ref.p1=fmtP(P+20); ref.d0=String(Math.round(D*0.85)); ref.d1=String(Math.round(D*1.15)); saveRef(); renderRef()};
+    const r=refRows(I.tipo).find(z=>String(z.id)===String(a.id)), P=r?r.P:I.P, D=r?r.T:a.timeS/60; ref.p0=fmtP(P-20); ref.p1=fmtP(P+20); ref.d0=String(Math.round(D*0.85)); ref.d1=String(Math.round(D*1.15)); refSync()};
   B.querySelectorAll('[data-rspan]').forEach(b=>b.onclick=()=>{const d=+b.dataset.rspan, on=b.getAttribute('aria-pressed')==='true'; ref.f1=''; ref.f0=d&&!on?new Date(Date.now()-6*3600000-d*864e5).toISOString().slice(0,10):''; saveRef(); renderRef()});
   B.querySelectorAll('[data-rm]').forEach(b=>{b.onclick=()=>{if(ref.m===b.dataset.rm) return; ref.m=b.dataset.rm; saveRef(); renderRef()}; b.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();b.onclick()}}});
   B.querySelectorAll('[data-rtm]').forEach(b=>b.onclick=()=>{ref.tm=b.dataset.rtm; saveRef(); renderRef()});
@@ -4688,7 +4725,7 @@ function wireRef(B){
   B.querySelectorAll('input.rpri_old').forEach(i=>i.onchange=()=>{const v=num(i.value); ref.pri=ref.pri||{}; if(isFinite(v)&&v>0) ref.pri[i.dataset.k]=v; else delete ref.pri[i.dataset.k]; saveRef(); renderRef()});
   const ad=B.querySelector('#rfAdj'); if(ad) ad.onclick=()=>{ref.adj=!ref.adj; saveRef(); renderRef()};
   const al=B.querySelector('#rfAll'); if(al) al.onchange=()=>{ref.all=al.checked; saveRef(); renderRef()};
-  const tog=id=>{id=String(id); const k=ref.sel.map(String).indexOf(id); if(k>=0) ref.sel.splice(k,1); else if(ref.sel.length<4){const r=refRows(ref.tipo).find(z=>String(z.id)===id); if(r) ref.sel.push(r.id)} else {try{alertMsg('Máximo 4 rodajes: quitá uno para elegir otro.')}catch(e){}} saveRef(); renderRef()};
+  const tog=id=>{id=String(id); const k=ref.sel.map(String).indexOf(id); if(k>=0) ref.sel.splice(k,1); else if(ref.sel.length<4){const r=refRows(ref.tipo).find(z=>String(z.id)===id); if(r) ref.sel.push(r.id)} else {try{alertMsg('Máximo 4 rodajes: quitá uno para elegir otro.')}catch(e){}} refSync()};
   B.querySelectorAll('input.rfSel').forEach(i=>i.onchange=()=>tog(i.dataset.id));
   B.querySelectorAll('tr[data-rid]').forEach(tr=>tr.onclick=e=>{if(e.target.tagName==='INPUT'||e.target.tagName==='BUTTON') return; tog(tr.dataset.rid)});
 }
