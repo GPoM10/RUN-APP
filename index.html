@@ -156,10 +156,10 @@ window.addEventListener('load',function(){setTimeout(function(){if(typeof Chart=
 :root[data-num="sans"]{--mono:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
 :root[data-num="sans"] body{font-variant-numeric:tabular-nums}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#12131F; --panel:#1A1C2B; --ink:#E6E7F2; --muted:#9A9DB8; --line:#2D3047; --soft:#22243A;
+  --bg:#2B2D33; --panel:#34373E; --ink:#E3E5EA; --muted:#A7ABB6; --line:#4A4E58; --soft:#3D4048;
   --fzT:#A8A59C; --tLR:#5B82E6; --tER:#4CC95E; --tQ:#F5C518; --tTest:#B07CF0; --tTec:#3FC9D6; --tRace:#F04A3E; --accent:#8B96F0; --ok:#4CC95E; --warn:#F5B014; --bad:#F04A3E; --s1:#F04A3E; --s2:#4F9BF0; --s3:#4CC95E; --s4:#B07CF0; --vFc:#F04A3E; --vPace:#4CC95E; --vEff:#4F9BF0; --vTrimp:#F5A623; --vDec:#5CD3FF; --vPk:#F04A3E; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#12131F; --panel:#1A1C2B; --ink:#E6E7F2; --muted:#9A9DB8; --line:#2D3047; --soft:#22243A;
+  --bg:#2B2D33; --panel:#34373E; --ink:#E3E5EA; --muted:#A7ABB6; --line:#4A4E58; --soft:#3D4048;
   --fzT:#A8A59C; --tLR:#5B82E6; --tER:#4CC95E; --tQ:#F5C518; --tTest:#B07CF0; --tTec:#3FC9D6; --tRace:#F04A3E; --accent:#8B96F0; --ok:#4CC95E; --warn:#F5B014; --bad:#F04A3E; --s1:#F04A3E; --s2:#4F9BF0; --s3:#4CC95E; --s4:#B07CF0; --vFc:#F04A3E; --vPace:#4CC95E; --vEff:#4F9BF0; --vTrimp:#F5A623; --vDec:#5CD3FF; --vPk:#F04A3E; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.45;
@@ -196,7 +196,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,label.btn:focus-wi
 /* pestañas principales: siempre en su propia fila, grandes y con contraste */
 #tabSeg{display:flex;flex:1 1 100%;width:100%;margin-top:12px;gap:6px;border:0;border-radius:0;overflow:visible}
 #tabSeg button{flex:1 1 0;min-width:0;padding:10px 8px;font-size:16px;font-weight:700;letter-spacing:.02em;border:1.5px solid var(--accent);border-radius:8px;color:var(--accent);background:var(--panel);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#tabSeg button[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+#tabSeg button[aria-pressed="true"]{background:var(--accent);color:var(--bg);border-color:var(--accent)}
 @media (max-width:520px){#tabSeg{flex-wrap:wrap}#tabSeg button{flex:1 1 40%;font-size:15px;padding:9px 4px}}
 #list{display:flex;flex-direction:column;gap:6px;max-height:560px;overflow:auto;padding-right:2px}
 .item{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:8px;cursor:pointer}
@@ -392,6 +392,16 @@ header button.brand:hover span{color:var(--accent)}
 #home .hcard b{font-family:var(--display);font-size:22px;font-weight:600}
 #home .hcard span{color:var(--muted);font-size:12.5px;line-height:1.3}
 @media (max-width:520px){#home .htop{margin-bottom:22px} #home .runner{width:125%;opacity:.07;bottom:auto;top:24%}}
+
+.pickov{position:fixed;inset:0;z-index:9000;background:rgba(10,12,20,.45);display:flex;align-items:center;justify-content:center;padding:12px}
+.pickbox{background:var(--panel);color:var(--ink);border-radius:14px;padding:14px;width:min(720px,100%);max-height:92vh;overflow:auto;box-shadow:0 12px 40px rgba(0,0,0,.3)}
+.pkh{display:flex;align-items:center;gap:10px;margin-bottom:10px}.pkh b{font-family:var(--display);font-size:22px;text-transform:capitalize;flex:1;text-align:center}
+.pkh button{padding:4px 12px;font-size:16px}.pkh .pkx{font-size:14px}
+.pkg{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.pkw{text-align:center;font-size:12px;color:var(--muted);font-weight:600}
+.pkd{min-height:58px;border:1px solid var(--line);border-radius:8px;padding:3px;display:flex;flex-direction:column;gap:3px;font-size:11px}.pkd.e{opacity:.55}.pkd>span{color:var(--muted);font-size:11px}
+.pkd button{font-size:11px;padding:3px 4px;border-radius:5px;border:1px solid var(--line);border-left:4px solid;background:var(--soft);color:var(--ink);text-align:left;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pkd button.on,.pkd button:hover{background:color-mix(in srgb,var(--accent) 18%,var(--panel))}
+body[data-tab=cmp] #filtSeg,body[data-tab=cmp] #codeWrap{display:none!important}
 body[data-tab=cmp] #selChips,body[data-tab=cmp] #normLbl,body[data-tab=cmp] #normCfg,body[data-tab=cmp] #viewSeg{display:none!important}
 .item .tocmp{padding:1px 7px;font-size:15px;line-height:1.2;color:var(--muted)}
 .item .tocmp[aria-pressed=true]{color:#E8B007}
@@ -401,7 +411,7 @@ body[data-tab=cmp] #selChips,body[data-tab=cmp] #normLbl,body[data-tab=cmp] #nor
 
 <div class="wrap">
   <header>
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><span style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><button type="button" id="homeBtn" class="brand" title="Ir a la portada"><svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="lgH" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5361D6"/><stop offset="1" stop-color="#262F86"/></linearGradient></defs><rect x="2" y="2" width="60" height="60" rx="16" fill="url(#lgH)"/><path d="M10 38H22L26 28L31 46L36 18L40 38H46" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M46 38H54M50 33L55 38L50 43" fill="none" stroke="#9EE6A8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Run-app</span></button><button type="button" id="syncBtn" title="Sincronizar con Google Drive" style="font-size:12.5px;padding:4px 10px;white-space:nowrap">⟳ Sincronizar</button></span>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><span style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><button type="button" id="homeBtn" class="brand" title="Ir a la portada"><svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="lgH" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5361D6"/><stop offset="1" stop-color="#262F86"/></linearGradient></defs><rect x="2" y="2" width="60" height="60" rx="16" fill="url(#lgH)"/><path d="M10 38H22L26 28L31 46L36 18L40 38H46" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M46 38H54M50 33L55 38L50 43" fill="none" stroke="#9EE6A8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Run-app</span></button><button type="button" id="themeBtn" title="Modo de color" style="font-size:12.5px;padding:4px 10px;white-space:nowrap">☀/☾ Auto</button><button type="button" id="syncBtn" title="Sincronizar con Google Drive" style="font-size:12.5px;padding:4px 10px;white-space:nowrap">⟳ Sincronizar</button></span>
       <div class="prof"><label for="profSel">Atleta</label><select id="profSel" aria-label="Perfil"></select><button type="button" id="profNew">+ Nuevo perfil</button><button type="button" id="profEdit">Editar</button><button type="button" id="profDel">Borrar</button><button type="button" id="bkBtn" onclick="try{backupDialog()}catch(e){alert('No se pudo abrir el respaldo: '+e.message)}">Respaldo</button><span id="cloudSt" style="font-size:12px"></span></div>
       <span class="seg" role="group" aria-label="Sección" id="tabSeg"><button data-t="well" aria-pressed="false">Bienestar</button><button data-t="plan" aria-pressed="false">Programador</button><button data-t="cal" aria-pressed="false">Calendario</button><button data-t="cmp" aria-pressed="false">Analizador</button><button data-t="ref" aria-pressed="false">Comparador</button></span><div id="uiRow" style="display:flex;justify-content:flex-end;margin-top:6px"><button type="button" id="uiBtn" aria-expanded="false" title="Elegir qué paneles y qué gráficos se ven en esta pestaña" style="font-size:12.5px;padding:4px 10px;margin-right:6px">⚙ Personalizar</button><button type="button" id="foldAll" style="font-size:12.5px;padding:4px 10px">▸ Contraer todo</button></div><div id="uiBox" class="pedit" hidden style="margin-top:8px"></div></div>
     <p id="hdrDesc">Cargá los .fit de Coros y analizá cada entrenamiento a fondo; con ☆ lo mandás al Comparador. Usa las mismas definiciones del informe de LR: tramos de 250 m, FC reposo <span id="hRest">50</span>, FC máx <span id="hMax">190</span><span id="hThr"></span>, estabilización al 0,75 %.</p>
@@ -1222,11 +1232,11 @@ document.getElementById('file').addEventListener('change',ev=>{addFiles(ev.targe
 let confirmId=null;
 // la lista va plegada arriba del gráfico (el gráfico usa todo el ancho); los elegidos quedan como fichas
 let lpOpen=(()=>{try{return LS.getItem('comparador.lpOpen')==='1'}catch(e){return false}})();
-function syncLP(){const P=document.getElementById('listPanel'), b=document.getElementById('lpTog'); P.classList.toggle('col',!lpOpen); b.setAttribute('aria-expanded',lpOpen); b.textContent=lpOpen?'Listo ▴':'Elegir rodajes ▾';
+function syncLP(){const P=document.getElementById('listPanel'), b=document.getElementById('lpTog'), solo=tab==='cmp'; P.classList.toggle('col',!solo&&!lpOpen); b.setAttribute('aria-expanded',solo?'false':lpOpen); b.textContent=solo?'📅 Otro entrenamiento…':lpOpen?'Listo ▴':'Elegir rodajes ▾';
   const C=document.getElementById('selChips'), ch=sel.map(id=>acts.find(a=>a.id===id)).filter(Boolean);
   C.innerHTML=ch.length?ch.map((a,i)=>`<span><i style="background:${color(i)}"></i>${a.tipo} ${dt(a)}<button type="button" data-x="${String(a.id).replace(/"/g,'&quot;')}" aria-label="Quitar">✕</button></span>`).join(''):'<span class="mdesc" style="margin:0;border:0">Ningún rodaje elegido.</span>';
   C.querySelectorAll('button[data-x]').forEach(b=>b.onclick=()=>{sel=sel.filter(id=>String(id)!==b.dataset.x); save(); render()})}
-document.getElementById('lpTog').onclick=e=>{e.stopPropagation(); lpOpen=!lpOpen; try{LS.setItem('comparador.lpOpen',lpOpen?'1':'0')}catch(e){} syncLP()};
+document.getElementById('lpTog').onclick=e=>{e.stopPropagation(); if(tab==='cmp'){pickRun(); return} lpOpen=!lpOpen; try{LS.setItem('comparador.lpOpen',lpOpen?'1':'0')}catch(e){} syncLP()};
 function renderList(){ try{syncLP()}catch(e){}
   const L=document.getElementById('list'); L.innerHTML='';
   document.querySelectorAll('#filtSeg button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.f===filt));
@@ -1234,8 +1244,9 @@ function renderList(){ try{syncLP()}catch(e){}
   if(filt==='Calidad'){const codes=[...new Set(acts.filter(a=>a.tipo==='Calidad'&&a.q).map(a=>a.q.code))].sort();
     if(qcode&&!codes.includes(qcode)) qcode='';
     cs.innerHTML='<option value="">Todos</option>'+codes.map(c=>`<option${c===qcode?' selected':''}>${c}</option>`).join('')}
-  const shown=acts.filter(inPool).sort((a,b)=>b.t0Unix-a.t0Unix);
-  const solo=tab==='cmp'; document.getElementById('count').textContent=`${shown.length} rodaje${shown.length===1?'':'s'} · `+(solo?`${selC.length}/4 en el Comparador`:`${sel.length}/4 marcados`);
+  let shown=acts.filter(inPool).sort((a,b)=>b.t0Unix-a.t0Unix);
+  if(tab==='cmp'){const all=acts.slice().sort((a,b)=>b.t0Unix-a.t0Unix); shown=all.slice(0,4); const cur=all.find(a=>sel.includes(a.id)); if(cur&&!shown.includes(cur)) shown=[cur,...shown]}
+  const solo=tab==='cmp'; document.getElementById('count').textContent=solo?`Últimos entrenamientos · ${selC.length}/4 en el Comparador`:`${shown.length} rodaje${shown.length===1?'':'s'} · `+(solo?`${selC.length}/4 en el Comparador`:`${sel.length}/4 marcados`);
   {const hid=sel.filter(id=>!shown.some(a=>a.id===id)).length, sc=document.getElementById('selClr'); sc.hidden=solo||!sel.length; sc.title=hid?`${hid} de los marcados no se ven con el filtro actual`:'Quitar todas las marcas'}
   document.getElementById('demoNote').hidden=!acts.some(a=>a.ej);
   if(!shown.length){L.innerHTML='<div class="mdesc">No hay rodajes de este tipo todavía.</div>';return}
@@ -1271,6 +1282,28 @@ document.getElementById('selClr').onclick=()=>{sel=[]; confirmId=null; save(); r
 document.getElementById('codeSel').onchange=e=>{qcode=e.target.value;save();renderList();if(isTrV())renderChart()};
 document.querySelectorAll('#filtSeg button').forEach(b=>b.onclick=()=>{filt=b.dataset.f; qcode=''; /* al cambiar de tipo, el código vuelve a «Todos» para que no queden calidades ocultas */document.querySelectorAll('#filtSeg button').forEach(x=>x.setAttribute('aria-pressed',x===b));save();renderList();if(isTrV())renderChart()});
 
+
+/* ---------- Analizador: elegir un entrenamiento desde un calendario (se cierra al elegir) ---------- */
+let pickM=null;
+function pickRun(){const all=acts.slice().sort((a,b)=>b.t0Unix-a.t0Unix); if(!all.length) return;
+  const cur=all.find(a=>sel.includes(a.id))||all[0], k0=dkey(crDay(cur.t0Unix)); if(!pickM) pickM=k0.slice(0,7);
+  const byDay=new Map(); all.forEach(a=>{const k=dkey(crDay(a.t0Unix)); if(!byDay.has(k)) byDay.set(k,[]); byDay.get(k).push(a)});
+  const months=[...new Set([...byDay.keys()].map(k=>k.slice(0,7)))].sort();
+  let ov=document.getElementById('pickOv'); if(!ov){ov=document.createElement('div'); ov.id='pickOv'; ov.className='pickov'; document.body.appendChild(ov); ov.onclick=e=>{if(e.target===ov) closePick()}}
+  const [y,m]=pickM.split('-').map(Number), first=Date.UTC(y,m-1,1), off=(new Date(first).getUTCDay()+6)%7, nd=new Date(Date.UTC(y,m,0)).getUTCDate();
+  const MES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','setiembre','octubre','noviembre','diciembre'];
+  let cells=''; for(let i=0;i<off;i++) cells+='<div></div>';
+  for(let d=1;d<=nd;d++){const k=dkey(Date.UTC(y,m-1,d)), L=byDay.get(k)||[];
+    cells+=`<div class="pkd${L.length?'':' e'}"><span>${d}</span>${L.map(a=>`<button type="button" data-pid="${String(a.id).replace(/"/g,'&quot;')}" class="${sel.includes(a.id)?'on':''}" style="border-left-color:${tipoCol(a.tipo)}" title="${a.tipo} ${dt(a)} · ${nf(a.distKm,1)} km">${a.tipo} ${nf(a.distKm,1)}</button>`).join('')}</div>`}
+  const i=months.indexOf(pickM), prev=months.filter(x=>x<pickM).pop(), next=months.find(x=>x>pickM);
+  ov.innerHTML=`<div class="pickbox" role="dialog" aria-label="Elegir entrenamiento"><div class="pkh"><button type="button" data-pm="${prev||''}"${prev?'':' disabled'} aria-label="Mes anterior">‹</button><b>${MES[m-1]} ${y}</b><button type="button" data-pm="${next||''}"${next?'':' disabled'} aria-label="Mes siguiente">›</button><button type="button" class="pkx" aria-label="Cerrar">✕</button></div>
+    <div class="pkg">${['L','K','M','J','V','S','D'].map(x=>`<div class="pkw">${x}</div>`).join('')}${cells}</div><div class="mdesc" data-keep style="margin:8px 0 0">Tocá un entrenamiento para abrirlo en el Analizador. Los meses sin entrenamientos se saltan.</div></div>`;
+  ov.hidden=false;
+  ov.querySelectorAll('[data-pm]').forEach(b=>b.onclick=()=>{if(b.dataset.pm){pickM=b.dataset.pm; pickRun()}});
+  ov.querySelector('.pkx').onclick=closePick;
+  ov.querySelectorAll('[data-pid]').forEach(b=>b.onclick=()=>{const a=acts.find(x=>String(x.id)===b.dataset.pid); if(!a) return; sel=[a.id]; closePick(); save(); render(); requestAnimationFrame(()=>{const g=document.getElementById('cmpPanel'); if(g) g.scrollIntoView({behavior:'smooth',block:'start'})})})}
+function closePick(){const ov=document.getElementById('pickOv'); if(ov) ov.hidden=true; pickM=null}
+document.addEventListener('keydown',e=>{if(e.key==='Escape') closePick()});
 /* ---------- métricas ---------- */
 const M={
   hr:{n:'FC',y:'ppm',get:(s,a)=>hrN(s.hr,a),bin:(g,a)=>hrN(g.hr,a),fmt:v=>nf(v,0),d:'FC a lo largo del rodaje. Con el mismo ritmo, una curva más baja indica mejor forma o un día más fresco.'},
@@ -3338,8 +3371,12 @@ function syncTab(){const T=tab; {const bc=document.getElementById('backCal'); if
   {const t=document.getElementById('cmpTtl'); if(t) t.textContent=T==='cmp'?'Análisis':'Curvas y tendencias'} try{xqScan()}catch(e){}}
 document.querySelectorAll('#tabSeg button').forEach(b=>b.onclick=()=>{fromCal=false;goTab(b.dataset.t);save();render();window.scrollTo({top:0})});
 document.querySelectorAll('#home [data-go]').forEach(b=>b.onclick=()=>{fromCal=false;goTab(b.dataset.go);save();render();window.scrollTo({top:0})});
-{const NK='comparador.numFont', ap=v=>{document.documentElement.dataset.num=v==='sans'?'sans':''; document.querySelectorAll('#numSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.n===(v||'mono')))}; let v=''; try{v=LS.getItem(NK)||''}catch(e){} ap(v);
+{const NK='comparador.numFont', ap=v=>{document.documentElement.dataset.num=v==='mono'?'':'sans'; document.querySelectorAll('#numSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.n===(v||'sans')))}; let v=''; try{v=LS.getItem(NK)||''}catch(e){} ap(v);
   document.querySelectorAll('#numSeg button').forEach(b=>b.onclick=()=>{try{LS.setItem(NK,b.dataset.n)}catch(e){} ap(b.dataset.n); try{render()}catch(e){}})}
+{const TK='comparador.theme', L={auto:'☀/☾ Auto',dark:'☾ Noche',light:'☀ Día'}, nx={auto:'dark',dark:'light',light:'auto'};
+  const ap=v=>{const r=document.documentElement; if(v==='dark'||v==='light') r.dataset.theme=v; else delete r.dataset.theme; const b=document.getElementById('themeBtn'); b.textContent=L[v]||L.auto; b.title='Modo de color: '+(v==='dark'?'noche':v==='light'?'día':'automático (como el equipo)')+'. Tocá para cambiar.'};
+  let v='auto'; try{v=LS.getItem(TK)||'auto'}catch(e){} ap(v);
+  document.getElementById('themeBtn').onclick=()=>{v=nx[v]||'auto'; try{LS.setItem(TK,v)}catch(e){} ap(v); try{chart&&chart.destroy(); chart=null}catch(e){} try{render()}catch(e){}}}
 document.getElementById('homeBtn').onclick=()=>{fromCal=false;goTab('home');save();render();window.scrollTo({top:0})};
 // volver al calendario en el mes y el día desde donde se abrió el rodaje
 document.getElementById('backCal').onclick=e=>{e.stopPropagation(); fromCal=false; goTab(backTo==='rev'?'plan':backTo==='ref'?'ref':'cal'); save(); render();
