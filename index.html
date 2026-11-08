@@ -4506,8 +4506,8 @@ function xqPlace(el,b){let host=null; const pv=el.previousElementSibling;
   if(host&&!host.querySelector(':scope > .xq')) host.appendChild(b); else el.before(b)}
 function xqScan(){document.querySelectorAll('.mdesc, header > p, footer').forEach(el=>{
   if(el.dataset.xq){const b=el._xqb; if(b){if(!b.isConnected) xqPlace(el,b); b.hidden=!el.textContent.trim()||!!el.closest('[hidden]')} return}
-  if(el.dataset.keep!=null||XQ_ID.has(el.id)||el.closest(XQ_SKIP)) return;
-  if(el.textContent.trim().length<110) return;
+  const inRef=!!(el.closest('#refBox')||(typeof tab!=='undefined'&&tab==='ref'&&el.closest('.grid'))); if((!inRef&&el.dataset.keep!=null)||XQ_ID.has(el.id)||el.closest(XQ_SKIP)||(inRef&&el.closest('[data-rm]'))) return;
+  if(el.textContent.trim().length<(inRef?40:110)) return;
   el.dataset.xq=1; el.classList.add('xqh');
   const b=document.createElement('button'); b.type='button'; b.className='xq'; b.textContent='?'; b.title='Ver explicación'; b.setAttribute('aria-label','Ver explicación'); b.setAttribute('aria-expanded','false');
   b.addEventListener('click',e=>{e.stopPropagation(); e.preventDefault(); xqOpen(el,b)}); el._xqb=b; xqPlace(el,b)})}
