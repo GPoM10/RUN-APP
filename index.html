@@ -1547,9 +1547,9 @@ function selStats(a,t0,t1){const F=a.f5; if(!F||!F.h||!F.m) return null; const s
 function selAfter(chosen){const cv=document.getElementById('chart'); if(!chart||chart.canvas!==cv) return; const ok=chart.config.type==='scatter'&&chart.options.scales&&chart.options.scales.x&&chart.options.scales.x.title&&chart.options.scales.x.title.text==='minutos';
   chart.$sel=ok?selT:null; if(!selBound) bindSel(cv); renderSel(ok?chosen:[]); if(ok&&selT) chart.draw()}
 let selMode=false;
-function setSelMode(on){selMode=on; const cv=document.getElementById('chart'); if(!cv) return; cv.style.touchAction=on?'none':'manipulation'; const box=cv.parentElement; box.classList.toggle('selon',on);
+function setSelMode(on){selMode=on; const cv=document.getElementById('chart'); if(!cv) return; cv.style.touchAction=on?'none':'pan-y pinch-zoom'; const box=cv.parentElement; box.classList.toggle('selon',on);
   let b=document.getElementById('selBadge'); if(!b){b=document.createElement('div'); b.id='selBadge'; b.className='selbadge'; box.appendChild(b)} b.textContent='Selección activa · 2 toques para salir'; b.hidden=!on}
-function bindSel(cv){selBound=true; cv.style.touchAction='manipulation'; let st=null, tap0=null, lastTap=null;
+function bindSel(cv){selBound=true; cv.style.touchAction='pan-y pinch-zoom'; let st=null, tap0=null, lastTap=null;
   const xv=e=>{const c=chart; if(!c||!c.scales.x) return null; const r=cv.getBoundingClientRect(), px=e.clientX-r.left, a=c.chartArea; if(px<a.left-4||px>a.right+4) return null; return c.scales.x.getValueForPixel(Math.max(a.left,Math.min(a.right,px)))};
   cv.addEventListener('pointerdown',e=>{const touch=e.pointerType==='touch'; if(touch) tap0={x:e.clientX,y:e.clientY,t:Date.now(),id:e.pointerId}; if(touch&&!selMode) return; if(!chart||chart.$sel===undefined) return; const okc=chart.config.type==='scatter'&&chart.options.scales.x.title&&chart.options.scales.x.title.text==='minutos'; if(!okc) return; const v=xv(e); if(v==null) return; st={x:e.clientX,v,drag:false,id:e.pointerId}});
   cv.addEventListener('pointermove',e=>{if(!st||e.pointerId!==st.id) return; if(!st.drag&&Math.abs(e.clientX-st.x)<8) return; if(!st.drag){st.drag=true; try{cv.setPointerCapture(e.pointerId)}catch(_){}} const v=xv(e); if(v==null) return; chart.$sel=[st.v,v]; chart.draw(); e.preventDefault()});
