@@ -555,6 +555,7 @@ body[data-tab=cmp] #selChips,body[data-tab=cmp] #normLbl,body[data-tab=cmp] #nor
         <span class="seg" role="group" aria-label="Variable" id="pmSeg"><button data-m="trimp">TRIMP</button><button data-m="km">Km</button><button data-m="t">Tiempo</button><button data-m="zonas" title="TRIMP planeado por semana, repartido por zona de FC">TRIMP por zona</button></span>
       </div>
       <div class="chartbox" style="height:300px"><canvas id="pchart" aria-label="Planeado vs ejecutado por semana"></canvas><div class="empty" id="pEmpty">Planeá entrenos (sueltos, del coach o un ciclo) para comparar lo planeado con lo ejecutado.</div></div>
+      <div class="fwin opts" id="pwWin" style="margin-top:6px" hidden><span>Ver</span><div class="dr"><div class="drt"><div class="drf fwf" title="Arrastrá para mover la ventana"></div></div><input type="range" class="fwA" aria-label="Desde" min="0" value="0"><input type="range" class="fwB" aria-label="Hasta" min="0" value="0"></div><span class="fwL" style="font-family:var(--mono);font-size:12.5px;color:var(--ink)"></span></div>
       <div class="mdesc" id="pDesc"></div>
       <div class="tablewrap" id="ptab" style="margin-top:14px"></div>
     </div>
@@ -646,7 +647,7 @@ body[data-tab=cmp] #selChips,body[data-tab=cmp] #normLbl,body[data-tab=cmp] #nor
     <div id="strBox"></div>
   </section>
 
-  <footer>Versión 376 PWA (8 nov, Meta: en el teléfono la explicación de cada barra pasa abajo; Nutrición: peso, grasa, masa muscular y cintura con tendencia de 7 días; Nutrición: guía del día según el entreno, restricciones y checklist de constancia; Fuerza: biblioteca de sesiones con nombre y ejercicios propios; Fuerza en modo isométrico: sostenes de 6 s con pausa, 6 por lado; sección Fuerza: debilidades por pruebas, molestias o lista propia, ciclos con sesión fuerte y de mantenimiento, catálogo por área y sesiones en el Calendario; gráficos en pantalla completa con sus controles arriba; Bienestar: otros malestares —resfrío, gripe, fiebre, estómago, dolor de cabeza, alergia, otro— con intensidad, seguimiento y efecto en el estado). Deriva de la actividad = FC 2ª mitad ÷ 1ª mitad − 1, por tiempo, desde el punto de estabilización (referencia &lt; 5 %). FC limpia: un segundo que se aparta más de 2 % de los 5 s anteriores y de los 5 s posteriores se reemplaza por el promedio de esos 10 s. Normalización por temperatura: FC normalizada = FC − k × (temperatura del reloj − temperatura de referencia); la eficiencia normalizada usa esa FC. La deriva y el TRIMP no se normalizan. TRIMP de Banister segundo a segundo. Pa:HR (desacople aeróbico) = (EF 1ª mitad − EF 2ª mitad) ÷ EF 1ª mitad, con EF = velocidad ÷ FC, mismas mitades que la deriva. Fuerza pico por paso (× peso corporal) = π/2 × (tiempo de vuelo ÷ tiempo de contacto + 1), con tiempo de vuelo = 60 ÷ cadencia − contacto (modelo de muelle, Morin 2005); carga mecánica = pasos × fuerza pico promedio, en miles. Son estimaciones propias para seguir tu tendencia, no medidas de laboratorio. Los datos se guardan en tu espacio privado de la nube del artefacto (solo vos los ves) y se ven igual en la compu y en el celular; el botón Respaldo descarga una copia.</footer>
+  <footer>Versión 377 PWA (8 nov, Planeado vs ejecutado por semanas: barra para elegir qué semanas ver, con el historial ejecutado; Meta: en el teléfono la explicación de cada barra pasa abajo; Nutrición: peso, grasa, masa muscular y cintura con tendencia de 7 días; Nutrición: guía del día según el entreno, restricciones y checklist de constancia; Fuerza: biblioteca de sesiones con nombre y ejercicios propios; Fuerza en modo isométrico: sostenes de 6 s con pausa, 6 por lado; sección Fuerza: debilidades por pruebas, molestias o lista propia, ciclos con sesión fuerte y de mantenimiento, catálogo por área y sesiones en el Calendario; gráficos en pantalla completa con sus controles arriba; Bienestar: otros malestares —resfrío, gripe, fiebre, estómago, dolor de cabeza, alergia, otro— con intensidad, seguimiento y efecto en el estado). Deriva de la actividad = FC 2ª mitad ÷ 1ª mitad − 1, por tiempo, desde el punto de estabilización (referencia &lt; 5 %). FC limpia: un segundo que se aparta más de 2 % de los 5 s anteriores y de los 5 s posteriores se reemplaza por el promedio de esos 10 s. Normalización por temperatura: FC normalizada = FC − k × (temperatura del reloj − temperatura de referencia); la eficiencia normalizada usa esa FC. La deriva y el TRIMP no se normalizan. TRIMP de Banister segundo a segundo. Pa:HR (desacople aeróbico) = (EF 1ª mitad − EF 2ª mitad) ÷ EF 1ª mitad, con EF = velocidad ÷ FC, mismas mitades que la deriva. Fuerza pico por paso (× peso corporal) = π/2 × (tiempo de vuelo ÷ tiempo de contacto + 1), con tiempo de vuelo = 60 ÷ cadencia − contacto (modelo de muelle, Morin 2005); carga mecánica = pasos × fuerza pico promedio, en miles. Son estimaciones propias para seguir tu tendencia, no medidas de laboratorio. Los datos se guardan en tu espacio privado de la nube del artefacto (solo vos los ves) y se ven igual en la compu y en el celular; el botón Respaldo descarga una copia.</footer>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
@@ -2152,29 +2153,30 @@ function renderPlanner(){try{renderGoal()}catch(e){console.error(e)} renderThr()
   const isCyc=x=>!x.w.fase||/^(carga|descarga)$/i.test(x.w.fase);
   if(ZM){const tz=[0,0,0,0], tb=[0,0,0,0]; W.filter(isCyc).forEach(x=>x.pl.zt.forEach((v,b)=>{tz[b]+=v; tb[b]+=x.pl.zb[b]})); const TZ=tz.reduce((a,b)=>a+b,0)||1, TB=tb.reduce((a,b)=>a+b,0)||1;
     document.getElementById('pDesc').textContent=`TRIMP planeado de cada semana repartido por zona de FC (estimado con tu FC a cada ritmo). ${W.some(x=>!isCyc(x))?'Semanas de ciclo (sin taper, carrera, recuperación ni test, que van en barras tenues)':'Todo el ciclo'}, por TRIMP: ${BANDS.map((b,k)=>`${b[0]} ${nf(tz[k]/TZ*100,0)} %`).join(' · ')}. Por tiempo: ${BANDS.map((b,k)=>`${b[0]} ${nf(tb[k]/TB*100,0)} %`).join(' · ')}. La línea es lo ejecutado.`}
+  const [pwa,pwb]=pwIdx(W), Wc=W.slice(pwa,pwb+1); pwWin(W);
   if(pchart&&!!pchart.$z!==ZM){pchart.destroy();pchart=null}
   if(typeof Chart!=='undefined'&&ZM){const tick=css('--muted');
     const pctP={id:'zpct',afterDatasetsDraw(c){const {ctx}=c; ctx.save(); ctx.font='600 10px '+css('--mono'); ctx.textAlign='center'; ctx.textBaseline='middle';
       const WW=c.$W||[]; c.data.datasets.forEach((d,di)=>{if(d.type==='line'||!c.isDatasetVisible(di)) return; c.getDatasetMeta(di).data.forEach((el,k)=>{const v=d.data[k], tot=WW[k]&&WW[k].pl.trimp; if(!v||!tot) return; const h=Math.abs(el.base-el.y); if(h<13||el.width<22) return;
         ctx.fillStyle='#fff'; ctx.fillText(nf(v/tot*100,0)+'%',el.x,(el.y+el.base)/2)})}); ctx.restore()}};
-    const data={labels:W.map(x=>`S${x.i+1}${x.w.load?'':' D'}`),datasets:[...BANDS.map((b,k)=>({type:'bar',label:b[0],data:W.map(x=>x.pl.zt[k]),backgroundColor:W.map(x=>isCyc(x)?BCOL[k]:BCOL[k]+'55'),borderWidth:0,stack:'p'})),
-      {type:'line',label:'Ejecutado',data:W.map(x=>x.past||x.ex.n?x.ex.trimp:null),borderColor:css('--ink'),backgroundColor:css('--ink'),pointRadius:3,borderWidth:1.5,spanGaps:false}]};
+    const data={labels:Wc.map(x=>`S${x.i+1}${x.w.load?'':' D'}`),datasets:[...BANDS.map((b,k)=>({type:'bar',label:b[0],data:Wc.map(x=>x.pl.zt[k]),backgroundColor:Wc.map(x=>isCyc(x)?BCOL[k]:BCOL[k]+'55'),borderWidth:0,stack:'p'})),
+      {type:'line',label:'Ejecutado',data:Wc.map(x=>x.past||x.ex.n?x.ex.trimp:null),borderColor:css('--ink'),backgroundColor:css('--ink'),pointRadius:3,borderWidth:1.5,spanGaps:false}]};
     const opts={responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{position:'top',align:'start',labels:{color:css('--ink'),boxWidth:12,boxHeight:10,font:{family:css('--body')}}},
-      tooltip:{mode:'index',intersect:false,callbacks:{title:it=>{const x=W[it[0].dataIndex];return `Semana ${x.i+1}${x.w.fase?' · '+x.w.fase:x.w.load?'':' (descarga)'} · ${dfmt.format(new Date(x.w0+6*3600000))}`},
-        label:it=>{if(it.parsed.y==null) return null; const x=W[it.dataIndex]; return it.dataset.type==='line'?`Ejecutado: ${nf(it.parsed.y,0)} TRIMP`:`${it.dataset.label}: ${nf(it.parsed.y,0)} TRIMP (${nf(x.pl.trimp?it.parsed.y/x.pl.trimp*100:0,0)} %) · ${nf(x.pl.zb[it.datasetIndex]/60,0)} min`},
-        footer:it=>{const x=W[it[0].dataIndex];return `Planeado: ${nf(x.pl.trimp,0)} TRIMP · ${fmtT(x.pl.t)}`}}}},
+      tooltip:{mode:'index',intersect:false,callbacks:{title:it=>{const x=Wc[it[0].dataIndex];return `Semana ${x.i+1}${x.w.fase?' · '+x.w.fase:x.w.load?'':' (descarga)'} · ${dfmt.format(new Date(x.w0+6*3600000))}`},
+        label:it=>{if(it.parsed.y==null) return null; const x=Wc[it.dataIndex]; return it.dataset.type==='line'?`Ejecutado: ${nf(it.parsed.y,0)} TRIMP`:`${it.dataset.label}: ${nf(it.parsed.y,0)} TRIMP (${nf(x.pl.trimp?it.parsed.y/x.pl.trimp*100:0,0)} %) · ${nf(x.pl.zb[it.datasetIndex]/60,0)} min`},
+        footer:it=>{const x=Wc[it[0].dataIndex];return `Planeado: ${nf(x.pl.trimp,0)} TRIMP · ${fmtT(x.pl.t)}`}}}},
       scales:{x:{stacked:true,grid:{display:false},ticks:{color:tick,font:{family:css('--mono')},maxRotation:0,autoSkip:true}},y:{stacked:true,beginAtZero:true,title:{display:true,text:'TRIMP planeado',color:tick},grid:{color:css('--line')},ticks:{color:tick,font:{family:css('--mono')}}}}};
-    opts.layout={padding:{top:24}}; if(pchart){pchart.$W=W;pchart.data=data;pchart.options=opts} else{pchart=new Chart(cv,{type:'bar',data,options:opts,plugins:[pctP]}); pchart.$z=true; pchart.$W=W} pchart.$rw=W.map(x=>x.w0); pchart.$rs=7*DAY; pchart.update()}
+    opts.layout={padding:{top:24}}; if(pchart){pchart.$W=Wc;pchart.data=data;pchart.options=opts} else{pchart=new Chart(cv,{type:'bar',data,options:opts,plugins:[pctP]}); pchart.$z=true; pchart.$W=Wc} pchart.$rw=Wc.map(x=>x.w0); pchart.$rs=7*DAY; pchart.update()}
   else if(typeof Chart!=='undefined'){const tick=css('--muted');
-    const data={labels:W.map(x=>`S${x.i+1}${x.w.load?'':' D'}`),datasets:[
-      {label:'Planeado',data:W.map(x=>val(x.pl,pm)),backgroundColor:css('--line'),borderWidth:0},
-      {label:'Ejecutado',data:W.map(x=>x.past||x.ex.n?val(x.ex,pm):null),backgroundColor:css('--accent'),borderWidth:0}]};
+    const data={labels:Wc.map(x=>`S${x.i+1}${x.w.load?'':' D'}`),datasets:[
+      {label:'Planeado',data:Wc.map(x=>val(x.pl,pm)),backgroundColor:css('--line'),borderWidth:0},
+      {label:'Ejecutado',data:Wc.map(x=>x.past||x.ex.n?val(x.ex,pm):null),backgroundColor:css('--accent'),borderWidth:0}]};
     const opts={responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{position:'top',align:'start',labels:{color:css('--ink'),boxWidth:12,boxHeight:10,font:{family:css('--body')}}},
-      tooltip:{mode:'index',intersect:false,callbacks:{title:it=>{const x=W[it[0].dataIndex];return `Semana ${x.i+1}${x.w.load?'':' (descarga)'} · ${dfmt.format(new Date(x.w0+6*3600000))}`},
+      tooltip:{mode:'index',intersect:false,callbacks:{title:it=>{const x=Wc[it[0].dataIndex];return `Semana ${x.i+1}${x.w.load?'':' (descarga)'} · ${dfmt.format(new Date(x.w0+6*3600000))}`},
         label:it=>it.parsed.y==null?null:`${it.dataset.label}: ${nf(it.parsed.y,pm==='km'?1:0)} ${unit}`,
-        footer:it=>{const x=W[it[0].dataIndex];return x.ex.n&&val(x.pl,pm)?`Ejecutado ${nf(val(x.ex,pm)/val(x.pl,pm)*100,0)} % de lo planeado`:''}}}},
+        footer:it=>{const x=Wc[it[0].dataIndex];return x.ex.n&&val(x.pl,pm)?`Ejecutado ${nf(val(x.ex,pm)/val(x.pl,pm)*100,0)} % de lo planeado`:''}}}},
       scales:{x:{grid:{display:false},ticks:{color:tick,font:{family:css('--mono')},maxRotation:0,autoSkip:true}},y:{beginAtZero:true,title:{display:true,text:unit,color:tick},grid:{color:css('--line')},ticks:{color:tick,font:{family:css('--mono')}}}}};
-    opts.layout={padding:{top:24}}; if(pchart){pchart.data=data;pchart.options=opts} else pchart=new Chart(cv,{type:'bar',data,options:opts}); pchart.$rw=W.map(x=>x.w0); pchart.$rs=7*DAY; pchart.update()}
+    opts.layout={padding:{top:24}}; if(pchart){pchart.data=data;pchart.options=opts} else pchart=new Chart(cv,{type:'bar',data,options:opts}); pchart.$rw=Wc.map(x=>x.w0); pchart.$rs=7*DAY; pchart.update()}
   try{pDays()}catch(e){console.error(e)}
   const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const sm=o=>`${fmtT(o.t)} · ${nf(o.km,1)} km · ${nf(o.trimp,0)}`;
@@ -2194,9 +2196,24 @@ function renderPlanner(){try{renderGoal()}catch(e){console.error(e)} renderThr()
   T.querySelectorAll('select.wk').forEach(s=>s.onchange=()=>{cycle.weeks[+s.dataset.i].load=s.value==='Carga'; save(); renderPlanner()});
 }
 // planeado vs ejecutado día por día de una semana (Lun a Dom, con los de descanso); usa la misma semana que la Revisión semanal
+// Planeado vs ejecutado por semanas: ventana elegida con la barra de abajo (manijas para los extremos, franja del medio para moverla); por defecto 12 semanas atrás y 4 adelante
+let pwSel=(()=>{try{const v=JSON.parse(LS.getItem('comparador.pwSel')||'null'); return Array.isArray(v)?v:null}catch(e){return null}})();
+function pwIdx(W){const n=W.length-1; if(n<0) return [0,-1]; const near=t=>{let k=0,bd=Infinity; W.forEach((x,i)=>{const d=Math.abs(x.w0-t); if(d<bd){bd=d;k=i}}); return k};
+  if(pwSel){let a=near(pwSel[0]), b=near(pwSel[1]); if(b<a) [a,b]=[b,a]; return [a,b]}
+  const t=near(wkOf(crDay(Math.floor(Date.now()/1000)))); return [Math.max(0,t-11),Math.min(n,t+4)]}
+function pwWin(W){const B=document.getElementById('pwWin'); if(!B) return; const n=W.length-1; B.hidden=pg!=='w'||n<3; if(B.hidden) return;
+  const A=B.querySelector('.fwA'), Z=B.querySelector('.fwB'), F=B.querySelector('.fwf'), L=B.querySelector('.fwL'), MINW=2;
+  const paint=([a,b])=>{A.value=a; Z.value=b; F.style.left=a/n*100+'%'; F.style.right=(n-b)/n*100+'%'; L.textContent=`${dShort.format(new Date(W[a].w0+6*3600000))} → ${dShort.format(new Date(W[b].w0+6*DAY+6*3600000))} · ${b-a+1} semanas`};
+  [A,Z].forEach(x=>{x.min=0; x.max=n; x.step=1}); paint(pwIdx(W));
+  let raf=0; const set=(a,b)=>{a=Math.max(0,Math.min(n,a)); b=Math.max(0,Math.min(n,b)); if(b-a<MINW){if(a+MINW<=n) b=a+MINW; else a=b-MINW} pwSel=[W[a].w0,W[b].w0]; try{LS.setItem('comparador.pwSel',JSON.stringify(pwSel))}catch(e){} paint([a,b]); cancelAnimationFrame(raf); raf=requestAnimationFrame(()=>renderPlanner())};
+  A.oninput=()=>{const b=+Z.value; set(Math.min(+A.value,b-MINW),b)}; Z.oninput=()=>{const a=+A.value; set(a,Math.max(+Z.value,a+MINW))};
+  F.ondblclick=()=>{pwSel=null; try{LS.removeItem('comparador.pwSel')}catch(e){} renderPlanner()};
+  F.onpointerdown=e=>{e.preventDefault(); const Wd=B.querySelector('.drt').getBoundingClientRect().width||1, x0=e.clientX, [a0,b0]=pwIdx(W); F.setPointerCapture(e.pointerId);
+    F.onpointermove=ev=>{let dd=Math.round((ev.clientX-x0)/Wd*n); if(a0+dd<0) dd=-a0; if(b0+dd>n) dd=n-b0; set(a0+dd,b0+dd)};
+    F.onpointerup=F.onpointercancel=()=>{F.onpointermove=null}}}
 let pg=(()=>{try{return LS.getItem('comparador.pg')||'d'}catch(e){return 'd'}})();
 const pmK=()=>pm==='zonas'?'trimp':pm, isZ=()=>pm==='zonas';
-function pDays(){const pm=pmK();document.querySelectorAll('#pgSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.g===pg)); document.getElementById('pwNav').hidden=pg!=='d';
+function pDays(){const pm=pmK();document.querySelectorAll('#pgSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.g===pg)); document.getElementById('pwNav').hidden=pg!=='d'; {const B=document.getElementById('pwWin'); if(B&&pg==='d') B.hidden=true}
   if(pg!=='d'||!pchart||typeof Chart==='undefined') return;
   const M=hrModel(), easy=easyPace(), today=crDay(Math.floor(Date.now()/1000)), w0=wkOf(today)+rvOff*7*DAY, unit={trimp:'TRIMP',km:'km',t:'minutos'}[pm], val=(o,k)=>k==='t'?o.t/60:o[k];
   document.getElementById('pwLab').textContent=`${dShort.format(new Date(w0+6*3600000))} al ${dShort.format(new Date(w0+6*DAY+6*3600000))}`;
@@ -2233,24 +2250,25 @@ function renderPvE(){const pm=pmK();const E=document.getElementById('pEmpty'), c
   const ps=allPlans(), M=hrModel(), easy=easyPace(), nowW=wkOf(crDay(Math.floor(Date.now()/1000)));
   if(!ps.length){E.hidden=false;cv.hidden=true;T.innerHTML='';document.getElementById('pDesc').textContent='';if(pchart){pchart.destroy();pchart=null}return}
   E.hidden=true; cv.hidden=false;
-  const ws=ps.map(p=>wkOf(p.day)), last=Math.max(...ws), first=Math.max(Math.min(...ws),last-25*7*DAY), W=[];
+  const ws=ps.map(p=>wkOf(p.day)), aw=acts.filter(a=>!a.ej).map(a=>wkOf(crDay(a.t0Unix))), last=Math.max(...ws,nowW), firstP=Math.min(...ws), first=Math.max(Math.min(firstP,...aw),last-52*7*DAY), W=[];
   for(let w0=first; w0<=Math.max(last,Math.min(nowW,last+4*7*DAY)); w0+=7*DAY){const d=wkData(w0,M,easy); W.push({w0,pl:d.pl,ex:d.ex,ps:ps.filter(p=>wkOf(p.day)===w0).sort((x,y)=>x.day-y.day),past:w0<=nowW})}
   const val=(o,k)=>k==='t'?o.t/60:o[k], unit={trimp:'TRIMP',km:'km',t:'minutos'}[pm];
   document.getElementById('pDesc').textContent=`Barras claras: lo planeado (entrenos sueltos y plan del coach); oscuras: lo ejecutado (todo lo que cargaste esa semana, de cualquier tipo). El TRIMP planeado se estima con la FC que sueles tener a cada ritmo (${M.n?`ajustada con ${M.n} tramos estables de tu historial: ~${Math.round(M.f(450))} ppm a 7:30 y ~${Math.round(M.f(390))} a 6:30`:'sin historial cargado todavía: se usa ~150 ppm a 7:30'}), simulando cómo sube en cada bloque y cómo baja caminando en las recuperaciones. Con un ciclo generado, esta vista pasa a mostrar el ciclo.`;
+  const [pwa,pwb]=pwIdx(W), Wc=W.slice(pwa,pwb+1); pwWin(W);
   if(typeof Chart!=='undefined'){const tick=css('--muted');
-    const data={labels:W.map(x=>dShort.format(new Date(x.w0+6*3600000))),datasets:[
-      {label:'Planeado',data:W.map(x=>val(x.pl,pm)),backgroundColor:css('--line'),borderWidth:0},
-      {label:'Ejecutado',data:W.map(x=>x.past||x.ex.n?val(x.ex,pm):null),backgroundColor:css('--accent'),borderWidth:0}]};
+    const data={labels:Wc.map(x=>dShort.format(new Date(x.w0+6*3600000))),datasets:[
+      {label:'Planeado',data:Wc.map(x=>val(x.pl,pm)),backgroundColor:css('--line'),borderWidth:0},
+      {label:'Ejecutado',data:Wc.map(x=>x.past||x.ex.n?val(x.ex,pm):null),backgroundColor:css('--accent'),borderWidth:0}]};
     const opts={responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{position:'top',align:'start',labels:{color:css('--ink'),boxWidth:12,boxHeight:10,font:{family:css('--body')}}},
-      tooltip:{mode:'index',intersect:false,callbacks:{title:it=>`Semana del ${dfmt.format(new Date(W[it[0].dataIndex].w0+6*3600000))}`,
+      tooltip:{mode:'index',intersect:false,callbacks:{title:it=>`Semana del ${dfmt.format(new Date(Wc[it[0].dataIndex].w0+6*3600000))}`,
         label:it=>it.parsed.y==null?null:`${it.dataset.label}: ${nf(it.parsed.y,pm==='km'?1:0)} ${unit}`,
-        footer:it=>{const x=W[it[0].dataIndex];return x.ex.n&&val(x.pl,pm)?`Ejecutado ${nf(val(x.ex,pm)/val(x.pl,pm)*100,0)} % de lo planeado`:''}}}},
+        footer:it=>{const x=Wc[it[0].dataIndex];return x.ex.n&&val(x.pl,pm)?`Ejecutado ${nf(val(x.ex,pm)/val(x.pl,pm)*100,0)} % de lo planeado`:''}}}},
       scales:{x:{grid:{display:false},ticks:{color:tick,font:{family:css('--mono')},maxRotation:0,autoSkip:true}},y:{beginAtZero:true,title:{display:true,text:unit,color:tick},grid:{color:css('--line')},ticks:{color:tick,font:{family:css('--mono')}}}}};
-    opts.layout={padding:{top:24}}; if(pchart){pchart.data=data;pchart.options=opts} else pchart=new Chart(cv,{type:'bar',data,options:opts}); pchart.$rw=W.map(x=>x.w0); pchart.$rs=7*DAY; pchart.update()}
+    opts.layout={padding:{top:24}}; if(pchart){pchart.data=data;pchart.options=opts} else pchart=new Chart(cv,{type:'bar',data,options:opts}); pchart.$rw=Wc.map(x=>x.w0); pchart.$rs=7*DAY; pchart.update()}
   try{pDays()}catch(e){console.error(e)}
   const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])), sm=o=>`${fmtT(o.t)} · ${nf(o.km,1)} km · ${nf(o.trimp,0)}`;
   let h='<table class="ptab"><thead><tr><th>Semana</th><th style="text-align:left">Planeado</th><th>Planeado<br><span class="sub">tiempo · km · TRIMP</span></th><th>Ejecutado</th><th>Ejec./plan</th><th>Revisión</th></tr></thead><tbody>';
-  for(const x of W.slice().reverse()){const r=x.pl.trimp?x.ex.trimp/x.pl.trimp*100:null;
+  for(const x of W.filter(x=>x.w0>=firstP).reverse()){const r=x.pl.trimp?x.ex.trimp/x.pl.trimp*100:null;
     h+=`<tr class="${x.w0===nowW?'now':''}"><td style="text-align:left">${dShort.format(new Date(x.w0+6*3600000))}</td><td class="s">${x.ps.length?x.ps.map(p=>`<div class="sub" style="color:var(--ink)">${dShort.format(new Date(p.day+6*3600000))} · <b>${p.tipo}</b>${p.tipo==='Descanso'?'':` <code>${esc(planShow(p.plan))}</code>`}</div>`).join(''):'<span class="mdesc">—</span>'}</td>
       <td class="num">${x.pl.n?sm(x.pl):'—'}</td><td class="num">${x.ex.n?sm(x.ex):'—'}</td><td class="num">${r==null||!x.ex.n?'—':`<span class="${r>115||r<85?'w':'ok'}">${nf(r,0)} %</span>`}</td><td class="s" style="min-width:230px">${revCell(x.w0,M,easy,null)}</td></tr>`}
   T.innerHTML=h+'</tbody></table>'}
