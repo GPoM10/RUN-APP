@@ -1441,7 +1441,37 @@ function renderChart(){
   const qb=ref&&isQ(ref)&&ref.q.laps?(()=>{let n=0; const tp=ref.q.tph?'F':ref.tipo==='Test'?'F':'S'; return ref.q.laps.map(l=>({t0:l.a/60,t1:l.b/60,k:l.t==='w'?'w':isRec(l)?'r':l.blk,lab:l.t==='w'?tp+(++n):''}))})():null;
   if(chart){chart.$qb=qb; chart.data.datasets=ds;chart.options=opts;chart.$stabs=stabs;chart.$dev=!!m.band;chart.$zones=zOn;chart.$laps=null;chart.$ana=ana;chart.$avgs=avgs;chart.$kmv=kmv;chart.$dz=DZ[metric]?metric:null;chart.update()}
   else{chart=new Chart(document.getElementById('chart'),{type:'scatter',data:{datasets:ds},options:opts,plugins:[stabPlugin]});chart.$stabs=stabs;chart.$dev=!!m.band;chart.$zones=zOn;chart.$laps=null;chart.$ana=ana;chart.$avgs=avgs;chart.$kmv=kmv;chart.$qb=qb;chart.$dz=DZ[metric]?metric:null;chart.update()}
+  try{selAfter(chosen)}catch(e){console.error(e)}
 }
+/* ---------- selección de un tramo en el gráfico (mouse o dedo): promedios de cada rodaje en ese tramo ---------- */
+let selT=null, selBound=false;
+if(window.Chart&&Chart.register) Chart.register({id:'selBand',beforeDatasetsDraw(c){const S=c.$sel; if(!S||c.canvas.id!=='chart'||!c.scales.x) return; const {ctx,chartArea:a}=c, x=c.scales.x;
+  const p0=Math.max(a.left,x.getPixelForValue(Math.min(S[0],S[1]))), p1=Math.min(a.right,x.getPixelForValue(Math.max(S[0],S[1]))); if(p1-p0<1) return;
+  ctx.save(); ctx.fillStyle=css('--accent')+'22'; ctx.fillRect(p0,a.top,p1-p0,a.bottom-a.top); ctx.strokeStyle=css('--accent'); ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(p0,a.top); ctx.lineTo(p0,a.bottom); ctx.moveTo(p1,a.top); ctx.lineTo(p1,a.bottom); ctx.stroke(); ctx.restore()}});
+function selStats(a,t0,t1){const F=a.f5; if(!F||!F.h||!F.m) return null; const s0=Math.min(t0,t1)*60, s1=Math.max(t0,t1)*60, K=[];
+  for(let k=0;k<F.h.length;k++){const mid=k*5+2.5; if(mid>=s0&&mid<s1) K.push(k)} if(K.length<2) return null;
+  const dk=k=>F.m[k]-(k?F.m[k-1]:0), av=(X,f,sc)=>{if(!X) return null; let q=0,n=0; K.forEach(k=>{const v=X[k]; if(v>0&&(!f||f(k))){q+=v;n++}}); return n?q/n/(sc||1):null};
+  const dist=K.reduce((q,k)=>q+dk(k),0), dur=K.length*5, half=Math.floor(K.length/2), A=K.slice(0,half), B=K.slice(half), mh=X=>{let q=0,n=0; X.forEach(k=>{if(F.h[k]>0){q+=F.h[k]/10;n++}}); return n?q/n:null}, md=X=>X.reduce((q,k)=>q+dk(k),0);
+  const h1=mh(A), h2=mh(B), d1=md(A), d2=md(B); let hm=0; K.forEach(k=>{if(F.h[k]/10>hm) hm=F.h[k]/10});
+  return {dur,dist,pace:dist>5?dur/(dist/1000):null,hr:mh(K),hrMax:hm||null,der:h1&&h2?(h2/h1-1)*100:null,pahr:h1&&h2&&d1>0&&d2>0?(1-(d2/h2)/(d1/h1))*100:null,cad:av(F.c),gct:av(F.g),sl:av(F.l),vo:av(F.o),temp:av(F.t)}}
+function selAfter(chosen){const cv=document.getElementById('chart'); if(!chart||chart.canvas!==cv) return; const ok=chart.config.type==='scatter'&&chart.options.scales&&chart.options.scales.x&&chart.options.scales.x.title&&chart.options.scales.x.title.text==='minutos';
+  chart.$sel=ok?selT:null; if(!selBound) bindSel(cv); renderSel(ok?chosen:[]); if(ok&&selT) chart.draw()}
+function bindSel(cv){selBound=true; cv.style.touchAction='pan-y'; let st=null;
+  const xv=e=>{const c=chart; if(!c||!c.scales.x) return null; const r=cv.getBoundingClientRect(), px=e.clientX-r.left, a=c.chartArea; if(px<a.left-4||px>a.right+4) return null; return c.scales.x.getValueForPixel(Math.max(a.left,Math.min(a.right,px)))};
+  cv.addEventListener('pointerdown',e=>{if(!chart||chart.$sel===undefined) return; const okc=chart.config.type==='scatter'&&chart.options.scales.x.title&&chart.options.scales.x.title.text==='minutos'; if(!okc) return; const v=xv(e); if(v==null) return; st={x:e.clientX,v,drag:false,id:e.pointerId}});
+  cv.addEventListener('pointermove',e=>{if(!st||e.pointerId!==st.id) return; if(!st.drag&&Math.abs(e.clientX-st.x)<8) return; if(!st.drag){st.drag=true; try{cv.setPointerCapture(e.pointerId)}catch(_){}} const v=xv(e); if(v==null) return; chart.$sel=[st.v,v]; chart.draw(); e.preventDefault()});
+  const end=e=>{if(!st) return; const was=st.drag; st=null; if(!was) return; const S=chart.$sel; if(S&&Math.abs(S[1]-S[0])>=0.25){selT=[Math.min(S[0],S[1]),Math.max(S[0],S[1])]} else {selT=null; chart.$sel=null} chart.draw(); renderSel(sel.map(id=>acts.find(a=>a.id===id)).filter(Boolean))};
+  cv.addEventListener('pointerup',end); cv.addEventListener('pointercancel',end)}
+function renderSel(chosen){const mmss=v=>{const t=Math.round(v*60);return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')}, box0=document.getElementById('chart').parentElement; let B=document.getElementById('selBox'); if(!B){B=document.createElement('div'); B.id='selBox'; B.style.marginTop='8px'; box0.insertAdjacentElement('afterend',B)}
+  if(!selT||!chosen.length){B.innerHTML=chosen.length?'<div class="mdesc" style="margin:0">Arrastrá sobre el gráfico (con el mouse o el dedo) para elegir un tramo y ver sus promedios.</div>':''; return}
+  const rows=chosen.map((a,i)=>{const r=selStats(a,selT[0],selT[1]); if(!r) return `<tr><td style="text-align:left"><span style="display:inline-block;width:10px;height:3px;background:${color(i)};vertical-align:middle;margin-right:6px"></span>${a.tipo} ${dt(a)}</td><td colspan="10" class="mdesc">sin datos en ese tramo</td></tr>`;
+    const f=(v,d,u)=>v==null?'—':nf(v,d)+(u||'');
+    return `<tr><td style="text-align:left"><span style="display:inline-block;width:10px;height:3px;background:${color(i)};vertical-align:middle;margin-right:6px"></span>${a.tipo} ${dt(a)}</td><td class="num">${fmtT(r.dur)}</td><td class="num">${f(r.dist/1000,2,' km')}</td><td class="num"><b>${r.pace?fmtP(r.pace):'—'}</b></td><td class="num"><b>${f(r.hr,0)}</b></td><td class="num">${f(r.hrMax,0)}</td><td class="num">${f(r.der,1,' %')}</td><td class="num">${f(r.pahr,1,' %')}</td><td class="num">${f(r.cad,0)}</td><td class="num">${r.sl?f(r.sl/1000,2,' m'):'—'}</td><td class="num">${f(r.gct,0,' ms')}</td></tr>`}).join('');
+  B.innerHTML=`<div class="opts" style="margin:0 0 4px"><b>Tramo elegido: min ${mmss(selT[0])} a ${mmss(selT[1])}</b><button type="button" class="btn" id="selClr" style="font-size:12px;padding:3px 9px">Quitar selección</button></div>
+  <div style="overflow-x:auto"><table><thead><tr><th style="text-align:left">Rodaje</th><th>Tiempo</th><th>Distancia</th><th>Ritmo</th><th>FC media</th><th>FC máx</th><th title="FC de la segunda mitad del tramo contra la primera">Deriva</th><th title="Desacople aeróbico: eficiencia (velocidad ÷ FC) de la segunda mitad contra la primera">Pa:HR</th><th>Cadencia</th><th>Zancada</th><th>Contacto</th></tr></thead><tbody>${rows}</tbody></table></div>
+  <div class="mdesc" style="margin-top:2px">Promedios con los bloques de 5 s del tramo (el mismo rango de minutos en cada rodaje). Arrastrá de nuevo para cambiarlo.</div>`;
+  document.getElementById('selClr').onclick=()=>{selT=null; if(chart){chart.$sel=null; chart.draw()} renderSel(chosen)}}
+
 ['hideStart','showStab','showKm'].forEach(id=>document.getElementById(id).onchange=renderChart);
 // promedio por km o por vuelta (en calidad y test: cada serie, fase, descanso, calentamiento y vuelta a la calma); se recuerda
 var kmMode=(()=>{try{return LS.getItem('comparador.kmMode')||'km'}catch(e){return 'km'}})();
