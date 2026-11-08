@@ -81,7 +81,7 @@ window.addEventListener('load',function(){setTimeout(function(){if(typeof Chart=
   function mergeProfile(local,remote){ try{ var L=JSON.parse(local), R=JSON.parse(remote); var la=(L.acts||[]).filter(function(a){return !a.ej}).length, ra=(R.acts||[]).filter(function(a){return !a.ej}).length;
       if(!la&&!Object.keys((L.well||{}).days||{}).length) return remote; if(!ra&&!Object.keys((R.well||{}).days||{}).length) return local;
       var seen={}, acts=[]; (L.acts||[]).concat(R.acts||[]).forEach(function(a){ if(!a||a.id==null) return; var id=String(a.id); if(!seen[id]){seen[id]=1; acts.push(a)} }); L.acts=acts;
-      var wd=Object.assign({},(R.well||{}).days||{},(L.well||{}).days||{}); L.well=Object.assign({},R.well||{},L.well||{},{days:wd});
+      var wd=Object.assign({},(R.well||{}).days||{},(L.well||{}).days||{}), pn=Object.assign({},(R.well||{}).pain||{},(L.well||{}).pain||{}); L.well=Object.assign({},R.well||{},L.well||{},{days:wd,pain:pn});
       var ps={}, pl=[]; (L.plans||[]).concat(R.plans||[]).forEach(function(p){ if(!p) return; var k=p.day+'|'+p.tipo+'|'+p.plan; if(!ps[k]){ps[k]=1; pl.push(p)} }); L.plans=pl; if(!L.cycle&&R.cycle) L.cycle=R.cycle;
       var lt=L._ts||{}, rt=R._ts||{}; L._ts=Object.assign({},lt); L._h=Object.assign({},L._h||{});
       ['cycle','zones','thr','thrHist','fcHist','tpM','testCfg','goal','body','fc','norm','myW'].forEach(function(k){ if((rt[k]||0)>(lt[k]||0)&&k in R){ L[k]=R[k]; L._ts[k]=rt[k]; if(R._h&&k in R._h) L._h[k]=R._h[k] } });
@@ -131,7 +131,12 @@ window.addEventListener('load',function(){setTimeout(function(){if(typeof Chart=
   window.SYNC.boot=boot;
 })();
 </script>
-<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}.pthumbs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;max-width:420px;margin-top:8px}.pthumb{display:grid;gap:4px;justify-items:center;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px;cursor:pointer;font:inherit;color:var(--ink)}.pthumb span{font-size:12.5px;color:var(--muted)}
+.plist{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:4px;font-size:13.5px}.pdot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.ptrack{display:grid;gap:4px}.prow{display:grid;grid-template-columns:minmax(120px,190px) 1fr;gap:8px;align-items:center;font-size:12.5px}.pcells{display:grid;grid-template-columns:repeat(30,1fr);gap:2px}.pcell{height:14px;border-radius:2px}
+.pmod{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;max-width:560px;width:calc(100vw - 24px);margin:4vh auto;display:grid;gap:10px}.pbig{display:flex;justify-content:center}.pl{fill:var(--muted);font:11px var(--mono)}
+.pv{font:inherit;font-size:13px;padding:5px 10px;border-radius:6px;border:2px solid;background:var(--panel);color:var(--ink);cursor:pointer}
+</style>
 <title>Comparador de rodajes</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -553,6 +558,7 @@ table.zt td,table.zt th{padding:4px 8px}table.zt input.zl{width:52px}
       </div>
       <div class="panel" id="wStat"></div>
     </div>
+    <div class="panel" id="painBox" style="margin-top:16px"></div>
     <div class="panel" id="wLoad" style="margin-top:16px"></div>
     <div class="panel" style="margin-top:16px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2>Tendencias</h2>
@@ -1209,7 +1215,7 @@ function renderList(){ try{syncLP()}catch(e){}
       <span class="t1" style="display:flex;align-items:center;gap:6px">${dt(a)} <span style="font-weight:400;color:var(--muted)">${hm(a)}</span>${listF.well?mark(a):''}${a.ej||!listF.wbgt?'':wbBox(a)}</span>
       <span style="display:flex;gap:6px;align-items:center">${a.ej?'<span class="chip ej">Ejemplo</span>':''}${a.autoT?'<span class="chip" title="Tipo asignado automáticamente: revisalo" style="background:var(--warn);color:#fff">auto</span>':''}${a.noTr?'<span class="chip" title="No se grafica en la tendencia">sin tend.</span>':''}
         <select class="tipo" aria-label="Tipo"><option${a.tipo==='LR'?' selected':''}>LR</option><option${a.tipo==='ER'?' selected':''}>ER</option><option${a.tipo==='Calidad'?' selected':''}>Calidad</option><option${a.tipo==='Competencia'?' selected':''}>Competencia</option><option${a.tipo==='Test'?' selected':''}>Test</option><option${a.tipo==='Técnica'?' selected':''}>Técnica</option><option${a.tipo==='Otro'?' selected':''}>Otro</option></select>
-        ${a.tipo==='Test'&&!a.ej?`<button class="btn primary adjz" type="button" style="padding:3px 8px;font-size:11.5px" title="Calcular el umbral con este Test y programar las zonas del perfil">${thr&&thr.actId===String(a.id)?'✓ Zonas':'Ajustar zonas'}</button>`:''}<button class="del" title="Quitar este rodaje" aria-label="Quitar">×</button></span>
+        ${a.tipo==='Test'&&!a.ej?`<button class="btn primary adjz" type="button" style="padding:3px 8px;font-size:11.5px" title="Calcular el umbral con este Test y programar las zonas del perfil">${thr&&thr.actId===String(a.id)?'✓ Zonas':'Ajustar zonas'}</button>`:''}${a.ej?'':`<select class="tipo rpes" aria-label="Esfuerzo percibido (RPE) de la sesión" title="Esfuerzo percibido de toda la sesión (RPE 1–10)"><option value="">RPE</option>${[1,2,3,4,5,6,7,8,9,10].map(v=>`<option value="${v}"${a.rpe===v?' selected':''}>RPE ${v}</option>`).join('')}</select>`}<button class="del" title="Quitar este rodaje" aria-label="Quitar">×</button></span>
       <span class="t2">${a.ej?'':`<select class="tipo surf" aria-label="Superficie" title="Superficie (sin anotar = ${surfDef}, la de por defecto)"><option value="">${surfDef} ·</option>${SURF.map(x=>`<option${a.surf===x?' selected':''}>${x}</option>`).join('')}</select>`}${listLine(a,s)}${a.tipo==='Calidad'&&!a.q?' · sin series detectadas':''}</span>`;
     if(confirmId===a.id){const c=document.createElement('div');c.className='confirm';c.innerHTML='<span>¿Quitar este rodaje del comparador?</span><button class="yes">Quitar</button><button class="no">Cancelar</button>';
       c.querySelector('.yes').onclick=e=>{e.stopPropagation();acts=acts.filter(x=>x.id!==a.id);sel=sel.filter(x=>x!==a.id);confirmId=null;save();render()};
@@ -1218,6 +1224,7 @@ function renderList(){ try{syncLP()}catch(e){}
     el.onclick=e=>{if(e.target.closest('select,.del,.confirm')) return; toggle()};
     el.onkeydown=e=>{if((e.key===' '||e.key==='Enter')&&e.target===el){e.preventDefault();toggle()}};
     el.querySelector('select').onchange=e=>{a.tipo=e.target.value; delete a.autoT; save();render()};
+    {const rp=el.querySelector('select.rpes'); if(rp) rp.onchange=e=>{const v=+e.target.value; if(v>=1&&v<=10) a.rpe=v; else delete a.rpe; save(); render()}}
     {const sf=el.querySelector('select.surf'); if(sf) sf.onchange=e=>{const v=e.target.value; if(v) a.surf=v; else delete a.surf; save(); render()}}
     el.querySelector('.del').onclick=e=>{e.stopPropagation();confirmId=a.id;renderList()};
     {const z=el.querySelector('.adjz'); if(z) z.onclick=e=>{e.stopPropagation(); adjustZones(a.id)}}
@@ -1467,10 +1474,10 @@ function renderSel(chosen){const mmss=v=>{const t=Math.round(v*60);return Math.f
   const rows=chosen.map((a,i)=>{const r=selStats(a,selT[0],selT[1]); if(!r) return `<tr><td style="text-align:left"><span style="display:inline-block;width:10px;height:3px;background:${color(i)};vertical-align:middle;margin-right:6px"></span>${a.tipo} ${dt(a)}</td><td colspan="10" class="mdesc">sin datos en ese tramo</td></tr>`;
     const f=(v,d,u)=>v==null?'—':nf(v,d)+(u||'');
     return `<tr><td style="text-align:left"><span style="display:inline-block;width:10px;height:3px;background:${color(i)};vertical-align:middle;margin-right:6px"></span>${a.tipo} ${dt(a)}</td><td class="num">${fmtT(r.dur)}</td><td class="num">${f(r.dist/1000,2,' km')}</td><td class="num"><b>${r.pace?fmtP(r.pace):'—'}</b></td><td class="num"><b>${f(r.hr,0)}</b></td><td class="num">${f(r.hrMax,0)}</td><td class="num">${f(r.der,1,' %')}</td><td class="num">${f(r.pahr,1,' %')}</td><td class="num">${f(r.cad,0)}</td><td class="num">${r.sl?f(r.sl/1000,2,' m'):'—'}</td><td class="num">${f(r.gct,0,' ms')}</td></tr>`}).join('');
-  B.innerHTML=`<div class="opts" style="margin:0 0 4px"><b>Tramo elegido: min ${mmss(selT[0])} a ${mmss(selT[1])}</b><button type="button" class="btn" id="selClr" style="font-size:12px;padding:3px 9px">Quitar selección</button></div>
+  B.innerHTML=`<div class="opts" style="margin:0 0 4px"><b>Tramo elegido: min ${mmss(selT[0])} a ${mmss(selT[1])}</b><button type="button" class="btn" id="selTClr" style="font-size:12px;padding:3px 9px">Quitar selección</button></div>
   <div style="overflow-x:auto"><table><thead><tr><th style="text-align:left">Rodaje</th><th>Tiempo</th><th>Distancia</th><th>Ritmo</th><th>FC media</th><th>FC máx</th><th title="FC de la segunda mitad del tramo contra la primera">Deriva</th><th title="Desacople aeróbico: eficiencia (velocidad ÷ FC) de la segunda mitad contra la primera">Pa:HR</th><th>Cadencia</th><th>Zancada</th><th>Contacto</th></tr></thead><tbody>${rows}</tbody></table></div>
   <div class="mdesc" style="margin-top:2px">Promedios con los bloques de 5 s del tramo (el mismo rango de minutos en cada rodaje). Arrastrá de nuevo para cambiarlo.</div>`;
-  document.getElementById('selClr').onclick=()=>{selT=null; if(chart){chart.$sel=null; chart.draw()} renderSel(chosen)}}
+  document.getElementById('selTClr').onclick=()=>{selT=null; if(chart){chart.$sel=null; chart.draw()} renderSel(chosen)}}
 
 ['hideStart','showStab','showKm'].forEach(id=>document.getElementById(id).onchange=renderChart);
 // promedio por km o por vuelta (en calidad y test: cada serie, fase, descanso, calentamiento y vuelta a la calma); se recuerda
@@ -1563,6 +1570,7 @@ function renderTable(){
     ['Índice de desvío',(a,s)=>nf(s.idx*100,1)+' %',(a,s)=>s.idx*100,1,' pp'],
     ['Eficiencia',(a,s)=>nf(s.eff,3)+' m/lat',(a,s)=>s.eff,3,''],
     ['TRIMP',(a)=>nf(a.trimp,1),(a)=>a.trimp,1,''],
+    ['RPE de la sesión',(a)=>a.rpe?`<b>${a.rpe}</b>/10 · carga percibida ${Math.round(a.rpe*a.timeS/60)}${a.trimp?` · ${nf(a.rpe*a.timeS/60/a.trimp,1)}× el TRIMP`:''}`:'—',(a)=>a.rpe||null,0,''],
     ['FC estable (desde estabilización)',(a,s)=>nf(s.hrSt,1)+' ppm',(a,s)=>s.hrSt,1,''],
     ...(norm.on?[['FC estable llevada a WBGT '+nf(nRef(),1)+' °C',(a,s)=>nVal(a)==null?'— (sin clima)':nf(hrN(s.hrSt,a),1)+' ppm',(a,s)=>nVal(a)==null?null:hrN(s.hrSt,a),1,''],
       ['Eficiencia normalizada',(a,s)=>nVal(a)==null?'—':nf(s.vel/hrN(s.hrSt,a),3)+' m/lat',(a,s)=>nVal(a)==null?null:s.vel/hrN(s.hrSt,a),3,'']]:[]),
@@ -2521,7 +2529,7 @@ function wNoteFx(note,lv,hasSq){if(!note) return []; const s=String(note).toLowe
 function syncWForm(d){const x=wDay(d); document.getElementById('wD').value=d; wLoaded=d;
   document.getElementById('wHrv').value=x.hrv??''; document.getElementById('wRhr').value=x.rhr??''; document.getElementById('wShr').value=x.shr??'';
   document.getElementById('wSh').value=x.sh!=null?wfmt('sh',x.sh):''; document.getElementById('wNap').value=x.nap??''; document.getElementById('wSq').value=x.sq??''; document.getElementById('wFeel').value=x.feel||''; document.getElementById('wNote').value=x.note||''}
-function renderWell(){const keys=Object.keys(well.days).sort(), msg=document.getElementById('wMsg');
+function renderWell(){try{renderPain()}catch(e){console.error(e)} const keys=Object.keys(well.days).sort(), msg=document.getElementById('wMsg');
   {const ew=document.getElementById('evW'); if(well.cfg&&well.cfg.evW&&!ew.dataset.s){ew.value=well.cfg.evW; ew.dataset.s=1}}
   if(!document.getElementById('wD').value) syncWForm(todayKey());
   document.querySelectorAll('#wmSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===wm));
@@ -2572,7 +2580,7 @@ function renderWell(){const keys=Object.keys(well.days).sort(), msg=document.get
 }
 function parseH(s){s=String(s).trim(); if(!s) return null; const m=s.match(/^(\d{1,2})[:h](\d{1,2})$/); if(m) return +m[1]+(+m[2])/60; const v=num(s); return isFinite(v)&&v>0&&v<16?v:null}
 // al elegir otra fecha se cargan sus datos (input + change: en el celular el selector a veces solo avisa por uno de los dos)
-{const ldW=e=>{const v=e.target.value; if(!v||v===wLoaded) return; syncWForm(v); const x=wDay(v), n=Object.keys(x).filter(k=>k!=='man').length;
+{const ldW=e=>{const v=e.target.value; if(!v||v===wLoaded) return; syncWForm(v); try{renderPain()}catch(_){} const x=wDay(v), n=Object.keys(x).filter(k=>k!=='man').length;
   document.getElementById('wMsg').textContent=n?`Registro del ${dShort.format(new Date(dms(v)+6*3600000))} cargado: editalo y tocá Guardar.`:`Sin registro el ${dShort.format(new Date(dms(v)+6*3600000))}.`};
   ['input','change','blur'].forEach(t=>document.getElementById('wD').addEventListener(t,ldW))}
 document.getElementById('wSave').onclick=()=>{const d=document.getElementById('wD').value, msg=document.getElementById('wMsg'); if(!d){msg.textContent='Elegí la fecha.';return}
@@ -2581,6 +2589,58 @@ document.getElementById('wSave').onclick=()=>{const d=document.getElementById('w
   Object.keys(x).forEach(k=>{if(x[k]==null) delete x[k]});
   if(!Object.keys(x).length){delete well.days[d]; msg.textContent='Día vacío: se borró ese registro.'} else {well.days[d]={...x,man:true}; msg.textContent='Guardado.'}
   save(); renderWell()};
+/* ---------- molestias: mapa del cuerpo (frente, costado, espalda), intensidad 1–4 por zona y día, seguimiento y alertas ---------- */
+const PV={1:['leve','#E9C33B'],2:['moderada','#EE8A2E'],3:['fuerte','#E0472F'],4:['severa','#8E1B1B']};
+const PWHEN={c:'al correr',d:'después de correr',r:'en reposo'}, PTYPE={m:'muscular',a:'articular',t:'tendón'};
+// zonas: [clave, nombre, vista, cx, cy, rx, ry]; en frente el lado derecho de la persona queda a la izquierda del dibujo; en espalda, al revés
+const PZ=(()=>{const Z=[], two=(k,n,v,xr,xl,y,rx,ry)=>{Z.push([k+'_d',n+' derecha',v,xr,y,rx,ry]); Z.push([k+'_i',n+' izquierda',v,xl,y,rx,ry])};
+  two('ingle','Cadera / ingle','f',82,118,206,13,10); two('cuad','Cuádriceps','f',81,119,250,13,30); two('rod','Rodilla','f',80,120,300,12,11);
+  two('esp','Espinilla','f',80,120,345,8,27); two('tob','Tobillo','f',80,120,390,9,7); two('emp','Empeine','f',77,123,411,12,6);
+  Z.push(['cuello','Cuello','b',100,73,12,9]); two('homb','Hombro','b',132,68,96,16,10); Z.push(['lumbar','Zona lumbar','b',100,176,22,12]);
+  two('glut','Glúteo','b',118,82,212,16,14); two('isq','Isquiotibiales','b',119,81,258,12,28); two('gem','Gemelo','b',120,80,335,11,22);
+  two('aqu','Aquiles','b',120,80,384,5,10); two('pla','Planta / talón','b',121,79,414,11,6);
+  for(const [sd,nm] of [['d','derecha'],['i','izquierda']]){Z.push(['cadlat_'+sd,'Cadera lateral '+nm,'s'+sd,100,204,13,12]); Z.push(['it_'+sd,'Banda IT '+nm,'s'+sd,103,256,8,30]); Z.push(['rodext_'+sd,'Rodilla externa '+nm,'s'+sd,101,300,10,10]); Z.push(['tobext_'+sd,'Tobillo externo / peroneos '+nm,'s'+sd,99,389,8,8])}
+  return Z})();
+const pzName=k=>{const z=PZ.find(z=>z[0]===k); return z?z[1]:k};
+let painView='f', painSide='d', painSel=null;
+const painDay=()=>document.getElementById('wD').value||todayKey();
+function painOf(d){well.pain=well.pain||{}; return well.pain[d]||{}}
+function bodySvg(view,d,big){const P=painOf(d), side=view[0]==='s', fill='var(--soft)', st='var(--line)';
+  const sil=side?`<circle cx="100" cy="42" r="21"/><rect x="92" y="60" width="16" height="16" rx="5"/><path d="M78 78 Q100 70 122 80 L126 190 Q100 200 80 190 Z"/><path d="M86 188 Q104 186 116 196 L112 300 L108 380 L118 410 L120 420 L84 420 L90 380 L88 300 Z"/><path d="M96 82 L108 150 L104 196 L98 196 L94 150 Z" opacity=".6"/>`
+    :`<circle cx="100" cy="40" r="21"/><rect x="91" y="58" width="18" height="18" rx="5"/><path d="M62 82 Q100 70 138 82 L134 190 Q100 204 66 190 Z"/><path d="M62 84 L48 170 L42 236 L52 238 L60 172 L70 120 Z"/><path d="M138 84 L152 170 L158 236 L148 238 L140 172 L130 120 Z"/><path d="M66 188 Q100 204 134 188 L132 220 L126 300 L124 380 L132 418 L106 418 L106 380 L102 230 L98 230 L94 380 L94 418 L68 418 L76 380 L74 300 L68 220 Z"/>`;
+  const zs=PZ.filter(z=>z[2]===(side?'s'+painSide:view)).map(z=>{const x=P[z[0]], c=x?PV[x.v][1]:'transparent';
+    return `<ellipse data-z="${z[0]}" cx="${z[3]}" cy="${z[4]}" rx="${z[5]}" ry="${z[6]}" fill="${c}" fill-opacity="${x?.85:0}" stroke="${x?c:'var(--muted)'}" stroke-width="${big?1.4:1}" stroke-dasharray="${x?'':'3 2'}" style="cursor:pointer"><title>${z[1]}${x?` · ${PV[x.v][0]}`:''}</title></ellipse>`}).join('');
+  const lab=side?`Costado ${painSide==='d'?'derecho':'izquierdo'}`:view==='f'?'Frente':'Espalda', lr=side?'':view==='f'?'<text x="40" y="452" class="pl">der.</text><text x="160" y="452" class="pl" text-anchor="end">izq.</text>':'<text x="40" y="452" class="pl">izq.</text><text x="160" y="452" class="pl" text-anchor="end">der.</text>';
+  return `<svg viewBox="0 0 200 460" ${big?'style="height:min(70vh,560px);width:auto;max-width:100%"':'style="width:100%;height:auto"'} aria-label="${lab}"><g fill="${fill}" stroke="${st}" stroke-width="1.2">${sil}</g>${zs}${lr}</svg>`}
+function painAlerts(d){const out=[], P=painOf(d); Object.entries(P).forEach(([k,x])=>{if(x.v>=3) out.push(`<b>${pzName(k)}</b>: molestia ${PV[x.v][0]}. Evitá la calidad y bajá el volumen; si es severa o no mejora en 2–3 días, consultá.`)});
+  const t=dms(d); const keys=new Set(Object.keys(P)); keys.forEach(k=>{let n=0; for(let i=0;i<7;i++){const x=painOf(dkey(t-i*DAYW))[k]; if(x&&x.v>=2) n++; else break} if(n>=3&&!(P[k]&&P[k].v>=3)) out.push(`<b>${pzName(k)}</b> lleva ${n} días seguidos con molestia moderada o más: cuidala (menos volumen, sin calidad) y, si sigue, consultá.`)});
+  return out}
+function renderPain(){const B=document.getElementById('painBox'); if(!B) return; const d=painDay(), P=painOf(d), ks=Object.keys(P);
+  const list=ks.length?ks.map(k=>{const x=P[k]; return `<li><span class="pdot" style="background:${PV[x.v][1]}"></span><b>${pzName(k)}</b> · ${x.v} ${PV[x.v][0]}${x.w?' · '+PWHEN[x.w]:''}${x.t?' · '+PTYPE[x.t]:''}</li>`}).join(''):'<li class="mdesc" style="margin:0">Sin molestias registradas este día.</li>';
+  // seguimiento: zonas con registro en los últimos 60 días, 30 días hacia atrás desde la fecha elegida
+  const t=dms(d), N=30, seen=new Set(); for(let i=0;i<60;i++) Object.keys(painOf(dkey(t-i*DAYW))).forEach(k=>seen.add(k));
+  const rows=[...seen].map(k=>{let cells=''; for(let i=N-1;i>=0;i--){const dd=dkey(t-i*DAYW), x=painOf(dd)[k]; cells+=`<span class="pcell" title="${dd}${x?' · '+PV[x.v][0]:''}" style="background:${x?PV[x.v][1]:'var(--soft)'}"></span>`} return `<div class="prow"><span class="pname">${pzName(k)}</span><span class="pcells">${cells}</span></div>`}).join('');
+  const al=painAlerts(d);
+  B.innerHTML=`<h2>Molestias</h2><div class="mdesc" style="margin-top:0">Día <b>${d}</b> (el de «Registro del día»). Tocá una figura para abrirla en grande y marcar la zona: 1 leve · 2 moderada · 3 fuerte · 4 severa.</div>
+    ${al.length?`<div class="notice" style="margin:8px 0;border-left:4px solid var(--bad)">${al.join('<br>')}</div>`:''}
+    <div class="pthumbs">${[['f','Frente'],['s','Costado'],['b','Espalda']].map(([v,n])=>`<button type="button" class="pthumb" data-v="${v}">${bodySvg(v==='s'?'s'+painSide:v,d,false)}<span>${n}</span></button>`).join('')}</div>
+    <ul class="plist">${list}</ul>
+    ${rows?`<h2 style="margin-top:14px;font-size:17px">Seguimiento · últimos 30 días</h2><div class="ptrack">${rows}</div><div class="mdesc" style="margin-top:4px">Cada cuadrito es un día (el último es el día elegido); el color, la intensidad.</div>`:''}`;
+  B.querySelectorAll('.pthumb').forEach(b=>b.onclick=()=>{painView=b.dataset.v; painSel=null; painModal()})}
+function painModal(){let M=document.getElementById('painM'); if(!M){M=document.createElement('div'); M.id='painM'; M.className='trep-o'; document.body.appendChild(M); M.onclick=e=>{if(e.target===M){M.remove(); renderPain()}}}
+  const d=painDay(), P=painOf(d), v=painView==='s'?'s'+painSide:painView, z=painSel&&PZ.find(q=>q[0]===painSel), x=z?P[z[0]]:null;
+  M.innerHTML=`<div class="pmod"><div class="opts" style="justify-content:space-between;margin:0"><span class="seg" role="group" aria-label="Vista">${[['f','Frente'],['s','Costado'],['b','Espalda']].map(([k,n])=>`<button type="button" data-pv="${k}" aria-pressed="${painView===k}">${n}</button>`).join('')}</span>
+      ${painView==='s'?`<span class="seg" role="group" aria-label="Lado"><button type="button" data-ps="d" aria-pressed="${painSide==='d'}">Derecho</button><button type="button" data-ps="i" aria-pressed="${painSide==='i'}">Izquierdo</button></span>`:''}<button type="button" class="btn" id="pmClose">Listo</button></div>
+    <div class="pbig">${bodySvg(v,d,true)}</div>
+    ${z?`<div class="pedit2"><b>${z[1]}</b><div class="opts" style="margin:6px 0">${[1,2,3,4].map(n=>`<button type="button" class="pv" data-n="${n}" aria-pressed="${x&&x.v===n}" style="border-color:${PV[n][1]};${x&&x.v===n?`background:${PV[n][1]};color:#fff`:''}">${n} · ${PV[n][0]}</button>`).join('')}${x?'<button type="button" class="del" data-n="0">Quitar</button>':''}</div>
+      ${x?`<div class="opts" style="margin:0"><label>Cuándo <select class="tipo" id="pmW"><option value="">—</option>${Object.entries(PWHEN).map(([k,n])=>`<option value="${k}"${x.w===k?' selected':''}>${n}</option>`).join('')}</select></label><label>Tipo <select class="tipo" id="pmT"><option value="">—</option>${Object.entries(PTYPE).map(([k,n])=>`<option value="${k}"${x.t===k?' selected':''}>${n}</option>`).join('')}</select></label></div>`:''}</div>`:'<div class="mdesc" style="text-align:center">Tocá una zona (contorno punteado) para marcar la molestia.</div>'}</div>`;
+  const setP=fn=>{well.pain=well.pain||{}; const day={...(well.pain[d]||{})}; fn(day); if(Object.keys(day).length) well.pain[d]=day; else delete well.pain[d]; save(); painModal()};
+  M.querySelectorAll('[data-pv]').forEach(b=>b.onclick=()=>{painView=b.dataset.pv; painSel=null; painModal()});
+  M.querySelectorAll('[data-ps]').forEach(b=>b.onclick=()=>{painSide=b.dataset.ps; painSel=null; painModal()});
+  M.querySelectorAll('ellipse[data-z]').forEach(e=>e.onclick=()=>{painSel=e.dataset.z; painModal()});
+  M.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>{const n=+b.dataset.n; setP(day=>{if(!n) delete day[painSel]; else day[painSel]={...(day[painSel]||{}),v:n}})});
+  const w=M.querySelector('#pmW'), tt=M.querySelector('#pmT'); if(w) w.onchange=()=>setP(day=>{if(w.value) day[painSel].w=w.value; else delete day[painSel].w}); if(tt) tt.onchange=()=>setP(day=>{if(tt.value) day[painSel].t=tt.value; else delete day[painSel].t});
+  M.querySelector('#pmClose').onclick=()=>{M.remove(); renderPain()}}
 // CSV de Runalyze: hrv.csv (hrv), heart-rate-rest.csv (heartRate), sleep.csv (duration, hrAverage, isNap)
 document.getElementById('wSqNotes').onclick=()=>{let n=0; const ex=[]; for(const d in well.days){const x=well.days[d]; if(x.sq!=null||!x.note) continue; const v=sqFromNote(x.note); if(v!=null){x.sq=v; n++; if(ex.length<3) ex.push(`${d.slice(8)}/${d.slice(5,7)}: ${v}`)}}
   save(); renderWell(); document.getElementById('wMsg').textContent=n?`Calificación tomada de ${n} nota(s) (${ex.join(' · ')}${n>3?'…':''}). Revisá la tabla de 14 días.`:'No encontré calificaciones en tus notas. Escribila como «Coros 78» o usá el campo nuevo.'};
@@ -3268,6 +3328,7 @@ function renderQTable(chosen,S,W){
     ...wxRows(),...sleepRows(),
     ['Sesión completa',(a)=>`${fmtT(a.timeS)} · ${nf(a.distKm,2)} km`],
     ['TRIMP sesión',(a)=>nf(a.trimp,1),(a)=>a.trimp,1,''],
+    ['RPE de la sesión',(a)=>a.rpe?`<b>${a.rpe}</b>/10 · carga percibida ${Math.round(a.rpe*a.timeS/60)}${a.trimp?` · ${nf(a.rpe*a.timeS/60/a.trimp,1)}× el TRIMP`:''}`:'—',(a)=>a.rpe||null,0,''],
     ['TRIMP mecánico sesión',(a)=>a.dyn&&a.dyn.mech?nf(a.dyn.mech/1000,1):'—',(a)=>a.dyn&&a.dyn.mech?a.dyn.mech/1000:null,1,''],
     ['Mecánica estimada (bloques largos, series o tramo fuerte del Test)',0],
     ['Ritmo del tramo medido',(a,s)=>{const m=mechOf(a,s); return m?fmtP(m.pace)+' /km':'—'}],
@@ -3296,7 +3357,7 @@ function renderQTable(chosen,S,W){
    if(st>=0&&en>st){const secs=[]; for(let i=st;i<en;i++){if(rows[i][1]===0) secs.push({k:rows[i][0]==='Series cortas'?'S':'L'+(parseInt(rows[i][0].replace(/\D/g,''))-1),r:[]}); secs[secs.length-1].r.push(rows[i])}
      const ord=[]; let li=0; chosen[0].q.laps.filter(x=>x.t==='w').forEach(x=>{const k=isLg(x)?'L'+(li++):'S'; if(!ord.includes(k)) ord.push(k)});
      const pos=k=>{const i=ord.indexOf(k); return i<0?99:i}; secs.sort((a,b)=>pos(a.k)-pos(b.k)); rows.splice(st,en-st,...secs.flatMap(s=>s.r))}}
-  regroup(rows,[['Plan y ajustes',['Código','Plan del coach','Ritmo programado por el coach','Zapato','Superficie','Graficar en la tendencia']],['Sesión',['Hora de inicio','Sesión completa','TRIMP sesión','TRIMP mecánico sesión']],['Clima',['Temperatura del aire y clima','WBGT']],['Sueño',['Déficit de sueño','Sueño de la noche previa']]]);
+  regroup(rows,[['Plan y ajustes',['Código','Plan del coach','Ritmo programado por el coach','Zapato','Superficie','Graficar en la tendencia']],['Sesión',['Hora de inicio','Sesión completa','TRIMP sesión','RPE de la sesión','TRIMP mecánico sesión']],['Clima',['Temperatura del aire y clima','WBGT']],['Sueño',['Déficit de sueño','Sueño de la noche previa']]]);
   let h='<table><thead><tr><th></th>'+chosen.map((a,i)=>`<th style="color:${color(i)}">Calidad ${dt(a)}</th>`).join('')+'</tr></thead><tbody>';
   for(const [lab,f,g,dec,u] of rows){
     if(f===0){h+=`<tr class="sec"><td colspan="${chosen.length+1}">${lab}</td></tr>`;continue}
