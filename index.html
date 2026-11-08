@@ -402,6 +402,7 @@ header button.brand:hover span{color:var(--accent)}
 .pkd button{font-size:11px;padding:3px 4px;border-radius:5px;border:1px solid var(--line);border-left:4px solid;background:var(--soft);color:var(--ink);text-align:left;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pkd button.on,.pkd button:hover{background:color-mix(in srgb,var(--accent) 18%,var(--panel))}
 body[data-tab=cmp] #filtSeg,body[data-tab=cmp] #codeWrap{display:none!important}
+.chartbox.selon{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}.selbadge{position:absolute;left:8px;top:6px;z-index:3;background:var(--accent);color:var(--bg);font-size:12px;font-weight:600;padding:3px 8px;border-radius:6px;pointer-events:none}
 body[data-tab=cmp] #selChips,body[data-tab=cmp] #normLbl,body[data-tab=cmp] #normCfg,body[data-tab=cmp] #viewSeg{display:none!important}
 .item .tocmp{padding:1px 7px;font-size:15px;line-height:1.2;color:var(--muted)}
 .item .tocmp[aria-pressed=true]{color:#E8B007}
@@ -1532,20 +1533,26 @@ function selStats(a,t0,t1){const F=a.f5; if(!F||!F.h||!F.m) return null; const s
   return {dur,dist,pace:dist>5?dur/(dist/1000):null,hr:mh(K),hrMax:hm||null,der:h1&&h2?(h2/h1-1)*100:null,pahr:h1&&h2&&d1>0&&d2>0?(1-(d2/h2)/(d1/h1))*100:null,cad:av(F.c),gct:av(F.g),sl:av(F.l),vo:av(F.o),temp:av(F.t)}}
 function selAfter(chosen){const cv=document.getElementById('chart'); if(!chart||chart.canvas!==cv) return; const ok=chart.config.type==='scatter'&&chart.options.scales&&chart.options.scales.x&&chart.options.scales.x.title&&chart.options.scales.x.title.text==='minutos';
   chart.$sel=ok?selT:null; if(!selBound) bindSel(cv); renderSel(ok?chosen:[]); if(ok&&selT) chart.draw()}
-function bindSel(cv){selBound=true; cv.style.touchAction='pan-y'; let st=null;
+let selMode=false;
+function setSelMode(on){selMode=on; const cv=document.getElementById('chart'); if(!cv) return; cv.style.touchAction=on?'none':'manipulation'; const box=cv.parentElement; box.classList.toggle('selon',on);
+  let b=document.getElementById('selBadge'); if(!b){b=document.createElement('div'); b.id='selBadge'; b.className='selbadge'; box.appendChild(b)} b.textContent='Selección activa · 2 toques para salir'; b.hidden=!on}
+function bindSel(cv){selBound=true; cv.style.touchAction='manipulation'; let st=null, tap0=null, lastTap=null;
   const xv=e=>{const c=chart; if(!c||!c.scales.x) return null; const r=cv.getBoundingClientRect(), px=e.clientX-r.left, a=c.chartArea; if(px<a.left-4||px>a.right+4) return null; return c.scales.x.getValueForPixel(Math.max(a.left,Math.min(a.right,px)))};
-  cv.addEventListener('pointerdown',e=>{if(!chart||chart.$sel===undefined) return; const okc=chart.config.type==='scatter'&&chart.options.scales.x.title&&chart.options.scales.x.title.text==='minutos'; if(!okc) return; const v=xv(e); if(v==null) return; st={x:e.clientX,v,drag:false,id:e.pointerId}});
+  cv.addEventListener('pointerdown',e=>{const touch=e.pointerType==='touch'; if(touch) tap0={x:e.clientX,y:e.clientY,t:Date.now(),id:e.pointerId}; if(touch&&!selMode) return; if(!chart||chart.$sel===undefined) return; const okc=chart.config.type==='scatter'&&chart.options.scales.x.title&&chart.options.scales.x.title.text==='minutos'; if(!okc) return; const v=xv(e); if(v==null) return; st={x:e.clientX,v,drag:false,id:e.pointerId}});
   cv.addEventListener('pointermove',e=>{if(!st||e.pointerId!==st.id) return; if(!st.drag&&Math.abs(e.clientX-st.x)<8) return; if(!st.drag){st.drag=true; try{cv.setPointerCapture(e.pointerId)}catch(_){}} const v=xv(e); if(v==null) return; chart.$sel=[st.v,v]; chart.draw(); e.preventDefault()});
   const end=e=>{if(!st) return; const was=st.drag; st=null; if(!was) return; const S=chart.$sel; if(S&&Math.abs(S[1]-S[0])>=0.25){selT=[Math.min(S[0],S[1]),Math.max(S[0],S[1])]} else {selT=null; chart.$sel=null} chart.draw(); renderSel(sel.map(id=>acts.find(a=>a.id===id)).filter(Boolean))};
-  cv.addEventListener('pointerup',end); cv.addEventListener('pointercancel',end)}
+  const up=e=>{if(e.pointerType==='touch'&&tap0&&tap0.id===e.pointerId){const moved=Math.hypot(e.clientX-tap0.x,e.clientY-tap0.y), quick=Date.now()-tap0.t<300; tap0=null;
+      if(moved<12&&quick&&!(st&&st.drag)){const now=Date.now(); if(lastTap&&now-lastTap.t<400&&Math.hypot(e.clientX-lastTap.x,e.clientY-lastTap.y)<40){lastTap=null; st=null; setSelMode(!selMode); return} lastTap={t:now,x:e.clientX,y:e.clientY}}}
+    end(e)};
+  cv.addEventListener('pointerup',up); cv.addEventListener('pointercancel',e=>{tap0=null; end(e)})}
 function renderSel(chosen){const mmss=v=>{const t=Math.round(v*60);return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')}, box0=document.getElementById('chart').parentElement; let B=document.getElementById('selBox'); if(!B){B=document.createElement('div'); B.id='selBox'; B.style.marginTop='8px'; box0.insertAdjacentElement('afterend',B)}
-  if(!selT||!chosen.length){B.innerHTML=chosen.length?'<div class="mdesc" style="margin:0">Arrastrá sobre el gráfico (con el mouse o el dedo) para elegir un tramo y ver sus promedios.</div>':''; return}
+  if(!selT||!chosen.length){B.innerHTML=chosen.length?'<div class="mdesc" style="margin:0">Arrastrá sobre el gráfico con el mouse para elegir un tramo y ver sus promedios. En el celular: dos toques sobre el gráfico activan la selección, arrastrás con el dedo y otros dos toques la desactivan.</div>':''; return}
   const rows=chosen.map((a,i)=>{const r=selStats(a,selT[0],selT[1]); if(!r) return `<tr><td style="text-align:left"><span style="display:inline-block;width:10px;height:3px;background:${color(i)};vertical-align:middle;margin-right:6px"></span>${a.tipo} ${dt(a)}</td><td colspan="10" class="mdesc">sin datos en ese tramo</td></tr>`;
     const f=(v,d,u)=>v==null?'—':nf(v,d)+(u||'');
     return `<tr><td style="text-align:left"><span style="display:inline-block;width:10px;height:3px;background:${color(i)};vertical-align:middle;margin-right:6px"></span>${a.tipo} ${dt(a)}</td><td class="num">${fmtT(r.dur)}</td><td class="num">${f(r.dist/1000,2,' km')}</td><td class="num"><b>${r.pace?fmtP(r.pace):'—'}</b></td><td class="num"><b>${f(r.hr,0)}</b></td><td class="num">${f(r.hrMax,0)}</td><td class="num">${f(r.der,1,' %')}</td><td class="num">${f(r.pahr,1,' %')}</td><td class="num">${f(r.cad,0)}</td><td class="num">${r.sl?f(r.sl/1000,2,' m'):'—'}</td><td class="num">${f(r.gct,0,' ms')}</td></tr>`}).join('');
   B.innerHTML=`<div class="opts" style="margin:0 0 4px"><b>Tramo elegido: min ${mmss(selT[0])} a ${mmss(selT[1])}</b><button type="button" class="btn" id="selTClr" style="font-size:12px;padding:3px 9px">Quitar selección</button></div>
   <div style="overflow-x:auto"><table><thead><tr><th style="text-align:left">Rodaje</th><th>Tiempo</th><th>Distancia</th><th>Ritmo</th><th>FC media</th><th>FC máx</th><th title="FC de la segunda mitad del tramo contra la primera">Deriva</th><th title="Desacople aeróbico: eficiencia (velocidad ÷ FC) de la segunda mitad contra la primera">Pa:HR</th><th>Cadencia</th><th>Zancada</th><th>Contacto</th></tr></thead><tbody>${rows}</tbody></table></div>
-  <div class="mdesc" style="margin-top:2px">Promedios con los bloques de 5 s del tramo (el mismo rango de minutos en cada rodaje). Arrastrá de nuevo para cambiarlo.</div>`;
+  <div class="mdesc" style="margin-top:2px">Promedios con los bloques de 5 s del tramo (el mismo rango de minutos en cada rodaje). Arrastrá de nuevo para cambiarlo (en el celular, con la selección activada por dos toques).</div>`;
   document.getElementById('selTClr').onclick=()=>{selT=null; if(chart){chart.$sel=null; chart.draw()} renderSel(chosen)}}
 
 ['hideStart','showStab','showKm'].forEach(id=>document.getElementById(id).onchange=renderChart);
