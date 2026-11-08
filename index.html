@@ -216,7 +216,9 @@ button:focus-visible,input:focus-visible,select:focus-visible,label.btn:focus-wi
 .metrics button{font-weight:500;padding:6px 11px}
 .metrics button[aria-pressed="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
 .opts{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:10px;color:var(--muted);font-size:13px}
-.chartbox{position:relative;height:360px;margin-top:12px}
+.chartbox{position:relative;height:360px;margin-top:12px}.chartbox .fsbtn{position:absolute;right:2px;top:2px;z-index:4;width:28px;height:28px;padding:0;display:grid;place-items:center;border:1px solid var(--line);border-radius:6px;background:color-mix(in srgb,var(--panel) 85%,transparent);color:var(--muted);cursor:pointer}.chartbox .fsbtn:hover{color:var(--ink)}
+body.fsOn{overflow:hidden}.fsP{position:fixed!important;inset:0;z-index:5000;margin:0!important;border:0!important;border-radius:0!important;background:var(--panel);overflow:auto;overscroll-behavior:contain;padding:calc(10px + env(safe-area-inset-top)) calc(56px + env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left))!important}.fsP>.fsH{display:none!important}.fsP>.fsT{height:var(--fsh,70vh)!important;margin-top:8px!important}.fstog{display:none}.fsT>.fstog{display:grid;place-items:center;padding:0;position:fixed;top:calc(56px + env(safe-area-inset-top));right:calc(10px + env(safe-area-inset-right));width:38px;height:38px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink);cursor:pointer;z-index:5001}.fsT>.fstog[aria-pressed=true]{background:var(--ink);color:var(--panel)}.fsT>.fsbtn{position:fixed;top:calc(10px + env(safe-area-inset-top));right:calc(10px + env(safe-area-inset-right));width:38px;height:38px;color:var(--ink);background:var(--panel);z-index:5001}
+
 @media (max-width:600px){.chartbox{height:280px}}
 /* fitness: el panel del ACWR va al doble de alto y la caja crece para que el de arriba no se achique */
 .chartbox.pmc{height:495px}@media (max-width:600px){.chartbox.pmc{height:385px}}
@@ -633,7 +635,7 @@ body[data-tab=cmp] #selChips,body[data-tab=cmp] #normLbl,body[data-tab=cmp] #nor
     </div>
   </section>
 
-  <footer>Versión 369 PWA (8 nov, Bienestar: otros malestares —resfrío, gripe, fiebre, estómago, dolor de cabeza, alergia, otro— con intensidad, seguimiento y efecto en el estado). Deriva de la actividad = FC 2ª mitad ÷ 1ª mitad − 1, por tiempo, desde el punto de estabilización (referencia &lt; 5 %). FC limpia: un segundo que se aparta más de 2 % de los 5 s anteriores y de los 5 s posteriores se reemplaza por el promedio de esos 10 s. Normalización por temperatura: FC normalizada = FC − k × (temperatura del reloj − temperatura de referencia); la eficiencia normalizada usa esa FC. La deriva y el TRIMP no se normalizan. TRIMP de Banister segundo a segundo. Pa:HR (desacople aeróbico) = (EF 1ª mitad − EF 2ª mitad) ÷ EF 1ª mitad, con EF = velocidad ÷ FC, mismas mitades que la deriva. Fuerza pico por paso (× peso corporal) = π/2 × (tiempo de vuelo ÷ tiempo de contacto + 1), con tiempo de vuelo = 60 ÷ cadencia − contacto (modelo de muelle, Morin 2005); carga mecánica = pasos × fuerza pico promedio, en miles. Son estimaciones propias para seguir tu tendencia, no medidas de laboratorio. Los datos se guardan en tu espacio privado de la nube del artefacto (solo vos los ves) y se ven igual en la compu y en el celular; el botón Respaldo descarga una copia.</footer>
+  <footer>Versión 370 PWA (8 nov, gráficos en pantalla completa con sus controles arriba; Bienestar: otros malestares —resfrío, gripe, fiebre, estómago, dolor de cabeza, alergia, otro— con intensidad, seguimiento y efecto en el estado). Deriva de la actividad = FC 2ª mitad ÷ 1ª mitad − 1, por tiempo, desde el punto de estabilización (referencia &lt; 5 %). FC limpia: un segundo que se aparta más de 2 % de los 5 s anteriores y de los 5 s posteriores se reemplaza por el promedio de esos 10 s. Normalización por temperatura: FC normalizada = FC − k × (temperatura del reloj − temperatura de referencia); la eficiencia normalizada usa esa FC. La deriva y el TRIMP no se normalizan. TRIMP de Banister segundo a segundo. Pa:HR (desacople aeróbico) = (EF 1ª mitad − EF 2ª mitad) ÷ EF 1ª mitad, con EF = velocidad ÷ FC, mismas mitades que la deriva. Fuerza pico por paso (× peso corporal) = π/2 × (tiempo de vuelo ÷ tiempo de contacto + 1), con tiempo de vuelo = 60 ÷ cadencia − contacto (modelo de muelle, Morin 2005); carga mecánica = pasos × fuerza pico promedio, en miles. Son estimaciones propias para seguir tu tendencia, no medidas de laboratorio. Los datos se guardan en tu espacio privado de la nube del artefacto (solo vos los ves) y se ven igual en la compu y en el celular; el botón Respaldo descarga una copia.</footer>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
@@ -4839,6 +4841,42 @@ function wireRef(B){
   B.querySelectorAll('tr[data-rid]').forEach(tr=>tr.onclick=e=>{if(e.target.tagName==='INPUT'||e.target.tagName==='BUTTON') return; tog(tr.dataset.rid)});
 }
 var REFREADY=true; try{if(tab==='ref') renderRef()}catch(e){}
+
+/* ---------- pantalla completa de los gráficos: cuadrito en la esquina de cada gráfico; arriba quedan los controles de ese gráfico y el gráfico llena el resto ---------- */
+let fsKey=null, fsNoCtl=false; const FSI={k:'<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="6" r="2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="12" r="2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="18" cy="18" r="2" fill="none" stroke="currentColor" stroke-width="2"/></svg>',o:'<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  c:'<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'};
+const fsKeyOf=cb=>{const c=cb.querySelector('canvas'); if(!c) return null; return c.id?'#'+c.id:c.dataset.id?`canvas.${c.classList[0]}[data-id="${c.dataset.id}"]`:null};
+function fsBtns(){document.querySelectorAll('.chartbox').forEach(cb=>{let b=cb.querySelector(':scope>.fsbtn');
+  if(!b){b=document.createElement('button'); b.type='button'; b.className='fsbtn'; b.onclick=e=>{e.stopPropagation(); const k=fsKeyOf(cb); if(k&&fsKey===k) fsExit(); else if(k) fsEnter(k)}; cb.appendChild(b)}
+  let t=cb.querySelector(':scope>.fstog'); if(cb.classList.contains('fsT')){if(!t){t=document.createElement('button'); t.type='button'; t.className='fstog'; t.onclick=e=>{e.stopPropagation(); fsNoCtl=!fsNoCtl; fsApply()}; cb.appendChild(t)} const lb=fsNoCtl?'Mostrar controles':'Ocultar controles'; if(t.title!==lb){t.title=lb; t.setAttribute('aria-label',lb); t.setAttribute('aria-pressed',String(fsNoCtl)); t.innerHTML=FSI.k}} else if(t) t.remove();
+  const on=String(cb.classList.contains('fsT')); if(b.dataset.on!==on){b.dataset.on=on; b.innerHTML=on==='true'?FSI.c:FSI.o; b.title=on==='true'?'Volver a lo normal':'Pantalla completa'; b.setAttribute('aria-label',b.title)}})}
+function fsClear(){['fsP','fsT','fsH'].forEach(c=>document.querySelectorAll('.'+c).forEach(e=>{e.classList.remove(c); if(c==='fsP') e.style.removeProperty('--fsh')}))}
+function fsApply(){if(!fsKey) return; const c=document.querySelector(fsKey), cb=c&&c.closest('.chartbox'), P=cb&&cb.parentElement;
+  if(!P){fsExit(); return}
+  if(!P.classList.contains('fsP')||!cb.classList.contains('fsT')){fsClear(); P.classList.add('fsP'); cb.classList.add('fsT')}
+  document.body.classList.add('fsOn');
+  // antes del gráfico: los controles hasta el título de la sección; se ocultan textos, avisos, paneles internos y lo que ya es de otro gráfico o tabla
+  let stop=false; for(let e=cb.previousElementSibling; e; e=e.previousElementSibling){let h=true;
+    if(stop||e.matches('.mdesc,.notice,.panel,.empty,script,style')) h=true;
+    else if(e.matches('table,.tablewrap,.chartbox,.ptrack')||e.querySelector('.chartbox,table,.tablewrap')) stop=true;
+    else {h=false; if(e.matches('h2')||e.querySelector('h2')) stop=true}
+    e.classList.toggle('fsH',h||(fsNoCtl&&!e.matches('.hovstrip')))}
+  // después del gráfico: solo las barras de control (rango, ventana)
+  for(let e=cb.nextElementSibling; e; e=e.nextElementSibling) e.classList.toggle('fsH',fsNoCtl||!e.matches('.opts'));
+  if(!cb.getClientRects().length){fsExit(); return}
+  let after=0; for(let e=cb.nextElementSibling; e; e=e.nextElementSibling) if(!e.classList.contains('fsH')&&e.offsetHeight) after+=e.offsetHeight+8;
+  const h=Math.max(240,Math.floor(P.clientHeight-cb.offsetTop-after-14)); if(P.style.getPropertyValue('--fsh')!==h+'px') P.style.setProperty('--fsh',h+'px');
+  fsBtns()}
+function fsEnter(k){fsKey=k; fsClear(); fsApply(); const P=document.querySelector('.fsP'); if(P) P.scrollTop=0;
+  const de=document.documentElement; if(de.requestFullscreen&&!document.fullscreenElement) de.requestFullscreen({navigationUI:'hide'}).catch(()=>{}); setTimeout(fsApply,350)}
+function fsExit(){const k=fsKey; fsKey=null; fsNoCtl=false; fsClear(); document.body.classList.remove('fsOn'); fsBtns();
+  if(document.fullscreenElement&&document.exitFullscreen) document.exitFullscreen().catch(()=>{});
+  const c=k&&document.querySelector(k); if(c) c.closest('.chartbox').scrollIntoView({block:'center'})}
+{let q=0; new MutationObserver(()=>{if(q) return; q=requestAnimationFrame(()=>{q=0; fsBtns(); if(fsKey) fsApply()})}).observe(document.body,{childList:true,subtree:true})}
+addEventListener('resize',()=>{if(fsKey) setTimeout(fsApply,60)});
+document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&fsKey) fsExit(); else if(fsKey) setTimeout(fsApply,60)});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&fsKey) fsExit()});
+fsBtns();
 
 window.cloudSt=function(){};
 
