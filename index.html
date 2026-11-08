@@ -403,6 +403,7 @@ header button.brand:hover span{color:var(--accent)}
 .pkd button.on,.pkd button:hover{background:color-mix(in srgb,var(--accent) 18%,var(--panel))}
 body[data-tab=cmp] #filtSeg,body[data-tab=cmp] #codeWrap{display:none!important}
 .chartbox.selon{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}.selbadge{position:absolute;left:8px;top:6px;z-index:3;background:var(--accent);color:var(--bg);font-size:12px;font-weight:600;padding:3px 8px;border-radius:6px;pointer-events:none}
+.hovstrip{min-height:62px;margin-top:10px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--soft);font-size:12.5px;line-height:1.35;display:flex;flex-wrap:wrap;gap:2px 18px;align-content:flex-start}.hovstrip .ctt{flex:1 0 100%;font-weight:600}.hovstrip .ctl{display:flex;gap:6px;align-items:baseline}.hovstrip .ctl i{flex:none;width:10px;height:10px;border-radius:2px;display:inline-block;transform:translateY(1px)}.hovstrip .hph{color:var(--muted)}
 body[data-tab=cmp] #selChips,body[data-tab=cmp] #normLbl,body[data-tab=cmp] #normCfg,body[data-tab=cmp] #viewSeg{display:none!important}
 .item .tocmp{padding:1px 7px;font-size:15px;line-height:1.2;color:var(--muted)}
 .item .tocmp[aria-pressed=true]{color:#E8B007}
@@ -499,7 +500,8 @@ body[data-tab=cmp] #selChips,body[data-tab=cmp] #normLbl,body[data-tab=cmp] #nor
         <label id="y2Wrap">Segundo eje <select class="tipo" id="y2Sel" aria-label="Variable del segundo eje"><option value="">Ninguno</option><option value="hr">FC</option><option value="pace">Ritmo</option><option value="eff">Eficiencia</option><optgroup label="Dinámica de carrera"><option value="gct">Contacto</option><option value="cad">Cadencia</option><option value="vr">Ratio vertical</option><option value="sl">Longitud de zancada</option><option value="bal">Balance</option><option value="vgrf">Fuerza vertical</option><option value="stiff">Rigidez</option></optgroup></select></label>
       </div>
       <div class="notice" id="needReload" style="margin-top:10px" hidden><b>Volvé a cargar la carpeta con «Elegir carpeta» o arrastrándola.</b> Se reemplazan los mismos rodajes y se conservan tus notas, tipos y ritmos programados. Algunos rodajes se guardaron con una versión anterior de la app y no traen la dinámica de carrera (cadencia, contacto, balance, ratio vertical y longitud de zancada a lo largo del rodaje, pasos, fuerza pico), el tiempo por zona ni, en las sesiones de calidad, las series. El Pa:HR sí se calcula con lo que ya está guardado.</div>
-      <div class="chartbox"><div id="trStat" hidden style="position:absolute;top:34px;right:10px;z-index:2;background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-family:var(--mono);font-size:11.5px;line-height:1.45;color:var(--ink);pointer-events:none;text-align:right"></div><canvas id="chart" aria-label="Gráfico comparativo"></canvas><div class="empty" id="chartEmpty" hidden>Marcá de uno a cuatro entrenamientos en la lista para graficarlos.</div></div>
+      <div id="hovStrip" class="hovstrip"><span class="hph">Tocá o pasá el mouse sobre el gráfico para ver aquí los valores.</span></div>
+      <div class="chartbox" style="margin-top:6px"><div id="trStat" hidden style="position:absolute;top:34px;right:10px;z-index:2;background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-family:var(--mono);font-size:11.5px;line-height:1.45;color:var(--ink);pointer-events:none;text-align:right"></div><canvas id="chart" aria-label="Gráfico comparativo"></canvas><div class="empty" id="chartEmpty" hidden>Marcá de uno a cuatro entrenamientos en la lista para graficarlos.</div></div>
       <div id="trRngBox" class="opts" style="margin-top:6px" hidden><span>Mostrar</span><span class="seg" role="group" aria-label="Rango rápido" id="trQ"></span><div class="dr"><div class="drt"><div class="drf" id="trFill"></div></div><input type="range" id="trA" aria-label="Desde" min="0" value="0"><input type="range" id="trB" aria-label="Hasta" min="0" value="0"></div><span id="trLab" style="font-family:var(--mono);font-size:12.5px;color:var(--ink)"></span></div>
       <div class="fwin opts" id="fwBox" style="margin-top:6px" hidden><span>Ver</span><div class="dr"><div class="drt"><div class="drf fwf" title="Arrastrá para mover la ventana"></div></div><input type="range" class="fwA" aria-label="Desde" min="0" value="0"><input type="range" class="fwB" aria-label="Hasta" min="0" value="0"></div><span class="fwL" style="font-family:var(--mono);font-size:12.5px;color:var(--ink)"></span></div>
       <div class="mdesc" id="mdesc"></div>
@@ -635,6 +637,17 @@ body[data-tab=cmp] #selChips,body[data-tab=cmp] #normLbl,body[data-tab=cmp] #nor
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
 <script type="text/plain" id="appsrc">/* ---------- cuadro de información de los gráficos: se ubica en la esquina más limpia del gráfico (o fuera, arriba), sin tapar el punto ---------- */
 function extTip({chart,tooltip:t}){const cv=chart.canvas, host=cv.parentNode; if(!host) return;
+  {const S=cv.id==='chart'&&document.getElementById('hovStrip'); if(S){ // gráfico principal: los valores van en la franja fija de arriba, sin tapar nada
+    if(!t||!t.opacity||!t.dataPoints||!t.dataPoints.length) return;
+    const E=x=>String(x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const col=c=>{const v=c&&(typeof c.borderColor==='string'?c.borderColor:typeof c.backgroundColor==='string'?c.backgroundColor:null); return v||'var(--muted)'};
+    const tl=(t.title||[]).filter(x=>x!=null&&x!=='');
+    let h=tl.length?`<div class="ctt">${tl.map(E).join(' · ')}</div>`:'';
+    (t.body||[]).forEach((b,i)=>{const dp=t.dataPoints[i], lab=dp&&dp.dataset&&dp.dataset.label||''; let ls=[...(b.before||[]),...(b.lines||[]),...(b.after||[])].filter(x=>x!=null&&x!=='');
+      ls=ls.map(l=>lab&&String(l).startsWith(lab)?String(lab).split(' · ')[0]+String(l).slice(String(lab).length).replace(/^:\s*/,': '):l);
+      if(ls.length) h+=`<div class="ctl"><i style="background:${col(t.labelColors&&t.labelColors[i])}"></i><span>${ls.map(E).join(' · ')}</span></div>`});
+    const ft=(t.footer||[]).filter(Boolean); if(ft.length) h+=`<div class="ctl" style="color:var(--muted)">${ft.map(E).join(' · ')}</div>`;
+    S.innerHTML=h; const q=host.querySelector(':scope > .ctip'); if(q) q.style.opacity=0; return}}
   let el=host.querySelector(':scope > .ctip'); if(!el){el=document.createElement('div'); el.className='ctip'; if(getComputedStyle(host).position==='static') host.style.position='relative'; host.appendChild(el)}
   if(!t||!t.opacity||!t.dataPoints||!t.dataPoints.length){el.style.opacity=0; return}
   const E=x=>String(x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
