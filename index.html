@@ -4633,7 +4633,7 @@ function renderRef(){const B=document.getElementById('refBox'); if(!B) return; c
   const C=refCalc(), m=ref.m, X=C.M[m], R=RMET[m], F=X.F, selR=ref.sel.map(id=>C.rows.find(r=>r.id===id)).filter(Boolean);
   const inp=(k,l,ph,w)=>`<label>${l}<input class="pace rf" data-k="${k}" value="${esc(ref[k])}" placeholder="${ph||''}" inputmode="decimal" style="width:${w||90}px"></label>`;
   const fm1=(v,d)=>v==null?'—':nf(v,d??R.d);
-  let h=`<h2>Comparador: evolución sin el ruido del clima</h2>
+  let h=`<h2>Comparador</h2>
   <div class="mdesc" data-keep style="margin-top:0">Se eligen rodajes comparables (mismo tipo, ritmo y duración) y se calcula cómo habría sido el rodaje <b>a un mismo WBGT</b>. La pendiente de calor sale de una regresión (${R.n} ~ WBGT + ritmo + duración) con <b>todos</b> los rodajes de ese tipo; el filtro solo define el rodaje de referencia. Nada se extrapola fuera del WBGT que viviste.</div>
   ${catHtml(CAT)}
   
