@@ -521,6 +521,7 @@ body[data-tab=cmp] #selChips,body[data-tab=cmp] #normLbl,body[data-tab=cmp] #nor
         <div class="mdesc" style="margin-top:0" id="tblNote">La diferencia en gris es contra el primer rodaje marcado. El ritmo programado sale automático (ritmo promedio redondeado a 5 s); si escribís el ritmo que tenías planeado, el índice de desvío se recalcula contra ese. Borralo para volver al automático.</div>
         <div class="tablewrap" id="tbl"></div>
       </div>
+      <div id="stdBox" style="margin-top:18px" hidden></div>
     </section>
   </div>
 
@@ -652,7 +653,7 @@ body[data-tab=cmp] #selChips,body[data-tab=cmp] #normLbl,body[data-tab=cmp] #nor
     <div id="strBox"></div>
   </section>
 
-  <footer>Versión 387 PWA (9 nov, Nutrición: selector de fecha e InBody dentro de Peso y composición; 9 nov, Nutrición: tasa metabólica del InBody y calibración de la grasa de la balanza; 9 nov, Nutrición: calorías del día con metabolismo basal, actividad y entreno, y objetivo de peso con déficit en días suaves; 9 nov, Nutrición en raciones: mano ahuecada de carbohidrato y palma de proteína; 8 nov, Plan de carrera: separar un tramo agrupado y distancia de cada tramo; Plan de carrera: agrupar tramos tocando las filas y fijar el ritmo de un tramo (el resto se ajusta a la meta); Meta: plan de carrera desde el .gpx, con ritmo por tramo según la pendiente, mapa por colores, parciales por km y comparación con la carrera grabada; tramos simplificados o propios, split positivo o negativo y pulsera; Fitness, fatiga y forma: la carga del día en un eje secundario a la derecha; Planeado vs ejecutado por semanas: barra para elegir qué semanas ver, con el historial ejecutado; Meta: en el teléfono la explicación de cada barra pasa abajo; Nutrición: peso, grasa, masa muscular y cintura con tendencia de 7 días; Nutrición: guía del día según el entreno, restricciones y checklist de constancia; Fuerza: biblioteca de sesiones con nombre y ejercicios propios; Fuerza en modo isométrico: sostenes de 6 s con pausa, 6 por lado; sección Fuerza: debilidades por pruebas, molestias o lista propia, ciclos con sesión fuerte y de mantenimiento, catálogo por área y sesiones en el Calendario; gráficos en pantalla completa con sus controles arriba; Bienestar: otros malestares —resfrío, gripe, fiebre, estómago, dolor de cabeza, alergia, otro— con intensidad, seguimiento y efecto en el estado). Deriva de la actividad = FC 2ª mitad ÷ 1ª mitad − 1, por tiempo, desde el punto de estabilización (referencia &lt; 5 %). FC limpia: un segundo que se aparta más de 2 % de los 5 s anteriores y de los 5 s posteriores se reemplaza por el promedio de esos 10 s. Normalización por temperatura: FC normalizada = FC − k × (temperatura del reloj − temperatura de referencia); la eficiencia normalizada usa esa FC. La deriva y el TRIMP no se normalizan. TRIMP de Banister segundo a segundo. Pa:HR (desacople aeróbico) = (EF 1ª mitad − EF 2ª mitad) ÷ EF 1ª mitad, con EF = velocidad ÷ FC, mismas mitades que la deriva. Fuerza pico por paso (× peso corporal) = π/2 × (tiempo de vuelo ÷ tiempo de contacto + 1), con tiempo de vuelo = 60 ÷ cadencia − contacto (modelo de muelle, Morin 2005); carga mecánica = pasos × fuerza pico promedio, en miles. Son estimaciones propias para seguir tu tendencia, no medidas de laboratorio. Los datos se guardan en tu espacio privado de la nube del artefacto (solo vos los ves) y se ven igual en la compu y en el celular; el botón Respaldo descarga una copia.</footer>
+  <footer>Versión 388 PWA (10 nov, Analizador: ritmo estándar por tramo con tu curva ritmo–FC y temperatura de cada vuelta; 9 nov, Nutrición: selector de fecha e InBody dentro de Peso y composición; 9 nov, Nutrición: tasa metabólica del InBody y calibración de la grasa de la balanza; 9 nov, Nutrición: calorías del día con metabolismo basal, actividad y entreno, y objetivo de peso con déficit en días suaves; 9 nov, Nutrición en raciones: mano ahuecada de carbohidrato y palma de proteína; 8 nov, Plan de carrera: separar un tramo agrupado y distancia de cada tramo; Plan de carrera: agrupar tramos tocando las filas y fijar el ritmo de un tramo (el resto se ajusta a la meta); Meta: plan de carrera desde el .gpx, con ritmo por tramo según la pendiente, mapa por colores, parciales por km y comparación con la carrera grabada; tramos simplificados o propios, split positivo o negativo y pulsera; Fitness, fatiga y forma: la carga del día en un eje secundario a la derecha; Planeado vs ejecutado por semanas: barra para elegir qué semanas ver, con el historial ejecutado; Meta: en el teléfono la explicación de cada barra pasa abajo; Nutrición: peso, grasa, masa muscular y cintura con tendencia de 7 días; Nutrición: guía del día según el entreno, restricciones y checklist de constancia; Fuerza: biblioteca de sesiones con nombre y ejercicios propios; Fuerza en modo isométrico: sostenes de 6 s con pausa, 6 por lado; sección Fuerza: debilidades por pruebas, molestias o lista propia, ciclos con sesión fuerte y de mantenimiento, catálogo por área y sesiones en el Calendario; gráficos en pantalla completa con sus controles arriba; Bienestar: otros malestares —resfrío, gripe, fiebre, estómago, dolor de cabeza, alergia, otro— con intensidad, seguimiento y efecto en el estado). Deriva de la actividad = FC 2ª mitad ÷ 1ª mitad − 1, por tiempo, desde el punto de estabilización (referencia &lt; 5 %). FC limpia: un segundo que se aparta más de 2 % de los 5 s anteriores y de los 5 s posteriores se reemplaza por el promedio de esos 10 s. Normalización por temperatura: FC normalizada = FC − k × (temperatura del reloj − temperatura de referencia); la eficiencia normalizada usa esa FC. La deriva y el TRIMP no se normalizan. TRIMP de Banister segundo a segundo. Pa:HR (desacople aeróbico) = (EF 1ª mitad − EF 2ª mitad) ÷ EF 1ª mitad, con EF = velocidad ÷ FC, mismas mitades que la deriva. Fuerza pico por paso (× peso corporal) = π/2 × (tiempo de vuelo ÷ tiempo de contacto + 1), con tiempo de vuelo = 60 ÷ cadencia − contacto (modelo de muelle, Morin 2005); carga mecánica = pasos × fuerza pico promedio, en miles. Son estimaciones propias para seguir tu tendencia, no medidas de laboratorio. Los datos se guardan en tu espacio privado de la nube del artefacto (solo vos los ves) y se ven igual en la compu y en el celular; el botón Respaldo descarga una copia.</footer>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
@@ -728,7 +729,7 @@ function parseFit(buf){
   const T={0x00:[1,'u8',0xFF],0x01:[1,'s8',0x7F],0x02:[1,'u8',0xFF],0x83:[2,'s16',0x7FFF],0x84:[2,'u16',0xFFFF],0x85:[4,'s32',0x7FFFFFFF],0x86:[4,'u32',0xFFFFFFFF],0x8A:[1,'u8',0xFF],0x8B:[2,'u16',0xFFFF],0x8C:[4,'u32',0xFFFFFFFF],0x0D:[1,'u8',0xFF]};
   // 3 FC, 5 distancia, 57 temperatura (sesión); dinámica: 4 cadencia (zancadas/min), 41 contacto (0,1 ms), 39 oscilación (0,1 mm), 83 ratio vertical (0,01 %), 85 longitud de paso (0,1 mm)
   // vueltas (mensaje 19): 2 inicio, 7 tiempo transcurrido (ms)
-  const WANT=new Set([253,3,5,6,73,57,4,41,39,83,84,85,2,7,13,0,1]); let pos=null; const laps=[];
+  const WANT=new Set([253,3,5,6,73,57,4,41,39,83,84,85,2,7,13,0,1,50]); let pos=null; const laps=[];
   function readData(d){
     const r={};
     for(const [num,sz,bt] of d.f){
@@ -748,7 +749,7 @@ function parseFit(buf){
     if(g===20&&r[253]!=null) recs.push({ts:r[253],dist:r[5]!=null?r[5]/100:NaN,hr:r[3]!=null?r[3]:NaN,
       spd:r[73]!=null?r[73]/1000:(r[6]!=null?r[6]/1000:NaN), cad:r[4]?r[4]*2:NaN, gct:r[41]?r[41]/10:NaN, vo:r[39]?r[39]/10:NaN, vr:r[83]?r[83]/100:NaN, sl:r[85]?r[85]/10:NaN, bal:r[84]&&r[84]<10000?r[84]/100:NaN, tc:r[13]!=null?r[13]:NaN});
     else if(g===18&&!gotSession){gotSession=true;temp=r[57]??null; sport=r.sport??null}
-    else if(g===19&&r[2]!=null&&r[7]!=null) laps.push({st:r[2],el:r[7]/1000,d:r[9]!=null&&r[9]<4e9?r[9]/100:null});
+    else if(g===19&&r[2]!=null&&r[7]!=null) laps.push({st:r[2],el:r[7]/1000,d:r[9]!=null&&r[9]<4e9?r[9]/100:null,t:r[50]??null});
     else if(g===FIT_WX&&r[0]!=null&&r[1]!=null) wxF={t:r[0]/10,rh:r[1]/10,sr:r[2]!=null?r[2]/10:0,ws:r[3]!=null?r[3]/100:0,...(r[4]!=null?{cc:r[4]}:{}),...(r[6]!=null?{pr:r[6]/10}:{}),...(r[7]!=null?{pf:r[7]/100}:{})}; // clima que agregó el comparador
   }
   while(p<end){
@@ -1203,7 +1204,7 @@ async function addFiles(files){
   for(const [i,f] of files.entries()){
     setStatus(`Procesando ${i+1} de ${files.length}…`);
     try{const buf=await f.arrayBuffer(); const {recs,temp,laps,names,sport,pos,wxF}=parseFit(buf); if(sport!=null&&sport!==RUN_SPORT){skip.push(f.name); continue} const s=to1Hz(recs); const t0r=s.t0Unix-631065600;
-      s.laps=laps.map(l=>[l.st-t0r,l.st-t0r+Math.round(l.el),l.d]); const r=analyze(s);
+      s.laps=laps.map(l=>[l.st-t0r,l.st-t0r+Math.round(l.el),l.d]); const r=analyze(s); if(laps.length>=2) r.lp=s.laps.map((x,i)=>[Math.max(0,x[0]),x[1],laps[i].t]); // vueltas con su temperatura promedio (para el ritmo estándar)
       const path=f._path||f.webkitRelativePath||''; const dir=path.split('/').slice(0,-1).join('/');
       const id=String(s.t0Unix); const prev=acts.find(a=>a.id===id); const manual=document.getElementById('tipoIn').value;
       const fromDir=tipoDe(dir), auto=!fromDir&&!manual&&!prev; const tipo=fromDir||manual||(prev?prev.tipo:autoTipo(f.name,names,s,r)); if(auto) nAuto++;
@@ -2467,6 +2468,52 @@ function rpWire(B){const inp=B.querySelector('#rpIn'), msg=B.querySelector('#rpM
 
   if(dn) dn.onchange=()=>{goal.rp={...(goal.rp||{}),down:dn.value}; save(); renderGoal()};
   if(del) del.onclick=()=>{if(!confirm('¿Quitar el recorrido de la meta?')) return; delete goal.route; save(); renderGoal()}}
+/* ---------- ritmo estándar: la FC de cada tramo llevada a un ritmo fijo con tu curva ritmo–FC (y, si querés, a una temperatura fija), para comparar rodajes hechos a ritmos distintos ---------- */
+let stdChart=null;
+// tramos del rodaje: las vueltas del reloj (con su temperatura) o, si no hay, cada 500 m; FC y ritmo con los bloques de 5 s
+function stdTramos(a){const F=a.f5; if(!F||!F.h||!F.m||F.h.length<6) return null; const n=F.h.length, mAt=i=>i<=0?0:F.m[Math.min(n-1,i-1)];
+  const mk=(t0,t1,T)=>{const i0=Math.max(0,Math.floor(t0/5)), i1=Math.min(n,Math.max(i0+1,Math.round(t1/5))); let q=0,c=0; for(let i=i0;i<i1;i++){if(F.h[i]>0){q+=F.h[i]/10;c++}}
+    const d=mAt(i1)-mAt(i0), dur=(i1-i0)*5; if(!c||d<50) return null; let tt=T; if(tt==null&&F.t){let s=0,k=0; for(let i=i0;i<i1;i++) if(F.t[i]!=null){s+=F.t[i];k++} if(k) tt=s/k}
+    return {t0:i0*5,t1:i1*5,k0:mAt(i0)/1000,k1:mAt(i1)/1000,d,dur,hr:q/c,pace:dur/(d/1000),T:tt}};
+  let L=[], src='';
+  if(Array.isArray(a.lp)&&a.lp.length>=3){L=a.lp.map(([t0,t1,T])=>mk(t0,t1,T)).filter(Boolean); src=`vueltas del reloj (${L.length})`}
+  if(L.length<3){L=[]; let prev=0, t0=0; for(let i=0;i<n;i++){const k=Math.floor(F.m[i]/500); if(k>prev){const x=mk(t0,(i+1)*5,null); if(x) L.push(x); prev=k; t0=(i+1)*5}}
+    if(F.m[n-1]-(L.length?L[L.length-1].k1*1000:0)>200){const x=mk(t0,n*5,null); if(x) L.push(x)} src='cada 500 m (sin vueltas del reloj)'}
+  const hasT=L.some(x=>x.T!=null); if(!hasT&&a.temp!=null) L.forEach(x=>x.T=a.temp);
+  return {L,src,lapT:Array.isArray(a.lp)&&a.lp.some(x=>x[2]!=null)}}
+function stdCalc(a){const R=stdTramos(a); if(!R) return null; const M=hrModel(), b=M.b, pS=norm.pstd||450, useT=!!norm.pstdT, kT=norm.k||0.4, tR=norm.tref||21, z1=zones.lim[0];
+  let stabK=0; try{stabK=summarize(a).stab||0}catch(e){}
+  R.L.forEach(x=>{x.hs=x.hr-b*(x.pace-pS); x.hst=useT&&x.T!=null?x.hs-kT*(x.T-tR):x.hs;
+    x.flag=x.k1<=stabK+0.01?'cal':x.hr>=z1?'zona':Math.abs(x.pace-pS)>30?'lejos':''});
+  const V=R.L.filter(x=>!x.flag), wav=A=>{const w=A.reduce((q,x)=>q+x.dur,0); return w?A.reduce((q,x)=>q+x.hst*x.dur,0)/w:null};
+  const half=Math.floor(V.length/2), der=V.length>=4?(wav(V.slice(half))/wav(V.slice(0,half))-1)*100:null;
+  return {...R,M,b,pS,useT,kT,tR,z1,stabK,hs:wav(V),der,nV:V.length}}
+function renderStd(){const B=document.getElementById('stdBox'); if(!B) return; const a=tab==='cmp'&&view==='km'?acts.find(x=>x.id===sel[0]):null;
+  if(!a||!(a.tipo==='ER'||a.tipo==='LR')){B.hidden=true; if(stdChart){stdChart.destroy();stdChart=null} return}
+  const C=stdCalc(a); if(!C||C.L.length<3){B.hidden=true; return} B.hidden=false;
+  const FL={cal:'antes de estabilizar',zona:`fuera de Z1 (≥ ${C.z1} ppm)`,lejos:'a más de 30 s del estándar'};
+  const tCol=C.L.some(x=>x.T!=null&&x.T!==C.L[0].T), FS={cal:'calent.',zona:'≥ Z2',lejos:'±30 s'};
+  B.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2>Ritmo estándar</h2>
+      <span class="opts" style="margin:0"><label>Llevar a <input class="pace" id="stdP" value="${fmtP(C.pS)}" style="width:58px">/km</label><label><input type="checkbox" id="stdT"${C.useT?' checked':''}> y a ${nf(C.tR,0)} °C</label></span></div>
+    <div class="mdesc" style="margin-top:0">Tramos: ${C.src}. Cada tramo lleva su FC al ritmo estándar con tu curva ritmo–FC (${nf(-C.b*10,1)} ppm por cada 10 s/km, de ${C.M.n} tramos estables)${C.useT?` y a ${nf(C.tR,0)} °C con ${nf(C.kT,1)} ppm por °C (temperatura del reloj${C.lapT?', la de cada vuelta':', el promedio del rodaje'})`:''}. Vale mientras sigas en la misma zona: los tramos marcados no entran en el resumen.</div>
+    <div class="nbst" style="margin-top:8px"><div><span>FC a ${fmtP(C.pS)}${C.useT?` y ${nf(C.tR,0)} °C`:''}</span><b>${C.hs!=null?nf(C.hs,0)+' ppm':'—'}</b><span>${C.nV} de ${C.L.length} tramos válidos</span></div>
+      <div><span>Deriva a ritmo estándar</span><b>${C.der!=null?(C.der>0?'+':'')+nf(C.der,1)+' %':'—'}</b><span>2.ª mitad contra 1.ª, sin el efecto del ritmo</span></div></div>
+    <div class="chartbox" style="height:240px;margin-top:10px"><canvas id="stdChart" aria-label="FC real y a ritmo estándar por tramo"></canvas></div>
+    <div class="tablewrap" style="margin-top:8px"><table class="rptab"><thead><tr><th>#</th><th>km</th><th>Ritmo</th><th>FC</th>${tCol?'<th>Temp.</th>':''}<th>a ${fmtP(C.pS)}</th><th style="text-align:left" title="Tramos que no entran en el resumen">Fuera</th></tr></thead><tbody>
+      ${C.L.map((x,i)=>`<tr style="${x.flag?'opacity:.55':''}"><td>${i+1}</td><td>${nf(x.k0,2)}–${nf(x.k1,2)}</td><td>${fmtP(x.pace)}</td><td>${nf(x.hr,0)}</td>${tCol?`<td>${x.T!=null?nf(x.T,0)+' °C':'—'}</td>`:''}<td><b>${nf(x.hst,0)}</b></td><td style="text-align:left" class="mdesc" title="${x.flag?FL[x.flag]:''}">${x.flag?FS[x.flag]:''}</td></tr>`).join('')}</tbody></table></div>
+    <div class="mdesc" style="margin-top:4px">Fuera del resumen: calent. = antes de estabilizar · ≥ Z2 = FC de ${C.z1} o más · ±30 s = a más de 30 s del ritmo estándar.</div>
+    ${!C.lapT?'<div class="mdesc">Tu reloj guarda la temperatura de cada vuelta: con vueltas de 500 m (y volviendo a cargar el .fit si es de antes de esta versión) la corrección por temperatura usa la de cada tramo en vez del promedio.</div>':''}`;
+  const pi=document.getElementById('stdP'); pi.onchange=()=>{const v=parseP(pi.value); if(v>=240&&v<=720){norm.pstd=v; save(); renderStd()} else pi.value=fmtP(C.pS)};
+  document.getElementById('stdT').onchange=e=>{norm.pstdT=e.target.checked; save(); renderStd()};
+  if(stdChart){stdChart.destroy();stdChart=null} if(typeof Chart==='undefined') return;
+  const X=C.L.map(x=>(x.k0+x.k1)/2), tick=css('--muted'), pr=C.L.map(x=>x.flag?2.5:4);
+  const ds=[{label:'FC real',data:C.L.map((x,i)=>({x:X[i],y:x.hr})),borderColor:css('--muted'),backgroundColor:css('--muted'),borderWidth:1.5,pointRadius:pr,showLine:true},
+    {label:`FC a ${fmtP(C.pS)}${C.useT?` y ${nf(C.tR,0)} °C`:''}`,data:C.L.map((x,i)=>({x:X[i],y:x.hst})),borderColor:css('--s1'),backgroundColor:C.L.map(x=>x.flag?'transparent':css('--s1')),pointBorderColor:css('--s1'),borderWidth:2.5,pointRadius:pr.map(r=>r+1),showLine:true}];
+  if(tCol&&C.L.some(x=>x.T!==C.L[0].T)) ds.push({label:'Temp. del reloj',data:C.L.map((x,i)=>({x:X[i],y:x.T})),borderColor:css('--warn'),backgroundColor:css('--warn'),borderDash:[4,3],borderWidth:1.5,pointRadius:0,showLine:true,yAxisID:'yt'});
+  const sc={x:{type:'linear',title:{display:true,text:'km',color:tick},grid:{color:css('--line')},ticks:{color:tick,font:{family:css('--mono')}}},y:{title:{display:true,text:'ppm',color:tick},grid:{color:css('--line')},ticks:{color:tick,font:{family:css('--mono')}}}};
+  if(ds.length>2) sc.yt={position:'right',title:{display:true,text:'°C',color:tick},grid:{display:false},ticks:{color:tick,font:{family:css('--mono')}}};
+  stdChart=new Chart(document.getElementById('stdChart'),{type:'scatter',data:{datasets:ds},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{position:'top',align:'start',labels:{color:css('--ink'),boxWidth:12,boxHeight:6}},
+    tooltip:{callbacks:{label:it=>{const x=C.L[it.dataIndex]; return `${it.dataset.label}: ${nf(it.parsed.y,0)}${it.dataset.yAxisID==='yt'?' °C':' ppm'}${x.flag?' · '+FL[x.flag]:''}`}}}},scales:sc}})}
 /* ---------- revisión semanal: chequeos antes de ejecutar y lectura para recalibrar ---------- */
 const RV={acwr:[0.8,1.3],lr:1.10,int:0.10,hi:10,lo:-5};
 function wkData(w0,M,easy){const z0=()=>[0,0,0,0], pl={t:0,km:0,trimp:0,zb:z0(),ztr:z0(),zd:z0(),mx:0,n:0}, ex={t:0,km:0,trimp:0,zb:z0(),ztr:z0(),zd:z0(),zn:0,mx:0,n:0};
@@ -4897,7 +4944,7 @@ function syncZones(){zones.lim.forEach((v,i)=>{const el=document.getElementById(
 document.getElementById('zonesOn').onchange=e=>{zones.on=e.target.checked;save();renderChart()};
 document.querySelectorAll('.zl').forEach((el,i)=>el.onchange=()=>{const v=Math.round(num(el.value)); const lo=i?zones.lim[i-1]:P.rest, hi=i<zones.lim.length-1?zones.lim[i+1]:P.max;
   if(isFinite(v)&&v>lo&&v<hi) zones.lim[i]=v; syncZones(); save(); renderChart()});
-function render(){syncTab(); if(tab==='home') return; if(tab==='cal'){renderCal();return} if(tab==='plan'){renderPlanner();return} if(tab==='well'){renderWell();return} if(tab==='str'){renderStr();return} if(tab==='nut'){renderNut();return} if(tab==='ref'){ref.sel=sel.slice(); if(typeof REFREADY!=='undefined'&&REFREADY) renderRef()} renderList();renderChart();if(view==='carga')renderPeriodTable();else if(view==='forma')renderPmcTable();else if(view==='tec')renderTecTable();else renderTable()}
+function render(){syncTab(); if(tab==='home') return; if(tab==='cal'){renderCal();return} if(tab==='plan'){renderPlanner();return} if(tab==='well'){renderWell();return} if(tab==='str'){renderStr();return} if(tab==='nut'){renderNut();return} if(tab==='ref'){ref.sel=sel.slice(); if(typeof REFREADY!=='undefined'&&REFREADY) renderRef()} renderList();renderChart();if(view==='carga')renderPeriodTable();else if(view==='forma')renderPmcTable();else if(view==='tec')renderTecTable();else renderTable(); try{renderStd()}catch(e){console.error(e)}}
 load(); if(tab==='cmp') selA=sel.slice(0,1); else if(tab==='ref') selC=sel.slice(0,4); tab='home'; if(syncTrimp()) save(); if(applyTests()) save(); if(plans.length||cycle) applyPlans(); syncZones(); syncPlanSum(); p1Fill();
 /* ---------- perfiles: cada atleta guarda sus rodajes, zonas, FC, peso y plan por separado ---------- */
 const curProf=()=>profs.list.find(x=>x.id===profs.cur);
