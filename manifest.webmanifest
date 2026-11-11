@@ -1,13 +1,13 @@
 {
- "name": "Run-app",
- "short_name": "Run-app",
+ "name": "Run Twin",
+ "short_name": "Run Twin",
  "description": "Bienestar, plan, análisis y comparación de tus entrenamientos",
  "start_url": "./",
  "scope": "./",
  "display": "standalone",
  "orientation": "any",
- "background_color": "#1A1C33",
- "theme_color": "#1A1C33",
+ "background_color": "#12162B",
+ "theme_color": "#12162B",
  "lang": "es",
  "icons": [
   {
