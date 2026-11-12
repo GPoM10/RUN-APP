@@ -112,6 +112,7 @@ async function rpc(method,params){
 }
 const txt=res=>((res&&res.result&&res.result.content)||[]).map(c=>c.text||('['+c.type+' '+(c.mimeType||'')+']')).join('\n');
 document.getElementById('b3').onclick=async()=>{
+  sid=null;
   if(!S.get('tok')){log('No hay permiso todavía: corra el paso 1 y luego el 2 (iniciar sesión) antes del 3.','bad');return}
   log('Paso 3: conectando…');
   try{
@@ -121,12 +122,18 @@ document.getElementById('b3').onclick=async()=>{
     const tl=await rpc('tools/list',{}); log('Herramientas: '+((tl.result&&tl.result.tools)||[]).map(t=>t.name).join(', '),'ok');
     const sr=await rpc('tools/call',{name:'querySportRecords',arguments:{limit:3,sportTypeCodes:[100,101,102,103]}});
     log('Rodajes:\n'+cut(txt(sr),900),'ok');
-    const fu=await rpc('tools/call',{name:'queryActivityFitFileDownloadUrls',arguments:{limit:1}});
+    const st=txt(sr), lm=st.match(/LabelId:\s*(\d+)\s*\|\s*SportType:\s*(\d+)/);
+    if(!lm){log('No encontré un rodaje con LabelId','bad');return}
+    const lab=lm[1], spt=+lm[2]; log('Rodaje de prueba: '+lab+' (tipo '+spt+')');
+    const ad=await rpc('tools/call',{name:'getActivityDetail',arguments:{labelId:lab,sportType:spt}});
+    const at=txt(ad); log('Detalle de la actividad ('+at.length+' caracteres):\n'+cut(at,1500));
+    const fu=await rpc('tools/call',{name:'queryActivityFitFileDownloadUrls',arguments:{labelId:lab,sportType:spt}});
     const ft=txt(fu); log('URL del .fit:\n'+cut(ft,500));
-    const m=ft.match(/https?:\/\/\S+/);
-    if(m){try{const r=await fetch(m[0].replace(/[)\]"'>,]+$/,'')); const b=await r.arrayBuffer(); const h=new Uint8Array(b.slice(8,12)); log('Descarga del .fit → '+r.status+' · '+b.byteLength+' bytes · firma '+String.fromCharCode(...h), r.ok?'ok':'bad')}catch(e){log('Descarga del .fit → bloqueada (CORS): '+e.message,'bad')}}
-    let fb=null; try{fb=await rpc('tools/call',{name:'downloadActivityFitFiles',arguments:{limit:1}})}catch(e){log('downloadActivityFitFiles → '+e.message,'bad')}
-    const c=((fb&&fb.result&&fb.result.content)||[]); log('downloadActivityFitFiles → '+c.map(x=>x.type+(x.resource?(' '+(x.resource.mimeType||'')+' '+((x.resource.blob||'').length)+' car.'):'')+(x.data?(' '+x.data.length+' car.'):'')).join(', '));
+    const m=ft.match(/https?:\/\/[^\s"'<>)\]]+/);
+    if(m){try{const r=await fetch(m[0]); const bb=await r.arrayBuffer(); const h=new Uint8Array(bb.slice(8,12)); log('Descarga del .fit → '+r.status+' · '+bb.byteLength+' bytes · firma '+String.fromCharCode(...h), r.ok?'ok':'bad')}catch(e){log('Descarga del .fit → bloqueada (CORS): '+e.message,'bad')}}
+    let fb=null; try{fb=await rpc('tools/call',{name:'downloadActivityFitFiles',arguments:{labelId:lab,sportType:spt}})}catch(e){log('downloadActivityFitFiles → '+e.message,'bad')}
+    const c=((fb&&fb.result&&fb.result.content)||[]);
+    log('downloadActivityFitFiles → '+c.map(x=>x.type+(x.text?(': '+cut(x.text,300)):'')+(x.resource?(' '+(x.resource.mimeType||'')+' '+((x.resource.blob||'').length)+' car.'):'')+(x.data?(' '+x.data.length+' car.'):'')).join(' | '));
     log('Prueba terminada. Toque "Copiar resultado" y péguelo en el chat.','ok');
   }catch(e){log('Error: '+e.message,'bad')}
 };
