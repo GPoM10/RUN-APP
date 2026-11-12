@@ -86,17 +86,34 @@ async function back(){
 let sid=null, rid=10;
 async function rpc(method,params){
   const h={'Content-Type':'application/json','Accept':'application/json, text/event-stream','Authorization':'Bearer '+S.get('tok')}; if(sid) h['Mcp-Session-Id']=sid;
-  const body={jsonrpc:'2.0',method,params}; if(!method.startsWith('notifications/')) body.id=++rid;
-  const r=await fetch(MCP,{method:'POST',headers:h,body:JSON.stringify(body)});
-  const s=r.headers.get('Mcp-Session-Id'); if(s) sid=s;
-  const t=await r.text(); if(!r.ok) throw new Error(method+' → '+r.status+' '+t.slice(0,300));
-  if(!t.trim()) return null;
-  if(t.trim().startsWith('{')) return JSON.parse(t);
-  const d=t.split('\n').filter(l=>l.startsWith('data:')).map(l=>l.slice(5).trim()).filter(Boolean).pop(); return d?JSON.parse(d):null;
+  const body={jsonrpc:'2.0',method,params}; const id=method.startsWith('notifications/')?null:++rid; if(id!=null) body.id=id;
+  const ac=new AbortController(), to=setTimeout(()=>ac.abort(),45000), t0=Date.now();
+  log('  … '+method+(params&&params.name?' '+params.name:''));
+  try{
+    const r=await fetch(MCP,{method:'POST',headers:h,body:JSON.stringify(body),signal:ac.signal});
+    const s=r.headers.get('Mcp-Session-Id'); if(s) sid=s;
+    const ct=r.headers.get('Content-Type')||'';
+    log('    respuesta '+r.status+' · '+(ct||'sin tipo')+' · '+((Date.now()-t0)/1000).toFixed(1)+' s');
+    if(!r.ok){const t=await r.text(); throw new Error(method+' → '+r.status+' '+t.slice(0,300))}
+    if(id==null||r.status===202){ac.abort(); return null}
+    if(!ct.includes('event-stream')){const t=await r.text(); return t.trim()?JSON.parse(t):null}
+    // flujo SSE: leer por partes y cortar al llegar la respuesta con nuestro id
+    const rd=r.body.getReader(), dec=new TextDecoder(); let buf='', n=0;
+    while(true){
+      const {value,done}=await rd.read(); if(done) break; n+=value.length; buf+=dec.decode(value,{stream:true});
+      const ev=buf.split(/\r?\n\r?\n/); buf=ev.pop();
+      for(const e of ev){const d=e.split(/\r?\n/).filter(l=>l.startsWith('data:')).map(l=>l.slice(5).trim()).join('');
+        if(!d) continue; let j; try{j=JSON.parse(d)}catch(x){continue}
+        if(j.id===id){ac.abort(); log('    '+(n/1024).toFixed(0)+' KB en '+((Date.now()-t0)/1000).toFixed(1)+' s'); return j}}
+    }
+    const d=buf.split(/\r?\n/).filter(l=>l.startsWith('data:')).map(l=>l.slice(5).trim()).join(''); return d?JSON.parse(d):null;
+  }catch(e){if(e.name==='AbortError') throw new Error(method+': sin respuesta en 45 s'); throw e}
+  finally{clearTimeout(to)}
 }
 const txt=res=>((res&&res.result&&res.result.content)||[]).map(c=>c.text||('['+c.type+' '+(c.mimeType||'')+']')).join('\n');
 document.getElementById('b3').onclick=async()=>{
-  if(!S.get('tok')){log('Primero el paso 2.','bad');return}
+  if(!S.get('tok')){log('No hay permiso todavía: corra el paso 1 y luego el 2 (iniciar sesión) antes del 3.','bad');return}
+  log('Paso 3: conectando…');
   try{
     const ini=await rpc('initialize',{protocolVersion:'2025-06-18',capabilities:{},clientInfo:{name:'Run Twin',version:'1'}});
     log('initialize → ok · sesión: '+(sid?'sí':'no (o encabezado no expuesto)'),'ok');
@@ -108,7 +125,7 @@ document.getElementById('b3').onclick=async()=>{
     const ft=txt(fu); log('URL del .fit:\n'+cut(ft,500));
     const m=ft.match(/https?:\/\/\S+/);
     if(m){try{const r=await fetch(m[0].replace(/[)\]"'>,]+$/,'')); const b=await r.arrayBuffer(); const h=new Uint8Array(b.slice(8,12)); log('Descarga del .fit → '+r.status+' · '+b.byteLength+' bytes · firma '+String.fromCharCode(...h), r.ok?'ok':'bad')}catch(e){log('Descarga del .fit → bloqueada (CORS): '+e.message,'bad')}}
-    const fb=await rpc('tools/call',{name:'downloadActivityFitFiles',arguments:{limit:1}});
+    let fb=null; try{fb=await rpc('tools/call',{name:'downloadActivityFitFiles',arguments:{limit:1}})}catch(e){log('downloadActivityFitFiles → '+e.message,'bad')}
     const c=((fb&&fb.result&&fb.result.content)||[]); log('downloadActivityFitFiles → '+c.map(x=>x.type+(x.resource?(' '+(x.resource.mimeType||'')+' '+((x.resource.blob||'').length)+' car.'):'')+(x.data?(' '+x.data.length+' car.'):'')).join(', '));
     log('Prueba terminada. Toque "Copiar resultado" y péguelo en el chat.','ok');
   }catch(e){log('Error: '+e.message,'bad')}
