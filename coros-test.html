@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Run Twin · prueba de conexión COROS</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:860px;margin:24px auto;padding:0 16px;background:#12162B;color:#E8EAF6}
+h1{font-size:22px}button{font:inherit;padding:8px 14px;border-radius:10px;border:1px solid #5361D6;background:#5361D6;color:#fff;cursor:pointer;margin:4px 6px 4px 0}
+button.sec{background:none;color:#C9CEFF}
+pre{white-space:pre-wrap;word-break:break-word;background:#0B0E1C;border:1px solid #262B4A;border-radius:10px;padding:12px;font-size:12.5px;max-height:70vh;overflow:auto}
+.ok{color:#7EE29A}.bad{color:#FF8A80}.mut{color:#9AA0BE;font-size:14px}
+</style>
+</head>
+<body>
+<h1>Prueba de conexión directa con COROS</h1>
+<p class="mut">Página temporal para ver si Run Twin puede conectarse a COROS desde el navegador. No guarda nada en la app; el permiso vive solo en esta pestaña.</p>
+<button id="b1">1 · Revisar servidor</button>
+<button id="b2">2 · Iniciar sesión en COROS</button>
+<button id="b3">3 · Traer rodajes y .fit</button>
+<button id="bc" class="sec">Copiar resultado</button>
+<pre id="out"></pre>
+<script>
+const MCP='https://mcp.coros.com/mcp', ORIGIN='https://mcp.coros.com';
+const REDIR=location.origin+location.pathname;
+const out=document.getElementById('out');
+const S={get:k=>{try{return JSON.parse(sessionStorage.getItem('ct.'+k))}catch(e){return null}},set:(k,v)=>sessionStorage.setItem('ct.'+k,JSON.stringify(v))};
+function log(t,c){const s=document.createElement('span'); if(c) s.className=c; s.textContent=t+'\n'; out.appendChild(s); S.set('log',(S.get('log')||'')+t+'\n')}
+const cut=(x,n=600)=>{x=typeof x==='string'?x:JSON.stringify(x,null,1); return x.length>n?x.slice(0,n)+' …':x};
+async function getJ(u){const r=await fetch(u); const t=await r.text(); let j=null; try{j=JSON.parse(t)}catch(e){} return {r,t,j}}
+const b64u=a=>btoa(String.fromCharCode(...new Uint8Array(a))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+async function meta(){
+  let pr=null;
+  for(const u of [ORIGIN+'/.well-known/oauth-protected-resource/mcp',ORIGIN+'/.well-known/oauth-protected-resource']){
+    try{const x=await getJ(u); log('GET '+u+' → '+x.r.status, x.r.ok?'ok':'bad'); if(x.j){pr=x.j; log(cut(x.j)); break}}catch(e){log('GET '+u+' → bloqueado ('+e.message+')','bad')}
+  }
+  const as=(pr&&pr.authorization_servers&&pr.authorization_servers[0])||ORIGIN;
+  let am=null;
+  for(const u of [as.replace(/\/$/,'')+'/.well-known/oauth-authorization-server',as.replace(/\/$/,'')+'/.well-known/openid-configuration']){
+    try{const x=await getJ(u); log('GET '+u+' → '+x.r.status, x.r.ok?'ok':'bad'); if(x.j&&x.j.authorization_endpoint){am=x.j; log(cut(x.j,1500)); break}}catch(e){log('GET '+u+' → bloqueado ('+e.message+')','bad')}
+  }
+  return {pr,am};
+}
+document.getElementById('b1').onclick=async()=>{
+  out.textContent=''; S.set('log','');
+  log('Página: '+REDIR);
+  const {pr,am}=await meta(); S.set('am',am); S.set('pr',pr);
+  try{
+    const r=await fetch(MCP,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json, text/event-stream'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'initialize',params:{protocolVersion:'2025-06-18',capabilities:{},clientInfo:{name:'Run Twin',version:'1'}}})});
+    log('POST /mcp sin permiso → '+r.status+' (se espera 401) · WWW-Authenticate visible: '+(r.headers.get('WWW-Authenticate')||'no'), r.status===401?'ok':'');
+  }catch(e){log('POST /mcp → bloqueado por el navegador (CORS): '+e.message,'bad')}
+  if(am&&am.registration_endpoint){
+    try{
+      const r=await fetch(am.registration_endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({client_name:'Run Twin',redirect_uris:[REDIR],grant_types:['authorization_code','refresh_token'],response_types:['code'],token_endpoint_auth_method:'none'})});
+      const t=await r.text(); log('Registro de la app → '+r.status, r.ok?'ok':'bad'); log(cut(t));
+      try{const j=JSON.parse(t); if(j.client_id) S.set('cid',j.client_id)}catch(e){}
+    }catch(e){log('Registro de la app → bloqueado (CORS): '+e.message,'bad')}
+  }else log('El servidor no anuncia registro automático de apps','bad');
+  log(S.get('cid')?'Listo para el paso 2.':'Sin client_id: no se puede seguir al paso 2.', S.get('cid')?'ok':'bad');
+};
+document.getElementById('b2').onclick=async()=>{
+  const am=S.get('am'), cid=S.get('cid');
+  if(!am||!cid){log('Primero corra el paso 1.','bad');return}
+  const ver=b64u(crypto.getRandomValues(new Uint8Array(32)));
+  const ch=b64u(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(ver)));
+  const st=b64u(crypto.getRandomValues(new Uint8Array(16)));
+  S.set('ver',ver); S.set('st',st);
+  const q=new URLSearchParams({response_type:'code',client_id:cid,redirect_uri:REDIR,code_challenge:ch,code_challenge_method:'S256',state:st,resource:MCP});
+  const sc=(S.get('pr')&&S.get('pr').scopes_supported)||am.scopes_supported; if(sc&&sc.length) q.set('scope',sc.join(' '));
+  location.href=am.authorization_endpoint+'?'+q;
+};
+async function back(){
+  const p=new URLSearchParams(location.search); if(!p.get('code')&&!p.get('error')) return;
+  out.textContent=S.get('log')||'';
+  history.replaceState(null,'',REDIR);
+  if(p.get('error')){log('COROS respondió error: '+p.get('error')+' '+(p.get('error_description')||''),'bad');return}
+  if(p.get('state')!==S.get('st')){log('state no coincide','bad');return}
+  log('Volvió de COROS con código de autorización','ok');
+  const am=S.get('am');
+  try{
+    const r=await fetch(am.token_endpoint,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'authorization_code',code:p.get('code'),redirect_uri:REDIR,client_id:S.get('cid'),code_verifier:S.get('ver'),resource:MCP})});
+    const t=await r.text(); log('Canje por token → '+r.status, r.ok?'ok':'bad');
+    const j=JSON.parse(t); if(j.access_token){S.set('tok',j.access_token); log('Token recibido (dura '+(j.expires_in||'?')+' s; refresh: '+(j.refresh_token?'sí':'no')+'). Siga al paso 3.','ok')} else log(cut(t),'bad');
+  }catch(e){log('Canje por token → bloqueado (CORS): '+e.message,'bad')}
+}
+let sid=null, rid=10;
+async function rpc(method,params){
+  const h={'Content-Type':'application/json','Accept':'application/json, text/event-stream','Authorization':'Bearer '+S.get('tok')}; if(sid) h['Mcp-Session-Id']=sid;
+  const body={jsonrpc:'2.0',method,params}; if(!method.startsWith('notifications/')) body.id=++rid;
+  const r=await fetch(MCP,{method:'POST',headers:h,body:JSON.stringify(body)});
+  const s=r.headers.get('Mcp-Session-Id'); if(s) sid=s;
+  const t=await r.text(); if(!r.ok) throw new Error(method+' → '+r.status+' '+t.slice(0,300));
+  if(!t.trim()) return null;
+  if(t.trim().startsWith('{')) return JSON.parse(t);
+  const d=t.split('\n').filter(l=>l.startsWith('data:')).map(l=>l.slice(5).trim()).filter(Boolean).pop(); return d?JSON.parse(d):null;
+}
+const txt=res=>((res&&res.result&&res.result.content)||[]).map(c=>c.text||('['+c.type+' '+(c.mimeType||'')+']')).join('\n');
+document.getElementById('b3').onclick=async()=>{
+  if(!S.get('tok')){log('Primero el paso 2.','bad');return}
+  try{
+    const ini=await rpc('initialize',{protocolVersion:'2025-06-18',capabilities:{},clientInfo:{name:'Run Twin',version:'1'}});
+    log('initialize → ok · sesión: '+(sid?'sí':'no (o encabezado no expuesto)'),'ok');
+    await rpc('notifications/initialized',{});
+    const tl=await rpc('tools/list',{}); log('Herramientas: '+((tl.result&&tl.result.tools)||[]).map(t=>t.name).join(', '),'ok');
+    const sr=await rpc('tools/call',{name:'querySportRecords',arguments:{limit:3,sportTypeCodes:[100,101,102,103]}});
+    log('Rodajes:\n'+cut(txt(sr),900),'ok');
+    const fu=await rpc('tools/call',{name:'queryActivityFitFileDownloadUrls',arguments:{limit:1}});
+    const ft=txt(fu); log('URL del .fit:\n'+cut(ft,500));
+    const m=ft.match(/https?:\/\/\S+/);
+    if(m){try{const r=await fetch(m[0].replace(/[)\]"'>,]+$/,'')); const b=await r.arrayBuffer(); const h=new Uint8Array(b.slice(8,12)); log('Descarga del .fit → '+r.status+' · '+b.byteLength+' bytes · firma '+String.fromCharCode(...h), r.ok?'ok':'bad')}catch(e){log('Descarga del .fit → bloqueada (CORS): '+e.message,'bad')}}
+    const fb=await rpc('tools/call',{name:'downloadActivityFitFiles',arguments:{limit:1}});
+    const c=((fb&&fb.result&&fb.result.content)||[]); log('downloadActivityFitFiles → '+c.map(x=>x.type+(x.resource?(' '+(x.resource.mimeType||'')+' '+((x.resource.blob||'').length)+' car.'):'')+(x.data?(' '+x.data.length+' car.'):'')).join(', '));
+    log('Prueba terminada. Toque "Copiar resultado" y péguelo en el chat.','ok');
+  }catch(e){log('Error: '+e.message,'bad')}
+};
+document.getElementById('bc').onclick=()=>navigator.clipboard.writeText(out.textContent).then(()=>log('(copiado)'));
+back();
+</script>
+</body>
+</html>
