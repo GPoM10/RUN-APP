@@ -582,6 +582,7 @@ body[data-tab=cmp] #selChips,body[data-tab=cmp] #normLbl,body[data-tab=cmp] #nor
         <span class="opts" id="pwNav" style="margin:0;gap:6px"><button type="button" id="pwPrev" aria-label="Semana anterior">‹</button><b id="pwLab" style="min-width:120px;text-align:center;color:var(--ink);font-size:13px"></b><button type="button" id="pwNext" aria-label="Semana siguiente">›</button></span>
         <span class="seg" role="group" aria-label="Variable" id="pmSeg"><button data-m="trimp">TRIMP</button><button data-m="km">Km</button><button data-m="t">Tiempo</button></span><span class="seg" role="group" aria-label="Repartir por zona"><button type="button" id="pzBtn" title="Reparte lo planeado y lo hecho por franja de FC (fácil, tempo, subumbral, Z3), en la variable elegida">Por zona</button></span>
       </div>
+      <div id="pzSum" style="margin:8px 0 4px"></div>
       <div class="chartbox" style="height:300px"><canvas id="pchart" aria-label="Planeado vs ejecutado por semana"></canvas><div class="empty" id="pEmpty">Planeá entrenos (sueltos, del coach o un ciclo) para comparar lo planeado con lo ejecutado.</div></div>
       <div class="fwin opts" id="pwWin" style="margin-top:6px" hidden><span>Ver</span><div class="dr"><div class="drt"><div class="drf fwf" title="Arrastrá para mover la ventana"></div></div><input type="range" class="fwA" aria-label="Desde" min="0" value="0"><input type="range" class="fwB" aria-label="Hasta" min="0" value="0"></div><span class="fwL" style="font-family:var(--mono);font-size:12.5px;color:var(--ink)"></span></div>
       <div class="mdesc" id="pDesc"></div>
@@ -2774,7 +2775,7 @@ function renderPvChart(){const E=document.getElementById('pEmpty'), cv=document.
   const isCyc=x=>!x.w.fase||/^(carga|descarga)$/i.test(x.w.fase);
   if(ZM){const tz=[0,0,0,0], tb=[0,0,0,0]; W.filter(isCyc).forEach(x=>x.pl.zt.forEach((v,b)=>{tz[b]+=v; tb[b]+=x.pl.zb[b]})); const TZ=tz.reduce((a,b)=>a+b,0)||1, TB=tb.reduce((a,b)=>a+b,0)||1;
     document.getElementById('pDesc').textContent=`Cada semana, la columna clara es lo planeado y la de color lleno lo hecho, repartidos por franja de FC en la variable elegida (TRIMP, km o tiempo). ${W.some(x=>!isCyc(x))?'Semanas de ciclo (sin taper, carrera, recuperación ni test, que van en barras tenues)':'Todo el ciclo'}, por TRIMP: ${BANDS.map((b,k)=>`${b[0]} ${nf(tz[k]/TZ*100,0)} %`).join(' · ')}. Por tiempo: ${BANDS.map((b,k)=>`${b[0]} ${nf(tb[k]/TB*100,0)} %`).join(' · ')}.`}
-  const [pwa,pwb]=pwIdx(W), Wc=W.slice(pwa,pwb+1); pwWin(W);
+  const [pwa,pwb]=pwIdx(W), Wc=W.slice(pwa,pwb+1); pwWin(W); _pzR=Wc.length?[Wc[0].w0,Wc[Wc.length-1].w0+6*DAY]:null;
   if(pchart&&!!pchart.$z!==ZM){pchart.destroy();pchart=null}
   if(typeof Chart!=='undefined'&&ZM){const tick=css('--muted');
     const pctP={id:'zpct',afterDatasetsDraw(c){const {ctx}=c; ctx.save(); ctx.font='600 10px '+css('--mono'); ctx.textAlign='center'; ctx.textBaseline='middle';
@@ -2799,7 +2800,7 @@ function renderPvChart(){const E=document.getElementById('pEmpty'), cv=document.
         footer:it=>{const x=Wc[it[0].dataIndex];return x.ex.n&&val(x.pl,pm)?`Ejecutado ${nf(val(x.ex,pm)/val(x.pl,pm)*100,0)} % de lo planeado`:''}}}},
       scales:{x:{grid:{display:false},ticks:{color:tick,font:{family:css('--mono')},maxRotation:0,autoSkip:true}},y:{beginAtZero:true,title:{display:true,text:unit,color:tick},grid:{color:css('--line')},ticks:{color:tick,font:{family:css('--mono')}}}}};
     opts.layout={padding:{top:24}}; if(pchart){pchart.data=data;pchart.options=opts} else pchart=new Chart(cv,{type:'bar',data,options:opts}); pchart.$rw=Wc.map(x=>x.w0); pchart.$rs=7*DAY; pchart.update()}
-  try{pDays()}catch(e){console.error(e)}
+  try{pDays()}catch(e){console.error(e)} try{pzSum()}catch(e){console.error(e)}
   const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const sm=o=>`${fmtT(o.t)} · ${nf(o.km,1)} km · ${nf(o.trimp,0)}`;
   let h='<table class="ptab"><thead><tr><th>Sem</th><th>Semana</th>'+SES.map((S,i)=>SES[i-1]&&SES[i-1].lab===S.lab?'':`<th${SES[i+1]&&SES[i+1].lab===S.lab?' colspan="2"':''}>${S.lab}</th>`).join('')+'<th>Sueltos<br><span class="sub">del calendario</span></th><th>Planeado<br><span class="sub">tiempo · km · TRIMP</span></th><th>Ejecutado</th><th>Ejec./plan</th><th>Revisión</th></tr></thead><tbody>';
@@ -2843,6 +2844,20 @@ let pzOn=(()=>{try{return LS.getItem('comparador.pz')==='1'}catch(e){return fals
 const pmK=()=>pm==='zonas'?'trimp':pm, isZ=()=>pzOn||pm==='zonas';
 // valor de una franja según la variable: TRIMP, minutos o km
 const zVal=(o,k,m)=>m==='t'?(o.zb[k]||0)/60:m==='km'?(o.zd[k]||0)/1000:(o.zt[k]||0), zTot=(o,m)=>[0,1,2,3].reduce((q,k)=>q+zVal(o,k,m),0), zUnit=m=>m==='t'?'min':m==='km'?'km':'TRIMP';
+/* ---------- reparto por zona de lo planeado y lo hecho hasta hoy, en la ventana que se ve (la semana en Días; las semanas visibles en Semanas) ---------- */
+let _pzR=null;
+function pzSum(){const B=document.getElementById('pzSum'); if(!B) return; const pm=pmK(), today=crDay(Math.floor(Date.now()/1000));
+  const r=pg==='d'?(()=>{const w0=wkOf(today)+rvOff*7*DAY; return [w0,w0+6*DAY]})():_pzR; if(!r){B.innerHTML=''; return}
+  const d1=Math.min(r[1],today); if(d1<r[0]){B.innerHTML=`<div class="mdesc" style="margin:0">Reparto por zona: esta ventana todavía no empezó.</div>`; return}
+  const M=hrModel(), easy=easyPace(), P=[0,0,0,0], E=[0,0,0,0], k=pm==='trimp'?['ztr','tr']:pm==='km'?['zd','d']:['zb','t'];
+  allPlans().filter(p=>p.day>=r[0]&&p.day<=d1&&p.tipo!=='Descanso').forEach(p=>{const e=estPlan(p.plan,M,easy); if(e) e[k[0]].forEach((v,b)=>P[b]+=v)});
+  acts.filter(a=>!a.ej).forEach(a=>{const d=crDay(a.t0Unix); if(d<r[0]||d>d1) return; const z=actBands3(a); if(z) z[k[1]].forEach((v,b)=>E[b]+=v)});
+  const tp=P.reduce((a,b)=>a+b,0), te=E.reduce((a,b)=>a+b,0), u=pm==='trimp'?'TRIMP':pm==='km'?'km':'min', f=v=>pm==='trimp'?nf(v,0):pm==='km'?nf(v/1000,1):nf(v/60,0);
+  const cell=(v,t)=>t?`<td class="num"><b>${nf(v/t*100,0)} %</b></td>`:'<td class="num">—</td>';
+  const lab=`${dShort.format(new Date(r[0]+6*3600000))} al ${dShort.format(new Date(d1+6*3600000))}${d1<r[1]?' (hasta hoy)':''}`;
+  B.innerHTML=`<div class="tablewrap"><table class="ptab" style="width:auto;min-width:0"><thead><tr><th style="text-align:left">${pm==='trimp'?'TRIMP':pm==='km'?'Km':'Tiempo'} por zona · ${lab}</th>${BANDS.map((b,i)=>`<th style="color:${BCOL[i]}">${b[0]}</th>`).join('')}<th>Total</th></tr></thead><tbody>
+    <tr><td style="text-align:left">Planeado</td>${P.map(v=>cell(v,tp)).join('')}<td class="num">${f(tp)} ${u}</td></tr>
+    <tr><td style="text-align:left">Hecho</td>${E.map(v=>cell(v,te)).join('')}<td class="num">${f(te)} ${u}${tp?` <span class="mdesc" style="margin:0">(${nf(te/tp*100,0)} %)</span>`:''}</td></tr></tbody></table></div>`}
 function pDays(){const pm=pmK();document.querySelectorAll('#pgSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.g===pg)); document.getElementById('pwNav').hidden=pg!=='d'; {const B=document.getElementById('pwWin'); if(B&&pg==='d') B.hidden=true}
   if(pg!=='d'||!pchart||typeof Chart==='undefined') return;
   const M=hrModel(), easy=easyPace(), today=crDay(Math.floor(Date.now()/1000)), w0=wkOf(today)+rvOff*7*DAY, unit={trimp:'TRIMP',km:'km',t:'minutos'}[pm], val=(o,k)=>k==='t'?o.t/60:o[k];
@@ -2887,7 +2902,7 @@ function renderPvE(){const pm=pmK();const E=document.getElementById('pEmpty'), c
   for(let w0=first; w0<=Math.max(last,Math.min(nowW,last+4*7*DAY)); w0+=7*DAY){const d=wkData(w0,M,easy); W.push({w0,pl:d.pl,ex:d.ex,ps:ps.filter(p=>wkOf(p.day)===w0).sort((x,y)=>x.day-y.day),past:w0<=nowW})}
   const val=(o,k)=>k==='t'?o.t/60:o[k], unit={trimp:'TRIMP',km:'km',t:'minutos'}[pm];
   document.getElementById('pDesc').textContent=`Barras claras: lo planeado (entrenos sueltos y plan del coach); oscuras: lo ejecutado (todo lo que cargaste esa semana, de cualquier tipo). El TRIMP planeado se estima con la FC que sueles tener a cada ritmo (${M.n?`ajustada con ${M.n} tramos estables de tu historial: ~${Math.round(M.f(450))} ppm a 7:30 y ~${Math.round(M.f(390))} a 6:30`:'sin historial cargado todavía: se usa ~150 ppm a 7:30'}), simulando cómo sube en cada bloque y cómo baja caminando en las recuperaciones. Con un ciclo generado, esta vista pasa a mostrar el ciclo.`;
-  const [pwa,pwb]=pwIdx(W), Wc=W.slice(pwa,pwb+1); pwWin(W);
+  const [pwa,pwb]=pwIdx(W), Wc=W.slice(pwa,pwb+1); pwWin(W); _pzR=Wc.length?[Wc[0].w0,Wc[Wc.length-1].w0+6*DAY]:null;
   if(typeof Chart!=='undefined'){const tick=css('--muted');
     const data={labels:Wc.map(x=>dShort.format(new Date(x.w0+6*3600000))),datasets:[
       {label:'Planeado',data:Wc.map(x=>val(x.pl,pm)),backgroundColor:css('--line'),borderWidth:0},
@@ -2898,7 +2913,7 @@ function renderPvE(){const pm=pmK();const E=document.getElementById('pEmpty'), c
         footer:it=>{const x=Wc[it[0].dataIndex];return x.ex.n&&val(x.pl,pm)?`Ejecutado ${nf(val(x.ex,pm)/val(x.pl,pm)*100,0)} % de lo planeado`:''}}}},
       scales:{x:{grid:{display:false},ticks:{color:tick,font:{family:css('--mono')},maxRotation:0,autoSkip:true}},y:{beginAtZero:true,title:{display:true,text:unit,color:tick},grid:{color:css('--line')},ticks:{color:tick,font:{family:css('--mono')}}}}};
     opts.layout={padding:{top:24}}; if(pchart){pchart.data=data;pchart.options=opts} else pchart=new Chart(cv,{type:'bar',data,options:opts}); pchart.$rw=Wc.map(x=>x.w0); pchart.$rs=7*DAY; pchart.update()}
-  try{pDays()}catch(e){console.error(e)}
+  try{pDays()}catch(e){console.error(e)} try{pzSum()}catch(e){console.error(e)}
   const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])), sm=o=>`${fmtT(o.t)} · ${nf(o.km,1)} km · ${nf(o.trimp,0)}`;
   let h='<table class="ptab"><thead><tr><th>Semana</th><th style="text-align:left">Planeado</th><th>Planeado<br><span class="sub">tiempo · km · TRIMP</span></th><th>Ejecutado</th><th>Ejec./plan</th><th>Revisión</th></tr></thead><tbody>';
   for(const x of W.filter(x=>x.w0>=firstP).reverse()){const r=x.pl.trimp?x.ex.trimp/x.pl.trimp*100:null;
